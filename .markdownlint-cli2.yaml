@@ -80,6 +80,9 @@ ignores:
   - "target/**"  # Rust build artifacts; harmless for non-Rust projects
   - ".git/**"
   - "*.min.md"
+  # Vendored agentnative-spec content. Edited upstream; we do not enforce
+  # this repo's lint rules on it. Resync via scripts/sync-spec.sh.
+  - "bundle/spec/CHANGELOG.md"
 
 # Fix automatically when --fix is used
 fix: true
