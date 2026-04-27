@@ -5,34 +5,28 @@ PR number in its squash commit message, which keeps the history scannable, attri
 
 ```text
 feature branch (feat/*, fix/*, chore/*, docs/*) → PR to dev (squash merge)
-                                                → PR dev → main (squash merge)
-                                                → tag v* on main → site pins to commit SHA
+                                                → cherry-pick non-docs commits to release/<slug>
+                                                → PR release/* to main (squash merge)
+                                                → tag v* on main → GitHub Release → site re-pins to commit SHA
 ```
 
-This is the **lightweight** variant of the brettdavies release pattern. It omits `release/*` cherry-pick branches
-because:
-
-1. The repo is content + scripts, not compiled artifacts. There is no crates.io publish, no Homebrew dispatch, no
-   cross-platform build to gate.
-2. The release scope is small enough that "everything currently on dev" is almost always what we want to ship.
-3. `guard-main-docs.yml` keeps engineering docs (`docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/`)
-   off `main` mechanically — we don't need a cherry-pick step to filter them out.
-
-If those assumptions stop holding (e.g., we start shipping a binary, or we need to hold back specific dev commits from a
-release), upgrade to the full `release/*` cherry-pick pattern from the canonical
-[`~/.claude/skills/github-repo-setup/references/RELEASES.md`](../../.claude/skills/github-repo-setup/references/RELEASES.md).
+This is the canonical brettdavies release pattern with `release/*` cherry-pick branches. Plans live on `dev` forever and
+`guard-main-docs.yml` blocks any `added` or `modified` engineering-doc files in PRs targeting `main`. The release-branch
+cherry-pick handles this cleanly: docs commits stay on `dev`, only feature/fix/chore commits go onto `release/*`.
 
 ## Branches
 
-| Branch                                 | Role                                                    | Lifetime                               | Protection                           |
-| -------------------------------------- | ------------------------------------------------------- | -------------------------------------- | ------------------------------------ |
-| `main`                                 | Released bundle. Only commits ready to ship.            | Forever.                               | `.github/rulesets/protect-main.json` |
-| `dev`                                  | Integration. All feature PRs land here. Default branch. | Forever. Never delete.                 | `.github/rulesets/protect-dev.json`  |
-| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Feature work.                                           | One PR's worth. Auto-deleted on merge. | None — squash into `dev` freely.     |
+| Branch                                 | Role                                                    | Lifetime                                    | Protection                           |
+| -------------------------------------- | ------------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
+| `main`                                 | Released bundle. Only release-merged commits.           | Forever.                                    | `.github/rulesets/protect-main.json` |
+| `dev`                                  | Integration. All feature PRs land here. Default branch. | Forever. Never delete.                      | `.github/rulesets/protect-dev.json`  |
+| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Feature work.                                           | One PR's worth. Auto-deleted on merge.      | None — squash into `dev` freely.     |
+| `release/*`                            | Head of a `release/* → main` PR.                        | One release's worth. Auto-deleted on merge. | None.                                |
 
-`dev` is a **forever branch**. Never delete it locally or remotely, even after a `dev → main` merge. The repo's
-`delete_branch_on_merge: true` setting doesn't touch `dev` because `dev` is the base, not the head, of the release-time
-PR.
+`dev` is a **forever branch**. Never delete it locally or remotely, even after a `release/* → main` merge. The next
+release cycle reuses the same `dev`. The repo's `delete_branch_on_merge: true` setting doesn't touch `dev` because `dev`
+is never the head of a PR — using a short-lived `release/*` head is what keeps the setting compatible with a forever
+integration branch.
 
 ## Daily development (feature → dev)
 
@@ -51,48 +45,100 @@ gh pr create --base dev --title "feat(scope): what changed"
 
 ## Releasing dev to main
 
-`dev` accumulates feature, fix, and docs commits. To cut a release, open one PR from `dev` to `main`:
+Engineering docs (`docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/`) live on `dev` only.
+`guard-main-docs.yml` blocks any `added` or `modified` files under those paths from reaching `main`. Branching from
+`dev` and deleting docs on the way produces `add/add` merge conflicts whenever `dev` and `main` have diverged (the norm
+after the first squash merge). The cherry-pick pattern avoids this.
+
+**Branch naming**: `release/v<X.Y.Z>` (preferred) or `release/<date>-<slug>`. Keep the slug short and descriptive.
 
 ```bash
-git checkout dev && git pull
+# 1. Cut release/* from main, NOT dev. Branching from dev causes add/add
+#    conflicts when dev and main have divergent histories.
+git fetch origin
+git checkout -b release/v<X.Y.Z> origin/main
 
-# Sanity: list what's on dev not yet on main.
+# 2. List the dev commits not yet on main:
 git log --oneline dev --not origin/main
 
-# Open the release PR. Title: a short summary of the version, not "Merge dev to main".
-gh pr create --base main --head dev --title "release: v<X.Y.Z> — <one-line summary>"
+# 3. Cherry-pick non-docs commits onto release/v<X.Y.Z>. Docs commits
+#    (anything that touched only docs/plans/, docs/solutions/,
+#    docs/brainstorms/, or docs/reviews/) stay on dev.
+git cherry-pick <sha1> <sha2> ...
+
+# 4. Verify no guarded paths leaked through:
+git diff origin/main --name-only | grep -E '^docs/(plans|solutions|brainstorms|reviews)/' && \
+  echo 'FAIL: guarded docs in release branch' || echo 'OK: no guarded docs'
+
+# 5. Bump VERSION on the release branch.
+echo '<X.Y.Z>' > VERSION
+
+# 6. Generate CHANGELOG entries from PR bodies. NEVER hand-edit CHANGELOG.md —
+#    the script is authoritative. It reads cliff.toml + each cherry-picked PR's
+#    ## Changelog section and prepends a versioned [<X.Y.Z>] entry.
+scripts/generate-changelog.sh
+# (the script extracts <X.Y.Z> from the branch name release/v<X.Y.Z>)
+
+# 7. Commit the version bump and generated changelog.
+git add VERSION CHANGELOG.md
+git commit -m "chore(release): v<X.Y.Z>"
+
+# 8. Push and open the PR:
+git push -u origin release/v<X.Y.Z>
+gh pr create --base main --head release/v<X.Y.Z> --title "release: v<X.Y.Z> — <one-line summary>"
 ```
-
-**`guard-main-docs` runs on every PR with base `main`.** If any commit on `dev` added or modified a file under
-`docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, or `docs/reviews/`, the check fails and the PR is blocked. Two
-ways to handle this:
-
-- **Preferred**: keep all engineering docs deletions or unchanged at PR time. Plans should land on `dev` and stay there
-  for posterity; they don't need to ship.
-- **Override**: if a doc legitimately needs to ship to `main` (e.g., user-facing under `docs/`), add an exception in the
-  reusable workflow at `brettdavies/.github`, not here.
 
 When the PR merges:
 
 1. The squash commit lands on `main` with the PR body as its message.
-2. Tag `v<X.Y.Z>` on the new `main` HEAD: `git checkout main && git pull && git tag -a v<X.Y.Z> -m "v<X.Y.Z>" && git
-   push origin v<X.Y.Z>`.
-3. The site at `anc.dev/install` re-pins via its own PR (separate repo, separate session).
+2. `release/v<X.Y.Z>` is auto-deleted.
+3. Tag the new `main` HEAD: `git checkout main && git pull && git tag -a v<X.Y.Z> -m "v<X.Y.Z>" && git push origin
+   v<X.Y.Z>`.
+4. Create the GitHub Release using the generated CHANGELOG section:
 
-`dev` keeps moving forward. Don't reset or rebase `dev` after a release — it is forever.
+   ```bash
+   gh release create v<X.Y.Z> --title "v<X.Y.Z>" \
+     --notes "$(awk '/^## \[<X.Y.Z>\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)"
+   ```
+
+5. The site at `anc.dev/install` re-pins via its own PR (separate repo, separate session). The handoff is the new commit
+   SHA plus a note if the bundle layout changed.
+
+`dev` keeps moving forward. Never reset or rebase `dev` after a release — it is forever.
+
+### CHANGELOG is generated, never hand-written
+
+`scripts/generate-changelog.sh` (with `cliff.toml`) is the only sanctioned way to update `CHANGELOG.md`. The script:
+
+- Runs `git-cliff` to prepend a versioned entry for commits since the last tag.
+- Walks each squash-merged PR's body, extracts the `## Changelog` section's `### Added` / `### Changed` / `### Fixed` /
+  `### Documentation` subsections, and replaces the auto-generated bullets with the curated PR-body content (with author
+  and PR-link attribution).
+
+If a PR's `## Changelog` section is empty, that PR's entry is omitted from the changelog (the convention in
+[`.github/pull_request_template.md`](.github/pull_request_template.md): empty section = no user-facing change). To fix a
+wrong CHANGELOG entry, fix the input — edit the squash-merged PR body, then re-run the script. Do **not** edit
+`CHANGELOG.md` directly.
+
+`scripts/generate-changelog.sh --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`) —
+wire this into the release-branch CI if/when one is added.
+
+### Why branch from main, not dev
+
+Branching from `dev` and then `gio trash`-ing the guarded paths seems simpler but produces `add/add` merge conflicts
+whenever `dev` and `main` have diverged. The file appears as "added" on both sides with different content. Always branch
+from `origin/main` and cherry-pick onto it.
 
 ## Version bump procedure
 
-Before opening the `dev → main` release PR:
+The version bump and CHANGELOG generation both happen on the `release/v<X.Y.Z>` branch (steps 5–6 of the cherry-pick
+flow above). There is no separate version-bump PR to `dev`. Picking the version is the only manual decision:
 
-1. Decide the new version per SemVer. **Patch** = doc updates, internal cleanups, non-substantive script tweaks.
-   **Minor** = new principles, new checks, new templates, new bundle files (backward-compatible additions). **Major** =
-   breaking changes to the bundle's contract — renaming `SKILL.md` frontmatter fields, changing exit codes of
-   `check-compliance.sh`, restructuring directory layout in ways that break existing skill installations.
-2. Bump `VERSION` (single line, `<X.Y.Z>\n`, no metadata).
-3. Add a section to `CHANGELOG.md` under `## [Unreleased]` (if present) with the new version + date, populated from the
-   `## Changelog` sections of every PR squash-merged into `dev` since the last release.
-4. Commit the bump on a `chore/release-vX.Y.Z` branch off `dev`, PR it into `dev`, then open the `dev → main` PR.
+- **Patch** — doc updates, internal cleanups, non-substantive script tweaks.
+- **Minor** — new principles, new checks, new templates, new bundle files (backward-compatible additions).
+- **Major** — breaking changes to the bundle's contract: renaming `bundle/SKILL.md` frontmatter fields, changing exit
+  codes of `bundle/scripts/check-compliance.sh`, restructuring directory layout in ways that break existing skill
+  installations, or moving content between `bundle/` and the producer-ops root.
 
 ## PRs and changelog generation
 
@@ -165,6 +211,7 @@ gh api repos/brettdavies/agentnative-skill/commits/<sha>/check-runs --jq '.check
 ## Related docs
 
 - [`AGENTS.md`](./AGENTS.md) — repo layout, lint commands, what agents must not do.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — how to propose changes.
 - [`.github/pull_request_template.md`](.github/pull_request_template.md) — PR body structure with changelog sections.
 - [`.github/rulesets/README.md`](.github/rulesets/README.md) — ruleset apply + verify procedure.
 - [`CHANGELOG.md`](./CHANGELOG.md) — released versions and their notes.
