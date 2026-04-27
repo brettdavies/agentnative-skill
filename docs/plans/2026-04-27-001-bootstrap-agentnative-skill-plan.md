@@ -68,10 +68,12 @@ The master plan and global CLAUDE.md mandate `dev` off `main`, features off `dev
 `main` to PR against — the first commit is a bootstrap exception:
 
 1. Bootstrap commit lands on `main` directly (no PR — there is nothing to review against).
-2. Immediately after, create `dev` tracking `main`. Push it, set as default branch.
+2. Immediately after, create `dev` tracking `main`. Push it. **Leave `main` as the repo default branch** — this matches
+   the rest of the agentnative ecosystem (`agentnative`, `agentnative-cli`, `agentnative-site` all default to `main`). A
+   naive `git clone` should land visitors on the released bundle, not on `dev`'s WIP.
 3. Tag `v0.1.0` on the bootstrap commit (pre-`dev` creation is fine; tag refers to commit SHA, not branch).
-4. Any subsequent work in this repo (post-v0.1.0) follows full discipline: feat/* off `dev`, squash-PR to `dev`, dev →
-   main PR.
+4. Any subsequent work in this repo (post-v0.1.0) follows full discipline: feat/*off `dev`, squash-PR to `dev`,
+   release/* cherry-picked from `main` and PR'd to `main`.
 
 The bootstrap exception is one commit only. Repeat-edits during this session must NOT pile onto `main`; if you discover
 a fix mid-session, force yourself onto a `feat/*` branch.
@@ -186,10 +188,13 @@ Companion endpoints (anc.dev/install, anc.dev/install.json) ship via
 the agentnative-site repo, pinning to this commit SHA."
 git push -u origin main
 
-# Now create dev, push, set as repo default.
+# Now create dev tracking main and push it.
+# Leave `main` as the repo default branch (matches the rest of the
+# ecosystem: agentnative, agentnative-cli, agentnative-site all
+# default to main). A naive `git clone` should land on the released
+# bundle, not on dev's WIP.
 git checkout -b dev
 git push -u origin dev
-gh repo edit brettdavies/agentnative-skill --default-branch dev
 ```
 
 ### Step 7: Tag v0.1.0
@@ -245,7 +250,7 @@ Mark this Unit complete only when ALL of these are green:
 
 - [ ] `gh repo view brettdavies/agentnative-skill --json visibility -q .visibility` → `PRIVATE` (cutover is later, not
   here).
-- [ ] `gh repo view brettdavies/agentnative-skill --json defaultBranchRef -q .defaultBranchRef.name` → `dev`.
+- [ ] `gh repo view brettdavies/agentnative-skill --json defaultBranchRef -q .defaultBranchRef.name` → `main`.
 - [ ] `gh run list --branch main --limit 1` → CI job for the initial commit completed `success`.
 - [ ] `gh release list` → empty for now (no GitHub Release object created — the tag exists, the release doesn't; v1
   doesn't need a Release object).
@@ -397,22 +402,32 @@ What was actually done:
 
 #### Step 9 — verification gate adjustments
 
-| Gate                         | Status at session end                            |
-| ---------------------------- | ------------------------------------------------ |
-| visibility = PRIVATE         | met                                              |
-| default branch = dev         | met                                              |
-| CI on `main` succeeded       | met                                              |
-| `gh release list` empty      | met                                              |
-| tag object SHA matches       | met                                              |
-| force-push to `main` refused | **deferred** to post-public-flip ruleset apply   |
-| markdownlint clean           | met                                              |
-| shellcheck clean             | met (with `.shellcheckrc` per "Additions" below) |
-| local clone smoke test       | met                                              |
+| Gate                         | Status at session end                               |
+| ---------------------------- | --------------------------------------------------- |
+| visibility = PRIVATE         | met                                                 |
+| default branch = main        | met (corrected post-bootstrap; see deviation below) |
+| CI on `main` succeeded       | met                                                 |
+| `gh release list` empty      | met                                                 |
+| tag object SHA matches       | met                                                 |
+| force-push to `main` refused | **deferred** to post-public-flip ruleset apply      |
+| markdownlint clean           | met                                                 |
+| shellcheck clean             | met (with `.shellcheckrc` per "Additions" below)    |
+| local clone smoke test       | met                                                 |
 
 #### Step 10 — handoff payload
 
 The handoff carries both SHAs (commit + tag object) so the consumer cannot accidentally pin to the wrong one. Per plan,
 the handoff is via the orchestrator chat, no committed handoff doc.
+
+#### Default branch — corrected post-bootstrap
+
+The plan's Step 6 and Branch-Discipline section originally said to set `dev` as the repo default branch. This was a plan
+error: the rest of the agentnative ecosystem (`agentnative`, `agentnative-cli`, `agentnative-site`) uses `default=main`,
+and a naive `git clone` should land visitors on the released bundle, not on `dev`'s WIP. The plan now correctly leaves
+`main` as default; both Step 6 and the Branch-Discipline section have been updated above. The live repo was originally
+configured with `default=dev` (executing the now-corrected plan literally) and was switched to `default=main` via `gh
+repo edit brettdavies/agentnative-skill --default-branch main` once the divergence was spotted. Step 9's gate is updated
+accordingly.
 
 ### Additions not in the original plan
 
