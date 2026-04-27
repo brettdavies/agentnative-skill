@@ -1,6 +1,9 @@
-# Mandatory review on anything that runs on user machines at install time.
+# Mandatory review on anything that runs on user machines at install time, and
+# on producer ops that determine what ships.
 # See: master plan risk row "Shell scripts in producer repo execute on user machines".
 
-scripts/**             @brettdavies
-.github/workflows/**   @brettdavies
-.github/CODEOWNERS     @brettdavies
+bundle/scripts/**       @brettdavies
+scripts/**              @brettdavies
+.github/workflows/**    @brettdavies
+.github/rulesets/**     @brettdavies
+.github/CODEOWNERS      @brettdavies
