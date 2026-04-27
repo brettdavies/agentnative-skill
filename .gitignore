@@ -1,0 +1,18 @@
+# OS / editor scratch
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Local-only work-in-progress (per global CLAUDE.md)
+TODO.md
+TODO
+*todo*.md
+.context/
+
+# Build artifacts (defensive — this repo currently has none)
+target/
+node_modules/
+dist/
+build/
