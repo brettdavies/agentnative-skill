@@ -134,11 +134,17 @@ from `origin/main` and cherry-pick onto it.
 The version bump and CHANGELOG generation both happen on the `release/v<X.Y.Z>` branch (steps 5–6 of the cherry-pick
 flow above). There is no separate version-bump PR to `dev`. Picking the version is the only manual decision:
 
-- **Patch** — doc updates, internal cleanups, non-substantive script tweaks.
-- **Minor** — new principles, new checks, new templates, new bundle files (backward-compatible additions).
-- **Major** — breaking changes to the bundle's contract: renaming `bundle/SKILL.md` frontmatter fields, changing exit
-  codes of `bundle/scripts/check-compliance.sh`, restructuring directory layout in ways that break existing skill
-  installations, or moving content between `bundle/` and the producer-ops root.
+- **Patch** — doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump.
+- **Minor** — new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
+  minor-level spec bump that adds requirements without tightening existing tiers.
+- **Major** — breaking changes to the bundle's contract: renaming `bundle/SKILL.md` frontmatter fields, restructuring
+  directory layout in ways that break existing skill installations, moving content between `bundle/` and the
+  producer-ops root, or vendoring a major-level spec bump (renamed/removed principles or tightened MUSTs that would
+  regress existing consumers).
+
+The skill's version is independent of the spec it vendors. A spec bump that doesn't affect the skill's surface (e.g.,
+prose-only edits) can ship as a patch even when the spec went minor. Use the SemVer guidance above against the *skill's*
+observable behaviour, not the spec's.
 
 ## PRs and changelog generation
 
