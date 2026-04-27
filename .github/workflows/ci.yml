@@ -41,17 +41,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Run ShellCheck (bundle scripts — ship to consumers)
+      - name: Run ShellCheck (producer scripts)
+        # The bundle is markdown-only (spec, references, templates, getting-started).
+        # Only producer-ops scripts under ./scripts/ are subject to shellcheck.
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
         env:
           # style severity surfaces all suggestions; CI fails on error+warning by default
-          SHELLCHECK_OPTS: "--severity=style"
-        with:
-          scandir: ./bundle/scripts
-          additional_files: bundle/scripts/checks/_helpers.sh
-      - name: Run ShellCheck (producer scripts)
-        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
-        env:
           SHELLCHECK_OPTS: "--severity=style"
         with:
           scandir: ./scripts
