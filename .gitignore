@@ -16,3 +16,9 @@ target/
 node_modules/
 dist/
 build/
+
+# Override global ignore for AGENTS.md.
+# Global ~/.config/git/ignore excludes **/AGENTS.md (local agent setup is private
+# by default). This producer repo IS the canonical home for how agents should
+# operate against the bundle, so AGENTS.md ships here intentionally.
+!AGENTS.md
