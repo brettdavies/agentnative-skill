@@ -48,6 +48,9 @@
           },
           {
             "context": "shellcheck"
+          },
+          {
+            "context": "guard-docs / check-forbidden-docs"
           }
         ]
       }

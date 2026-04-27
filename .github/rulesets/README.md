@@ -9,11 +9,11 @@ the visibility flip, before any post-flip pushes.
 
 ## Files
 
-| File                | Target            | Effect                                                                                                                                                                            |
-| ------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `protect-main.json` | `refs/heads/main` | Block direct creation/deletion/force-push; require PR with CODEOWNERS review, signed commits, linear history, and `markdownlint` + `shellcheck` status checks. Squash-only merge. |
-| `protect-dev.json`  | `refs/heads/dev`  | Block deletion/force-push; require signed commits. Light-touch by design — `dev` is the integration branch.                                                                       |
-| `protect-tags.json` | `refs/tags/v*`    | Block deletion, force-push (re-tag), and updates of release tags. Tags are immutable historical anchors that the site's `install.json` pins to.                                   |
+| File                | Target            | Effect                                                                                                                                                                                                                                |
+| ------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `protect-main.json` | `refs/heads/main` | Block direct creation/deletion/force-push; require PR with CODEOWNERS review, signed commits, linear history, and three required status checks: `markdownlint`, `shellcheck`, `guard-docs / check-forbidden-docs`. Squash-only merge. |
+| `protect-dev.json`  | `refs/heads/dev`  | Block deletion/force-push; require signed commits. Light-touch by design — `dev` is the integration branch.                                                                                                                           |
+| `protect-tags.json` | `refs/tags/v*`    | Block deletion, force-push (re-tag), and updates of release tags. Tags are immutable historical anchors that the site's `install.json` pins to.                                                                                       |
 
 ## Apply (after visibility flip)
 
