@@ -491,15 +491,23 @@ merge. CHANGELOG and VERSION bumps happen on the release branch, not on `dev`.
 **v0.2.0 release** (bootstrap session task #15, still outstanding as of 2026-04-28) will be the first execution of this
 pattern in this repo — see "Outstanding tasks" subsection.
 
-### Outstanding tasks (carried forward to the agentnative-site session or owner)
+### Outstanding tasks (carried forward to launch-eve execution)
 
 Step-11-block (rulesets + post-flip settings) all resolved 2026-04-28 in the post-public-flip follow-up below. **One
 task from the bootstrap session remains open** — task #15.
 
-- [ ] **v0.2.0 release** *(bootstrap session task #15 — outstanding)*. Cut `release/v0.2.0` from `origin/main`,
-  cherry-pick the non-docs commits since `v0.1.0`, bump `VERSION` to `0.2.0`, regenerate CHANGELOG via
-  `scripts/generate-changelog.sh`, PR to `main`, squash-merge, tag `v0.2.0` on `main`, create GitHub Releases for
-  `v0.1.0` (back-fill) and `v0.2.0`. Per the corrected release pattern above. Cherry-pick scope as of 2026-04-28:
+> **Release version + order:** see central tracker § Release Versions and Order — SoT for v0.3.0 launch wave
+> (`~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-launch-inversion-20260427-144756.md`).
+> Task #15 executes as **steps 3a/3b** of the launch wave: 3a is the `release/v0.2.0` PR cut + squash-merge to `main`;
+> 3b is the annotated tag + GitHub Release. **Hard-blocked on step 1** (spec `v0.3.0` tag) so the U1.5 re-vendor in
+> step 2 (CLI) and the bundle re-vendor here both pin to spec v0.3.0. Slip → push launch 24h. Skill is in the launch
+> wave, not optional.
+
+- [ ] **v0.2.0 release** *(bootstrap session task #15 — scheduled for launch eve, Tue 2026-04-28 PT)*. Cut
+  `release/v0.2.0` from `origin/main`, cherry-pick the non-docs commits since `v0.1.0`, bump `VERSION` to `0.2.0`,
+  regenerate CHANGELOG via `scripts/generate-changelog.sh`, PR to `main`, squash-merge, tag `v0.2.0` on `main`, create
+  GitHub Releases for `v0.1.0` (back-fill) and `v0.2.0`. Per the corrected release pattern above. Cherry-pick scope as
+  of 2026-04-28:
 
 | Commit    | Source PR | Why included                                                                                                                                                                           |
 | --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
