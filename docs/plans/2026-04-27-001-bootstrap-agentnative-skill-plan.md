@@ -479,17 +479,29 @@ always-bypass, per the `.github/rulesets/README.md` "Bypass" section.
 
 #### Negative-test caveat
 
-The negative tests in `.github/rulesets/README.md` ("force-push to main must be refused", "re-tagging v0.1.0 must be
-refused") are written for a **non-admin actor**. The repo owner has `bypass_mode: always`, so a solo run of those tests
-by the owner cannot demonstrate refusal — the push succeeds via bypass. The Step 9 gate "force-push to `main` refused"
-was therefore **verified by configuration inspection** (rules array + bypass list, both fetched via
-`/repos/.../rulesets/<id>`) rather than by destructive push. Enforcement is meaningful for any non-admin actor:
-collaborators, fine-grained PATs, GitHub Apps. A future non-admin push attempt will populate
-`/repos/.../rulesets/rule-suites` with a recorded refusal.
+The negative tests originally documented in `.github/rulesets/README.md` ("force-push to main must be refused",
+"re-tagging v0.1.0 must be refused") were written for a **non-admin actor**. The repo owner has `bypass_mode: always`,
+so a solo run of those tests by the owner cannot demonstrate refusal — the push succeeds via bypass. The Step 9 gate
+"force-push to `main` refused" was therefore **verified by configuration inspection** (rules array + bypass list, both
+fetched via `/repos/.../rulesets/<id>`) rather than by destructive push. Enforcement is meaningful for any non-admin
+actor: collaborators, fine-grained PATs, GitHub Apps.
 
-Plan addendum's negative tests should be re-read with this in mind: the tests in `.github/rulesets/README.md` remain
-correct *as written*, but only a non-admin actor can run them. Updating that README to call this out explicitly is a
-cleanup pass for a later session.
+**Incidental positive evidence (acquired later in the session):** When PR #5 was prepared (re-doing the plan addendum
+via the proper feature-branch + PR flow per the now-clarified branch-discipline rule), `dev` was force-pushed back to
+`0647342` to remove the original direct-to-`dev` commit `8f10a4e`. The remote logged the bypass explicitly:
+
+```text
+remote: Bypassed rule violations for refs/heads/dev:
+remote:
+remote: - Cannot force-push to this branch
+```
+
+That log line confirms the `protect-dev` ruleset evaluates incoming pushes correctly — the rule fired, the rule would
+have refused a non-admin, and the admin bypass let the push through. Stronger evidence than configuration inspection
+alone.
+
+The `.github/rulesets/README.md` itself was deleted in commit `5d93913` (direct-to-`dev`, post-PR-#5) — see "README
+cleanup" subsection below.
 
 #### Repo settings — drift resolved
 
@@ -507,19 +519,57 @@ Advanced Security (paid). The audit script reports these as warnings rather than
 Applied via `~/.claude/skills/github-repo-setup/scripts/repo-settings.sh apply brettdavies/agentnative-skill`. Final
 state: "Repo settings: ✓ compliant", "Security: warnings only — no actionable drift".
 
+#### Branch-discipline rule clarified mid-session
+
+The Step 11 plan-addendum commit was originally pushed direct to `dev` as `8f10a4e` per the global CLAUDE.md "plan-only
+commits → direct to `dev`" exception. Owner-redirect mid-session: in this repo, the audience-based test matters more
+than the directory. The `bundle/**.md` files ship verbatim to skill consumers and need PR review; `docs/plans/**` is
+still working-surface and stays direct-to-`dev`. The original commit accidentally bundled both audiences together — the
+addendum (planning surface) and an unrelated `bundle/SKILL.md` + `bundle/getting-started.md` trim (consumer surface) —
+which is what triggered the redo.
+
+Mechanics of the redo:
+
+1. `git reset 0647342` (mixed) → keeps working tree, moves HEAD back.
+2. `git push --force-with-lease origin dev` → admin-bypass logged at remote (see "Negative-test caveat" above).
+3. Branch `docs/skill-public-flip-followup` from `0647342`, two signed commits — `16bd44d` (addendum) + `ea12ce0`
+   (bundle trim).
+4. PR #5 squash-merged to `dev` as `0e04e53`. CI green.
+
+The global rule was then clarified in `~/.claude/CLAUDE.md` "Branch discipline" — the plan-docs exception is now
+explicitly bounded by **audience**, not directory: shipped markdown (bundle, top-level repo files) goes through PR;
+working-surface markdown (`docs/plans/`, `docs/brainstorms/`, etc.) stays direct-to-`dev`. This applies in every repo,
+not just this one.
+
+#### README cleanup
+
+`.github/rulesets/README.md` was deleted in commit `5d93913` (direct-to-`dev`; the file is repo-infrastructure meta-doc,
+not consumer-shipped — never on `main`, buried in `.github/`, read only by maintainers, so the audience-based rule does
+not require a PR). Reasons:
+
+- Filenames already self-document (`protect-main.json`, `protect-dev.json`, `protect-tags.json`).
+- Apply procedure was one-time; re-apply is `gh api repos/.../rulesets -X POST --input <file>` — basic enough to
+  re-derive without docs.
+- Verify section was actively misleading — admin always-bypass means the negative tests cannot be solo-run by the owner
+  as written.
+- Bypass notes are inline in each JSON's `bypass_actors` field anyway.
+
+The three JSON files are retained — they are the version-controlled rule definitions, single source of truth for
+re-apply, and diff-able if rules change.
+
 #### Step 9 gate — final reconciliation
 
-| Gate                         | Status (post-Step-11)                                       |
-| ---------------------------- | ----------------------------------------------------------- |
-| visibility = PRIVATE         | superseded — flipped to PUBLIC 2026-04-28 per Step 11       |
-| default branch = main        | met                                                         |
-| CI on `main` succeeded       | met                                                         |
-| `gh release list` empty      | met                                                         |
-| tag object SHA matches       | met                                                         |
-| force-push to `main` refused | met by configuration inspection (admin bypass caveat above) |
-| markdownlint clean           | met                                                         |
-| shellcheck clean             | met                                                         |
-| local clone smoke test       | met                                                         |
+| Gate                         | Status (post-Step-11)                                                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| visibility = PRIVATE         | superseded — flipped to PUBLIC 2026-04-28 per Step 11                                                                                                                                                                     |
+| default branch = main        | met                                                                                                                                                                                                                       |
+| CI on `main` succeeded       | met                                                                                                                                                                                                                       |
+| `gh release list` empty      | met                                                                                                                                                                                                                       |
+| tag object SHA matches       | met                                                                                                                                                                                                                       |
+| force-push to `main` refused | met — config inspection + incidental positive evidence on `protect-dev` (force-push of `dev` was logged as bypass at the remote during the PR #5 redo). Same rule shape on `protect-main`; same bypass behavior expected. |
+| markdownlint clean           | met                                                                                                                                                                                                                       |
+| shellcheck clean             | met                                                                                                                                                                                                                       |
+| local clone smoke test       | met                                                                                                                                                                                                                       |
 
 ### Inputs from this session that survived past the plan
 
