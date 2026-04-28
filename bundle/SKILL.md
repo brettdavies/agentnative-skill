@@ -75,7 +75,7 @@ Use `anc`. Install once:
 
 ```bash
 brew install brettdavies/tap/agentnative   # binary is `anc`
-cargo install agentnative                  # any platform with Rust
+cargo install agentnative
 ```
 
 Recommended invocations and the full agent loop are in [`getting-started.md`](./getting-started.md). Do not write shell
