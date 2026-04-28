@@ -509,8 +509,10 @@ task from the bootstrap session remains open** — task #15.
 | `0647342` | #4        | `feat(bundle)!:` anc-pivot — vendor agentnative-spec, drop dup checker. **BREAKING** in `bundle/` contract; ships in `0.x` minor per RELEASES.md "Version bump procedure".             |
 | `0e04e53` | #5        | **MIXED** — Step 11 plan addendum + bundle trim. Cherry-pick must drop the `docs/plans/` hunk so the diff against `main` carries only `bundle/SKILL.md` + `bundle/getting-started.md`. |
 | `5d93913` | (direct)  | Delete `.github/rulesets/README.md`                                                                                                                                                    |
+| `18836d8` | #6        | Dual-license under MIT or Apache-2.0 — adds `LICENSE-APACHE`, renames `LICENSE` → `LICENSE-MIT`, updates README + CONTRIBUTING. Path-rename is a consumer-visible change.              |
 
-  Excluded (would trip `guard-main-docs.yml`): `632b4d1`, `e8d46e4`, `774f969`, `81b0a8e` — all `docs/plans/` only.
+  Excluded (would trip `guard-main-docs.yml`): `632b4d1`, `e8d46e4`, `774f969`, `81b0a8e`, `56f27a1` — all
+  `docs/plans/` only.
 
 - [x] ~~**Apply rulesets post-public-flip.**~~ Done.
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
