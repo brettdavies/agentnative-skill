@@ -33,7 +33,8 @@ agentnative-skill/
 ├── CHANGELOG.md            released versions (generated, never hand-edited)
 ├── VERSION                 single-line current version
 ├── cliff.toml              git-cliff configuration
-├── LICENSE                 MIT
+├── LICENSE-MIT             MIT (one half of the dual license)
+├── LICENSE-APACHE          Apache 2.0 (the other half)
 └── README.md               this file
 ```
 
@@ -102,5 +103,14 @@ See [`SECURITY.md`](./SECURITY.md) for vulnerability disclosure.
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE). Vendored spec content under `bundle/spec/` is CC BY 4.0; attribution is in
+Dual-licensed under either of:
+
+- MIT — see [`LICENSE-MIT`](./LICENSE-MIT)
+- Apache License, Version 2.0 — see [`LICENSE-APACHE`](./LICENSE-APACHE)
+
+at your option. Matches the licensing on `agentnative-cli` so producers can adapt the bundle's check scripts into their
+own tooling without re-licensing friction.
+
+Vendored spec content under `bundle/spec/` is CC BY 4.0 (upstream from
+[`brettdavies/agentnative`](https://github.com/brettdavies/agentnative)); attribution is in
 [`bundle/spec/README.md`](./bundle/spec/README.md).

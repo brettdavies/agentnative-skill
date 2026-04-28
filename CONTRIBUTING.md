@@ -83,6 +83,13 @@ advisories channel.
 
 ## License
 
-By contributing, you agree your contributions are licensed under the MIT license that covers this repository (see
-[`LICENSE`](./LICENSE)). Vendored content under `bundle/spec/` is CC BY 4.0 (upstream); contributions to that directory
-should happen upstream in `agentnative-spec`.
+By contributing, you agree your contributions are dual-licensed under the same terms as the rest of this repository:
+
+- MIT — see [`LICENSE-MIT`](./LICENSE-MIT)
+- Apache License, Version 2.0 — see [`LICENSE-APACHE`](./LICENSE-APACHE)
+
+at the consumer's option. No CLA. The Apache-2.0 side carries the standard contributor patent grant under §3 of the
+license.
+
+Vendored content under `bundle/spec/` is CC BY 4.0 (upstream); contributions to that directory should happen upstream in
+[`agentnative-spec`](https://github.com/brettdavies/agentnative).
