@@ -522,7 +522,17 @@ task from the bootstrap session remains open** — task #15.
   Excluded (would trip `guard-main-docs.yml`): `632b4d1`, `e8d46e4`, `774f969`, `81b0a8e`, `56f27a1` — all
   `docs/plans/` only.
 
-- [x] ~~**Apply rulesets post-public-flip.**~~ Done.
+  **In-cherry-pick edits (land on `release/v0.2.0` directly, not on `dev` first):**
+
+- **Re-vendor `bundle/spec/` against agentnative-spec `v0.3.0`.** Run `SPEC_REF=v0.3.0 scripts/sync-spec.sh` after the
+    spec `v0.3.0` tag publishes (launch-wave step 1). Commit on `release/v0.2.0` as `chore(spec): re-vendor bundle/spec
+    to v0.3.0`. Without this, the bundle ships spec v0.2.0 (`draft` principles) while consumers pulling via `git clone`
+    from `main` would see content out-of-sync with `anc.dev`.
+- **Bump AGENTS.md `SPEC_REF` example** from the current `v0.2.1` illustrative value to `v0.3.0` to match what this
+    release actually vendors. ~1-line edit; same commit as re-vendor or its own `docs(skill): bump SPEC_REF example`.
+- **Add `## Coordinated cross-repo releases` paragraph to RELEASES.md.** Brief framing (~3-5 lines) on how skill
+    releases coordinate with spec releases (re-vendor `bundle/spec/`) and how site `install.json` re-pins to each new
+    skill release commit SHA. Same commit as the re-vendor; durable framing not specific to v0.3.0 launch wave.
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
 - [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
 
