@@ -248,19 +248,30 @@ git commit --allow-empty -m "test: should be rejected" && git push origin main
 
 Mark this Unit complete only when ALL of these are green:
 
-- [ ] `gh repo view brettdavies/agentnative-skill --json visibility -q .visibility` → `PRIVATE` (cutover is later, not
-  here).
-- [ ] `gh repo view brettdavies/agentnative-skill --json defaultBranchRef -q .defaultBranchRef.name` → `main`.
-- [ ] `gh run list --branch main --limit 1` → CI job for the initial commit completed `success`.
-- [ ] `gh release list` → empty for now (no GitHub Release object created — the tag exists, the release doesn't; v1
-  doesn't need a Release object).
-- [ ] `gh api repos/brettdavies/agentnative-skill/git/ref/tags/v0.1.0 --jq '.object.sha'` → matches the SHA captured in
-  Step 7.
-- [ ] Force-push to `main` fails (verified in Step 8).
-- [ ] `markdownlint-cli2 '**/*.md'` exits zero locally.
-- [ ] `shellcheck scripts/*.sh scripts/checks/*.sh` exits zero locally (or shows only style-level warnings explicitly
-  tolerated by the CI config).
-- [ ] **Local install smoke test (Claude Code):**
+> **Note (2026-04-28):** All gates met. The visibility gate has been **superseded** by the public flip executed in
+> Step 11. The reconciliation table under "Step 11 — post-public-flip execution → Step 9 gate — final reconciliation"
+> below is the authoritative current-state record. Boxes here check off the historical bootstrap-session gate.
+
+- [x] ~~`gh repo view brettdavies/agentnative-skill --json visibility -q .visibility` → `PRIVATE` (cutover is later, not
+  here).~~ Superseded — repo flipped to **PUBLIC** on 2026-04-28 (Step 11). The bootstrap-session gate was met when
+  written; the post-public-flip state is documented separately.
+- [x] `gh repo view brettdavies/agentnative-skill --json defaultBranchRef -q .defaultBranchRef.name` → `main`.
+  (Corrected post-bootstrap; see "Default branch — corrected post-bootstrap" deviation below.)
+- [x] `gh run list --branch main --limit 1` → CI job for the initial commit completed `success`.
+- [x] `gh release list` → empty (consistent with original gate; will change when task #15 publishes Releases for
+  `v0.1.0` + `v0.2.0`).
+- [x] `gh api repos/brettdavies/agentnative-skill/git/ref/tags/v0.1.0 --jq '.object.sha'` → matches the SHA captured in
+  Step 7. (See addendum table for the captured value; the gate compares tag-object SHAs, both sides agree.)
+- [x] Force-push to `main` fails (verified in Step 8). Met by configuration inspection of `protect-main`'s rules array
+- bypass list (Step 11 addendum). Strengthened by **incidental positive evidence on `protect-dev`** when `dev` was
+  force-pushed during the PR #5 redo and the remote logged the bypass: `Bypassed rule violations for refs/heads/dev:
+  Cannot force-push to this branch`. Same rule shape on `protect-main`; same refusal-for-non-admin behaviour expected.
+
+- [x] `markdownlint-cli2 '**/*.md'` exits zero locally.
+- [x] `shellcheck scripts/*.sh scripts/checks/*.sh` exits zero locally (or shows only style-level warnings explicitly
+  tolerated by the CI config). Three narrow disables added to `.shellcheckrc` per the "Additions not in the original
+  plan" table below.
+- [x] **Local install smoke test (Claude Code):**
       ```bash
       mkdir -p /tmp/anc-test-home/.claude/skills
       HOME=/tmp/anc-test-home git clone --depth 1 git@github.com:brettdavies/agentnative-skill.git \
@@ -268,7 +279,9 @@ Mark this Unit complete only when ALL of these are green:
       ls /tmp/anc-test-home/.claude/skills/agent-native-cli/SKILL.md   # exists
       rm -rf /tmp/anc-test-home
       ```
-      (SSH clone works against private repo for this user; the public e2e in the site session will use HTTPS.)
+      (SSH clone was verified during the bootstrap session against the then-private repo. After the 2026-04-28 public
+      flip, both `git clone https://github.com/brettdavies/agentnative-skill.git` and the SSH form should work; the
+      site session's e2e relies on the HTTPS path.)
 
 ### Step 10: Hand-off note
 
@@ -279,6 +292,11 @@ agentnative-skill v0.1.0 ready for site pin.
 Commit SHA: <40-char SHA from Step 7>
 Repo: still PRIVATE — public flip pending site PR cutover.
 ```
+
+> **Superseded 2026-04-28.** The repo flipped to **PUBLIC** in Step 11 ahead of the originally-planned cutover order;
+> the actual hand-off SHAs are in the "Final state at end of session" table below, and the post-flip + ruleset state
+> is in the "Step 11 — post-public-flip execution" section. The handoff format above is preserved for historical
+> reference; the live current-state table is the authoritative version.
 
 That's the entire cross-session handoff payload.
 
@@ -433,34 +451,70 @@ accordingly.
 
 These were authored in-session because reality required them. Each is stable to keep.
 
-| File                                    | Why                                                                                                                                                                                                                                                                                                                                                                  |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.markdownlint-cli2.yaml`               | Repo-local copy of the canonical 120-char config from `~/.markdownlint-cli2.yaml`. Without it, CI defaults to 80-char and fails on the migrated `SKILL.md` and `templates/agents-md-template.md`. The skill canonical config doesn't ship globally — every repo carries its own copy. Marked `Canonical version: 2026.04.15` so drift is detectable.                 |
-| `.shellcheckrc`                         | Three narrow disables (`SC1091`, `SC2034`, `SC2125`) tolerating style-only findings in the migrated bundle scripts. The plan's "no content rewriting" rule meant those scripts couldn't be modified in v0.1.0; the gate verbiage explicitly allowed "style-level warnings explicitly tolerated by the CI config". The disables are commented in-file with rationale. |
-| `.github/rulesets/protect-main.json`    | Branch ruleset for `main`: required signatures, linear history, squash-only PR with CODEOWNERS review, three required status checks (`markdownlint`, `shellcheck`, `guard-docs / check-forbidden-docs`), creation/deletion/non-fast-forward blocked. Bypass: admins.                                                                                                 |
-| `.github/rulesets/protect-dev.json`     | Branch ruleset for `dev`: deletion + force-push blocked, required signatures. No PR-requirement at the ruleset level (`dev` is the integration branch).                                                                                                                                                                                                              |
-| `.github/rulesets/protect-tags.json`    | Tag ruleset for `v*`: deletion, force-push (re-tag), and updates all blocked. Tags are immutable historical anchors that the site's `install.json` pins to.                                                                                                                                                                                                          |
-| `.github/rulesets/README.md`            | Apply + verify procedure for all three rulesets, intended to be run post-public-flip.                                                                                                                                                                                                                                                                                |
-| `AGENTS.md`                             | Project-level agent instructions for this repo specifically (NOT the Rust template). Repo's `.gitignore` was extended with `!AGENTS.md` to override the global `**/AGENTS.md` ignore for this repo only.                                                                                                                                                             |
-| `RELEASES.md`                           | Release procedure adapted from the canonical `~/.claude/skills/github-repo-setup/references/RELEASES.md` for the lightweight `dev → main` model (no `release/*` cherry-pick). Documents version-bump procedure, branch model, ruleset apply, and the verified status-check context table.                                                                            |
-| `.github/pull_request_template.md`      | Copy of the canonical `~/.config/github/pull_request_template.md`. Required because GitHub does not follow symlinks for PR-template discovery.                                                                                                                                                                                                                       |
-| `.github/workflows/guard-main-docs.yml` | Caller for the `brettdavies/.github` reusable workflow that blocks `docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/` from PRs targeting `main`. **Mechanically prevents** the failure mode that triggered the bootstrap-commit rewrite above.                                                                                                   |
+| File                                    | Why                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.markdownlint-cli2.yaml`               | Repo-local copy of the canonical 120-char config from `~/.markdownlint-cli2.yaml`. Without it, CI defaults to 80-char and fails on the migrated `SKILL.md` and `templates/agents-md-template.md`. The skill canonical config doesn't ship globally — every repo carries its own copy. Marked `Canonical version: 2026.04.15` so drift is detectable.                                         |
+| `.shellcheckrc`                         | Three narrow disables (`SC1091`, `SC2034`, `SC2125`) tolerating style-only findings in the migrated bundle scripts. The plan's "no content rewriting" rule meant those scripts couldn't be modified in v0.1.0; the gate verbiage explicitly allowed "style-level warnings explicitly tolerated by the CI config". The disables are commented in-file with rationale.                         |
+| `.github/rulesets/protect-main.json`    | Branch ruleset for `main`: required signatures, linear history, squash-only PR with CODEOWNERS review, three required status checks (`markdownlint`, `shellcheck`, `guard-docs / check-forbidden-docs`), creation/deletion/non-fast-forward blocked. Bypass: admins.                                                                                                                         |
+| `.github/rulesets/protect-dev.json`     | Branch ruleset for `dev`: deletion + force-push blocked, required signatures. No PR-requirement at the ruleset level (`dev` is the integration branch).                                                                                                                                                                                                                                      |
+| `.github/rulesets/protect-tags.json`    | Tag ruleset for `v*`: deletion, force-push (re-tag), and updates all blocked. Tags are immutable historical anchors that the site's `install.json` pins to.                                                                                                                                                                                                                                  |
+| ~~`.github/rulesets/README.md`~~        | ~~Apply + verify procedure for all three rulesets, intended to be run post-public-flip.~~ **Deleted 2026-04-28 in commit `5d93913`** — repo-infrastructure meta-doc (never on `main`, no consumer audience), and the verify section was actively misleading post-flip due to admin always-bypass on all three rulesets. JSON files retained; rationale in "README cleanup" subsection below. |
+| `AGENTS.md`                             | Project-level agent instructions for this repo specifically (NOT the Rust template). Repo's `.gitignore` was extended with `!AGENTS.md` to override the global `**/AGENTS.md` ignore for this repo only.                                                                                                                                                                                     |
+| `RELEASES.md`                           | Release procedure adapted from the canonical `~/.claude/skills/github-repo-setup/references/RELEASES.md`. **Note:** initially adapted for a lightweight `dev → main` model; subsequently rewritten in PR #3 (`bb5dce9`) to the canonical `release/v<X.Y.Z>` cherry-pick pattern. The current on-disk `RELEASES.md` is authoritative; see "Adopted release pattern — corrected" below.        |
+| `.github/pull_request_template.md`      | Copy of the canonical `~/.config/github/pull_request_template.md`. Required because GitHub does not follow symlinks for PR-template discovery.                                                                                                                                                                                                                                               |
+| `.github/workflows/guard-main-docs.yml` | Caller for the `brettdavies/.github` reusable workflow that blocks `docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/` from PRs targeting `main`. **Mechanically prevents** the failure mode that triggered the bootstrap-commit rewrite above.                                                                                                                           |
 
-### Adopted release pattern
+### Adopted release pattern — corrected
 
-Lightweight `feat/* → dev → main` (single squash-merge per release; no `release/*` cherry-pick branches). Documented
-end-to-end in `RELEASES.md`. The full `release/*` pattern is not justified for a content+scripts repo — there's no
-crates.io publish, no Homebrew dispatch, no cross-platform build, and `guard-main-docs.yml` already filters engineering
-docs out of release-time PRs.
+The original addendum text in this slot read: *"Lightweight `feat/* → dev → main` (single squash-merge per release; no
+`release/*` cherry-pick branches). Documented end-to-end in `RELEASES.md`."* That was accurate at the time (PR #2's
+`RELEASES.md` documented the lightweight model). It is **no longer accurate** — PR #3 (`bb5dce9`) rewrote `RELEASES.md`
+to the canonical `release/v<X.Y.Z>` cherry-pick pattern, matching the brettdavies-tap-publish skill's reference
+procedure. The on-disk `RELEASES.md` is the source of truth.
+
+The actual adopted pattern, per the current `RELEASES.md`:
+
+```text
+feature branch (feat/*, fix/*, chore/*, docs/*) → PR to dev (squash merge)
+                                                → cherry-pick non-docs commits to release/v<X.Y.Z>
+                                                → PR release/* to main (squash merge)
+                                                → tag v* on main → GitHub Release
+```
+
+Why cherry-pick: branching from `dev` and deleting `docs/plans/` paths produces `add/add` merge conflicts whenever `dev`
+and `main` have diverged. Cherry-picking from `dev` onto a `release/*` branch cut from `main` keeps `main` docs-free
+without conflict. `guard-main-docs.yml` is the secondary safety net, not the primary mechanism.
+
+The `release/*` branch's job is path-filtering, not staging — it lives only as the head of one PR and auto-deletes on
+merge. CHANGELOG and VERSION bumps happen on the release branch, not on `dev`.
+
+**v0.2.0 release** (bootstrap session task #15, still outstanding as of 2026-04-28) will be the first execution of this
+pattern in this repo — see "Outstanding tasks" subsection.
 
 ### Outstanding tasks (carried forward to the agentnative-site session or owner)
 
-All resolved 2026-04-28 in the post-public-flip "Step 11" follow-up. See
-[Step 11 — post-public-flip execution](#step-11--post-public-flip-execution-2026-04-28) below.
+Step-11-block (rulesets + post-flip settings) all resolved 2026-04-28 in the post-public-flip follow-up below. **One
+task from the bootstrap session remains open** — task #15.
 
-- ~~**Apply rulesets post-public-flip.**~~ Done.
-- ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
-- ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
+- [ ] **v0.2.0 release** *(bootstrap session task #15 — outstanding)*. Cut `release/v0.2.0` from `origin/main`,
+  cherry-pick the non-docs commits since `v0.1.0`, bump `VERSION` to `0.2.0`, regenerate CHANGELOG via
+  `scripts/generate-changelog.sh`, PR to `main`, squash-merge, tag `v0.2.0` on `main`, create GitHub Releases for
+  `v0.1.0` (back-fill) and `v0.2.0`. Per the corrected release pattern above. Cherry-pick scope as of 2026-04-28:
+
+| Commit    | Source PR | Why included                                                                                                                                                                           |
+| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `893e253` | #1        | rulesets JSON files (`.github/rulesets/*.json`)                                                                                                                                        |
+| `80099fc` | #2        | AGENTS.md / PR template / RELEASES.md / guard-main-docs.yml                                                                                                                            |
+| `bb5dce9` | #3        | bundle restructure + changelog generator + governance + RELEASES rewrite                                                                                                               |
+| `0647342` | #4        | `feat(bundle)!:` anc-pivot — vendor agentnative-spec, drop dup checker. **BREAKING** in `bundle/` contract; ships in `0.x` minor per RELEASES.md "Version bump procedure".             |
+| `0e04e53` | #5        | **MIXED** — Step 11 plan addendum + bundle trim. Cherry-pick must drop the `docs/plans/` hunk so the diff against `main` carries only `bundle/SKILL.md` + `bundle/getting-started.md`. |
+| `5d93913` | (direct)  | Delete `.github/rulesets/README.md`                                                                                                                                                    |
+
+  Excluded (would trip `guard-main-docs.yml`): `632b4d1`, `e8d46e4`, `774f969`, `81b0a8e` — all `docs/plans/` only.
+
+- [x] ~~**Apply rulesets post-public-flip.**~~ Done.
+- [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
+- [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
 
 ### Step 11 — post-public-flip execution (2026-04-28)
 
