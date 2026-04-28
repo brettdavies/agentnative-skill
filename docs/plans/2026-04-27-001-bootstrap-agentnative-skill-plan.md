@@ -455,13 +455,71 @@ docs out of release-time PRs.
 
 ### Outstanding tasks (carried forward to the agentnative-site session or owner)
 
-- **Apply rulesets post-public-flip.** After the agentnative-site session runs `gh repo edit
-  brettdavies/agentnative-skill --visibility public`, run the three `gh api repos/brettdavies/agentnative-skill/rulesets
-  -X POST --input <file>` invocations from `.github/rulesets/README.md`, then run the negative tests in the same doc to
-  confirm enforcement.
-- **`allow_auto_merge`.** `repo-settings.sh apply` did not flip this to `true`; likely also Pro-gated. Re-run the audit
-  after the public flip; should self-resolve.
-- **Secret scanning + push protection.** Same; require public visibility or GHAS.
+All resolved 2026-04-28 in the post-public-flip "Step 11" follow-up. See
+[Step 11 — post-public-flip execution](#step-11--post-public-flip-execution-2026-04-28) below.
+
+- ~~**Apply rulesets post-public-flip.**~~ Done.
+- ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
+- ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
+
+### Step 11 — post-public-flip execution (2026-04-28)
+
+Visibility flipped via `gh repo edit brettdavies/agentnative-skill --visibility public
+--accept-visibility-change-consequences`. All three rulesets posted from `.github/rulesets/*.json` and confirmed
+`enforcement: active`:
+
+| Ruleset ID | Name                 | Target          | Rules                                                                                                                    |
+| ---------- | -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 15669559   | Protect main         | refs/heads/main | creation, deletion, non_fast_forward, pull_request, required_signatures, required_status_checks, required_linear_history |
+| 15669560   | Protect dev          | refs/heads/dev  | deletion, non_fast_forward, required_signatures                                                                          |
+| 15669561   | Protect release tags | refs/tags/v*    | deletion, non_fast_forward, update                                                                                       |
+
+All three rulesets share `bypass_actors: [{actor_id: 5, actor_type: RepositoryRole, bypass_mode: always}]` — admin
+always-bypass, per the `.github/rulesets/README.md` "Bypass" section.
+
+#### Negative-test caveat
+
+The negative tests in `.github/rulesets/README.md` ("force-push to main must be refused", "re-tagging v0.1.0 must be
+refused") are written for a **non-admin actor**. The repo owner has `bypass_mode: always`, so a solo run of those tests
+by the owner cannot demonstrate refusal — the push succeeds via bypass. The Step 9 gate "force-push to `main` refused"
+was therefore **verified by configuration inspection** (rules array + bypass list, both fetched via
+`/repos/.../rulesets/<id>`) rather than by destructive push. Enforcement is meaningful for any non-admin actor:
+collaborators, fine-grained PATs, GitHub Apps. A future non-admin push attempt will populate
+`/repos/.../rulesets/rule-suites` with a recorded refusal.
+
+Plan addendum's negative tests should be re-read with this in mind: the tests in `.github/rulesets/README.md` remain
+correct *as written*, but only a non-admin actor can run them. Updating that README to call this out explicitly is a
+cleanup pass for a later session.
+
+#### Repo settings — drift resolved
+
+`repo-settings.sh report` post-flip showed three actionable drifts (none self-resolved on the visibility flip):
+
+| Setting                           | Before   | After   |
+| --------------------------------- | -------- | ------- |
+| `allow_auto_merge`                | false    | true    |
+| `secret_scanning`                 | disabled | enabled |
+| `secret_scanning_push_protection` | disabled | enabled |
+
+`secret_scanning_non_provider_patterns` and `secret_scanning_validity_checks` remain disabled — both require GitHub
+Advanced Security (paid). The audit script reports these as warnings rather than failures.
+
+Applied via `~/.claude/skills/github-repo-setup/scripts/repo-settings.sh apply brettdavies/agentnative-skill`. Final
+state: "Repo settings: ✓ compliant", "Security: warnings only — no actionable drift".
+
+#### Step 9 gate — final reconciliation
+
+| Gate                         | Status (post-Step-11)                                       |
+| ---------------------------- | ----------------------------------------------------------- |
+| visibility = PRIVATE         | superseded — flipped to PUBLIC 2026-04-28 per Step 11       |
+| default branch = main        | met                                                         |
+| CI on `main` succeeded       | met                                                         |
+| `gh release list` empty      | met                                                         |
+| tag object SHA matches       | met                                                         |
+| force-push to `main` refused | met by configuration inspection (admin bypass caveat above) |
+| markdownlint clean           | met                                                         |
+| shellcheck clean             | met                                                         |
+| local clone smoke test       | met                                                         |
 
 ### Inputs from this session that survived past the plan
 

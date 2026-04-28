@@ -51,7 +51,7 @@ requirements, and `bundle/references/framework-idioms-other-languages.md` for pe
 
 ```bash
 brew install brettdavies/tap/agentnative   # macOS / Linux
-cargo install agentnative                  # any platform with Rust
+cargo install agentnative
 ```
 
 Binary name: `anc`. Prebuilt releases at <https://github.com/brettdavies/agentnative-cli/releases>.
