@@ -61,7 +61,7 @@ Binary name: `anc`. Prebuilt releases at <https://github.com/brettdavies/agentna
 | Question                                        | Where                                                     |
 | ----------------------------------------------- | --------------------------------------------------------- |
 | What does P3 mean?                              | `bundle/spec/principles/p3-progressive-help-discovery.md` |
-| What spec version is this skill pinned to?      | `bundle/spec/VERSION`                                     |
+| What spec version does this bundle ship?        | `bundle/spec/VERSION`                                     |
 | How do I implement `<pattern>` in Rust/clap?    | `bundle/references/rust-clap-patterns.md`                 |
 | How do I implement `<pattern>` in Python/Go/JS? | `bundle/references/framework-idioms-other-languages.md`   |
 | File a spec question or proposal                | <https://github.com/brettdavies/agentnative>              |
