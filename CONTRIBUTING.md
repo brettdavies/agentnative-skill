@@ -63,7 +63,7 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
 ## Touching the skill content
 
 - **`spec/`** is vendored. Do not edit by hand. Substantive principle changes happen in `brettdavies/agentnative`; bring
-  them here by re-running `scripts/sync-spec.sh` at a new `SPEC_REF`.
+  them here by re-running `scripts/sync-spec.sh` after a new upstream tag lands.
 - **`SKILL.md`** is the host-discovered entry point. Changes to its `name` or `description` frontmatter affect skill
   discovery on every host — coordinate before changing.
 - **`getting-started.md`** is the agent's first read after `SKILL.md`. Keep it short and concrete; cite spec paths and

@@ -1,30 +1,29 @@
 #!/usr/bin/env bash
 # Vendor agentnative-spec into spec/.
 #
-# Extracts files at a pinned git ref via `git show <ref>:<path>` so the user's
-# spec working tree is not perturbed. The vendored tree ships as part of the
-# skill bundle so consumers carry the canonical principle text alongside the
+# Always vendors the latest v* tag found in the local spec checkout.
+# Extracts files via `git show <tag>:<path>` so the user's spec working
+# tree is not perturbed. The vendored tree ships as part of the skill
+# bundle so consumers carry the canonical principle text alongside the
 # skill metadata.
 #
 # Usage:
 #   scripts/sync-spec.sh
-#   SPEC_REF=v0.2.1 scripts/sync-spec.sh
 #   SPEC_ROOT=/path/to/agentnative-spec scripts/sync-spec.sh
 #
 # Env vars:
 #   SPEC_ROOT  Path to agentnative-spec checkout. Default: $HOME/dev/agentnative-spec
-#   SPEC_REF   Git ref (tag, branch, or SHA) to vendor. Default: v0.2.0
 #
-# Resync cadence: rerun after every new agentnative-spec tag. Stale orphan
-# files in spec/principles/ (e.g., from a spec rename) are accepted;
-# `git status` surfaces them at commit time.
+# Resync cadence: rerun after every new agentnative-spec tag. Run
+# `git -C $SPEC_ROOT fetch --tags` first to pick up the new tag locally.
+# Stale orphan files in spec/principles/ (e.g., from a spec rename) are
+# accepted; `git status` surfaces them at commit time.
 #
 # Mirror of agentnative-cli/scripts/sync-spec.sh; only DEST_DIR differs.
 
 set -euo pipefail
 
 SPEC_ROOT="${SPEC_ROOT:-$HOME/dev/agentnative-spec}"
-SPEC_REF="${SPEC_REF:-v0.2.0}"
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST_DIR="$REPO_ROOT/spec"
@@ -37,41 +36,43 @@ if [[ ! -d "$SPEC_ROOT/.git" ]]; then
     exit 1
 fi
 
-if ! git -C "$SPEC_ROOT" rev-parse --verify --quiet "$SPEC_REF^{commit}" >/dev/null; then
-    echo "error: SPEC_REF does not resolve to a commit in $SPEC_ROOT: $SPEC_REF" >&2
-    echo "       try \`git -C $SPEC_ROOT fetch --tags\` or check the ref name" >&2
+# Resolve the latest v* tag in the local spec checkout.
+spec_tag="$(git -C "$SPEC_ROOT" tag --list 'v*' --sort='-version:refname' | head -n 1)"
+if [[ -z "$spec_tag" ]]; then
+    echo "error: no v* tags found in $SPEC_ROOT" >&2
+    echo "       try \`git -C $SPEC_ROOT fetch --tags\` to pick up upstream tags" >&2
     exit 1
 fi
 
-resolved_sha="$(git -C "$SPEC_ROOT" rev-parse --short=7 "$SPEC_REF^{commit}")"
-echo "vendoring $SPEC_REF ($resolved_sha) from $SPEC_ROOT"
+resolved_sha="$(git -C "$SPEC_ROOT" rev-parse --short=7 "$spec_tag^{commit}")"
+echo "vendoring $spec_tag ($resolved_sha) from $SPEC_ROOT"
 
-# Verify the principles/ tree exists at the ref.
-if ! git -C "$SPEC_ROOT" cat-file -e "$SPEC_REF:principles" 2>/dev/null; then
-    echo "error: $SPEC_REF has no principles/ directory in $SPEC_ROOT" >&2
+# Verify the principles/ tree exists at the tag.
+if ! git -C "$SPEC_ROOT" cat-file -e "$spec_tag:principles" 2>/dev/null; then
+    echo "error: $spec_tag has no principles/ directory in $SPEC_ROOT" >&2
     exit 1
 fi
 
 mkdir -p "$DEST_PRINCIPLES"
 
 # VERSION and CHANGELOG.md are top-level in the spec repo.
-git -C "$SPEC_ROOT" show "$SPEC_REF:VERSION" >"$DEST_DIR/VERSION"
-git -C "$SPEC_ROOT" show "$SPEC_REF:CHANGELOG.md" >"$DEST_DIR/CHANGELOG.md"
+git -C "$SPEC_ROOT" show "$spec_tag:VERSION" >"$DEST_DIR/VERSION"
+git -C "$SPEC_ROOT" show "$spec_tag:CHANGELOG.md" >"$DEST_DIR/CHANGELOG.md"
 
-# Enumerate principle files at the ref and extract each one.
+# Enumerate principle files at the tag and extract each one.
 copied=0
 while IFS= read -r path; do
     case "$path" in
         principles/p*-*.md)
             dest_name="${path#principles/}"
-            git -C "$SPEC_ROOT" show "$SPEC_REF:$path" >"$DEST_PRINCIPLES/$dest_name"
+            git -C "$SPEC_ROOT" show "$spec_tag:$path" >"$DEST_PRINCIPLES/$dest_name"
             copied=$((copied + 1))
             ;;
     esac
-done < <(git -C "$SPEC_ROOT" ls-tree --name-only "$SPEC_REF" principles/)
+done < <(git -C "$SPEC_ROOT" ls-tree --name-only "$spec_tag" principles/)
 
 if [[ "$copied" -eq 0 ]]; then
-    echo "error: no principles/p*-*.md files found at $SPEC_REF" >&2
+    echo "error: no principles/p*-*.md files found at $spec_tag" >&2
     exit 1
 fi
 

@@ -1,22 +1,21 @@
 # Vendored agentnative-spec
 
 This directory is a **vendored copy** of [`brettdavies/agentnative`](https://github.com/brettdavies/agentnative) — the
-canonical specification of agent-native CLI principles. Files here are not edited by hand; they are mirrored from an
-upstream tag and ship inside the skill bundle so consumers carry the canonical principle text alongside the skill
-metadata. Each release of this bundle re-vendors against the latest spec tag.
-
-**Current snapshot:** `v0.2.0`
+canonical specification of agent-native CLI principles. Files here are not edited by hand; they are mirrored from the
+latest upstream `v*` tag and ship inside the skill bundle so consumers carry the canonical principle text alongside the
+skill metadata. Each release of this bundle re-vendors against the latest spec tag. The currently vendored version is
+recorded in [`VERSION`](./VERSION).
 
 ## Resync
 
 Run from the repo root:
 
 ```bash
-scripts/sync-spec.sh                    # default: SPEC_REF=v0.2.0
-SPEC_REF=v0.2.1 scripts/sync-spec.sh    # bump to a newer tag
+git -C $HOME/dev/agentnative-spec fetch --tags    # pick up new upstream tags first
+scripts/sync-spec.sh                              # auto-resolves the latest v* tag
 ```
 
-The script extracts files at the named git ref via `git show`, so the spec checkout's working tree is not perturbed.
+The script extracts files at the resolved tag via `git show`, so the spec checkout's working tree is not perturbed.
 Override `SPEC_ROOT` if your spec checkout is not at `$HOME/dev/agentnative-spec`.
 
 ## Layout
