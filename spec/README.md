@@ -1,23 +1,23 @@
 # Vendored agentnative-spec
 
 This directory is a **vendored copy** of [`brettdavies/agentnative`](https://github.com/brettdavies/agentnative) — the
-canonical specification of agent-native CLI principles. Files here are not edited by hand; they are mirrored from an
-upstream tag and ship inside the skill bundle so consumers carry the canonical principle text alongside the skill
-metadata. Each release of this bundle re-vendors against the latest spec tag.
-
-**Current snapshot:** `v0.2.0`
+canonical specification of agent-native CLI principles. Files here are not edited by hand; they are mirrored from the
+latest upstream `v*` tag and ship inside the skill bundle so consumers carry the canonical principle text alongside the
+skill metadata. Each release of this bundle re-vendors against the latest spec tag. The currently vendored version is
+recorded in [`VERSION`](./VERSION).
 
 ## Resync
 
 Run from the repo root:
 
 ```bash
-scripts/sync-spec.sh                    # default: SPEC_REF=v0.2.0
-SPEC_REF=v0.2.1 scripts/sync-spec.sh    # bump to a newer tag
+scripts/sync-spec.sh    # queries the remote for the latest v* tag; falls back to local on network failure
 ```
 
-The script extracts files at the named git ref via `git show`, so the spec checkout's working tree is not perturbed.
-Override `SPEC_ROOT` if your spec checkout is not at `$HOME/dev/agentnative-spec`.
+The script queries `https://github.com/brettdavies/agentnative.git` for the latest `v*` tag and shallow-clones that tag
+into a temp directory for extraction. If the remote is unreachable, it falls back to a local checkout
+(`$HOME/dev/agentnative-spec` by default; override with `SPEC_ROOT`). Override `SPEC_REMOTE_URL` to query a different
+remote. The script extracts files via `git show`, so neither source's working tree is perturbed.
 
 ## Layout
 
