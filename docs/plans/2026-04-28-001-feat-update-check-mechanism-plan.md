@@ -2,6 +2,8 @@
 title: "feat: gstack-style update-check mechanism + drop install.json SHA pin"
 type: feat
 status: active
+skill_scope_status: complete
+skill_scope_completed_date: 2026-04-29
 date: 2026-04-28
 parent: ~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-launch-inversion-20260427-144756.md
 ---

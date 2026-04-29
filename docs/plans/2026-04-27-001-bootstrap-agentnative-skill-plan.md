@@ -1,11 +1,15 @@
 ---
 title: "feat: Bootstrap agentnative-skill producer repo (Unit 1 of skill-distribution master plan)"
 type: feat
-status: complete-pending-public-flip
+status: complete
 date: 2026-04-27
 completed_date: 2026-04-27
+public_flip_completed_date: 2026-04-28
+v0_2_0_completed_date: 2026-04-29
 v0.1.0_commit: 47a76cceb8b7b1bc013c19ee18a5e38179b1dd0e
 v0.1.0_tag_object: 5e2b676369a952c80da4bf133ce5ac03d34406a5
+v0.2.0_commit: 2b10c845760becf3de8d66aafbb7b57820385d45
+v0.2.0_tag_object: 054c249c36e92d5fc08603f701c999ac9ad187b6
 master_plan: ../../../agentnative-site/docs/plans/2026-04-24-001-feat-skill-distribution-endpoint-plan.md
 related_session: ../../../agentnative-site/docs/plans/2026-04-27-001-feat-skill-distribution-site-plan.md
 origin: master plan Unit 1, executed in dedicated session
