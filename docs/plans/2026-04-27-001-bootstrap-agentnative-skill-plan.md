@@ -506,8 +506,11 @@ task from the bootstrap session remains open** — task #15.
 - [x] **v0.2.0 release** *(bootstrap session task #15 — executed 2026-04-29 PT, one day after launch-eve schedule due to
   the upstream spec PR #15 review block)*. **Step 3a complete:** `release/v0.2.0` cut from `origin/main`, cherry-picks
   landed in the order documented below, regenerated CHANGELOG via `scripts/generate-changelog.sh`, PR #12 squash-merged
-  to `main` 2026-04-29 ~16:38 PT (commit `2b10c84` on `main`). **Step 3b pending:** annotated tag `v0.2.0` + GitHub
-  Release (commands in PR #12 body's Deployment Notes). Cherry-pick scope as of 2026-04-28 (original plan):
+  to `main` 2026-04-29 ~16:38 PT (commit `2b10c84` on `main`). **Step 3b complete:** annotated tag `v0.2.0` pushed
+  (`054c249` tag-object SHA, points at squash-merge commit `2b10c84`); GitHub Release published 2026-04-29 22:16 UTC
+  with the CHANGELOG.md `## [0.2.0]` section as release notes
+  (<https://github.com/brettdavies/agentnative-skill/releases/tag/v0.2.0>). Cherry-pick scope as of 2026-04-28 (original
+  plan):
 
 | Commit    | Source PR | Why included                                                                                                                                                                                             |
 | --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -558,22 +561,22 @@ task from the bootstrap session remains open** — task #15.
   the bootstrap-side decisions above are preserved verbatim.
 
 - **In-cherry-pick spec re-vendor → real PR (#10).** The `chore(spec): re-vendor bundle/spec to v0.3.0` commit
-    originally drafted as `837ab9a` (later amended to `1640460`) was converted into PR #10 against `dev` so the v0.2.0
-    CHANGELOG could carry a curated bullet for the spec bump. Direct cherry-picks have no PR body for
-    `scripts/generate-changelog.sh` to extract from, so the in-cherry-pick path silently lost that entry. The same
-    content shipped via PR #10's squash; the only durable RELEASES.md addition was `## Spec re-vendoring` (a simpler
-    section than the originally-planned `## Coordinated cross-repo releases`, which was rewritten mid-flight to drop the
-    SHA-pin downstream framing per the update-check plan U6 scrub).
+  originally drafted as `837ab9a` (later amended to `1640460`) was converted into PR #10 against `dev` so the v0.2.0
+  CHANGELOG could carry a curated bullet for the spec bump. Direct cherry-picks have no PR body for
+  `scripts/generate-changelog.sh` to extract from, so the in-cherry-pick path silently lost that entry. The same content
+  shipped via PR #10's squash; the only durable RELEASES.md addition was `## Spec re-vendoring` (a simpler section than
+  the originally-planned `## Coordinated cross-repo releases`, which was rewritten mid-flight to drop the SHA-pin
+  downstream framing per the update-check plan U6 scrub).
 - **Two extra PRs added to launch-wave scope.** PR #11 (`chore(sync-spec): drop SHA-pin claims, modernize to
-    remote-first vendoring`) eliminated all SHA-pin model claims across `RELEASES.md`/`AGENTS.md`/`README.md`/
-    `CONTRIBUTING.md`/`spec/README.md` and rewrote `scripts/sync-spec.sh` to query the remote first with local fallback
-    (no `SPEC_REF`, no manual version bumps). PR #13 (`chore(lint): exclude CHANGELOG.md from markdownlint`) added the
-    generated CHANGELOG to `.markdownlint-cli2.yaml` ignores after the rich PR-body bullets tripped MD013 on the release
-    CI run.
+  remote-first vendoring`) eliminated all SHA-pin model claims across `RELEASES.md`/`AGENTS.md`/`README.md`/
+  `CONTRIBUTING.md`/`spec/README.md` and rewrote `scripts/sync-spec.sh` to query the remote first with local fallback
+  (no `SPEC_REF`, no manual version bumps). PR #13 (`chore(lint): exclude CHANGELOG.md from markdownlint`) added the
+  generated CHANGELOG to `.markdownlint-cli2.yaml` ignores after the rich PR-body bullets tripped MD013 on the release
+  CI run.
 - **Admin-bypass turned out unnecessary.** The launch-eve concern in §"Launch-eve trap" above was pessimistic. GitHub
-    actually evaluated `guard-main-docs.yml` from the PR's head branch (which carries the workflow via PR #2 `80099fc`
-    in the cherry-pick chain) and the `guard-docs / check-forbidden-docs` check ran and passed on PR #12. No bypass was
-    required. The bypass machinery remains in place for any future genuine chicken-and-egg.
+  actually evaluated `guard-main-docs.yml` from the PR's head branch (which carries the workflow via PR #2 `80099fc` in
+  the cherry-pick chain) and the `guard-docs / check-forbidden-docs` check ran and passed on PR #12. No bypass was
+  required. The bypass machinery remains in place for any future genuine chicken-and-egg.
 
   **Final cherry-pick chain on `release/v0.2.0` (post-execution):**
 
