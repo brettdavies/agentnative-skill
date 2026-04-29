@@ -11,12 +11,13 @@ recorded in [`VERSION`](./VERSION).
 Run from the repo root:
 
 ```bash
-git -C $HOME/dev/agentnative-spec fetch --tags    # pick up new upstream tags first
-scripts/sync-spec.sh                              # auto-resolves the latest v* tag
+scripts/sync-spec.sh    # queries the remote for the latest v* tag; falls back to local on network failure
 ```
 
-The script extracts files at the resolved tag via `git show`, so the spec checkout's working tree is not perturbed.
-Override `SPEC_ROOT` if your spec checkout is not at `$HOME/dev/agentnative-spec`.
+The script queries `https://github.com/brettdavies/agentnative.git` for the latest `v*` tag and shallow-clones that tag
+into a temp directory for extraction. If the remote is unreachable, it falls back to a local checkout
+(`$HOME/dev/agentnative-spec` by default; override with `SPEC_ROOT`). Override `SPEC_REMOTE_URL` to query a different
+remote. The script extracts files via `git show`, so neither source's working tree is perturbed.
 
 ## Layout
 

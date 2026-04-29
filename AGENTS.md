@@ -49,13 +49,13 @@ The canonical principle text lives in [`brettdavies/agentnative`](https://github
 vendors the latest released `v*` tag via `scripts/sync-spec.sh`. To resync:
 
 ```bash
-git -C $HOME/dev/agentnative-spec fetch --tags    # pick up new upstream tags
-scripts/sync-spec.sh                              # auto-resolves the latest v* tag locally
-git diff spec/                                    # review
+scripts/sync-spec.sh    # queries the remote first; falls back to $HOME/dev/agentnative-spec if offline
+git diff spec/          # review
 ```
 
 Then commit the result with a message like `chore: bump spec to agentnative-spec@<version>`. The vendored version is
-recorded in `spec/VERSION`.
+recorded in `spec/VERSION`. Override `SPEC_REMOTE_URL` to query a different remote, or `SPEC_ROOT` to point at a
+non-default local checkout.
 
 ## Branch + release model
 
