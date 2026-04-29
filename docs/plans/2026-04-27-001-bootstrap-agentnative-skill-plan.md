@@ -509,30 +509,31 @@ task from the bootstrap session remains open** — task #15.
   GitHub Releases for `v0.1.0` (back-fill) and `v0.2.0`. Per the corrected release pattern above. Cherry-pick scope as
   of 2026-04-28:
 
-| Commit    | Source PR | Why included                                                                                                                                                                           |
-| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `893e253` | #1        | rulesets JSON files (`.github/rulesets/*.json`)                                                                                                                                        |
-| `80099fc` | #2        | AGENTS.md / PR template / RELEASES.md / guard-main-docs.yml                                                                                                                            |
-| `bb5dce9` | #3        | bundle restructure + changelog generator + governance + RELEASES rewrite                                                                                                               |
-| `0647342` | #4        | `feat(bundle)!:` anc-pivot — vendor agentnative-spec, drop dup checker. **BREAKING** in `bundle/` contract; ships in `0.x` minor per RELEASES.md "Version bump procedure".             |
-| `0e04e53` | #5        | **MIXED** — Step 11 plan addendum + bundle trim. Cherry-pick must drop the `docs/plans/` hunk so the diff against `main` carries only `bundle/SKILL.md` + `bundle/getting-started.md`. |
-| `5d93913` | (direct)  | Delete `.github/rulesets/README.md`                                                                                                                                                    |
-| `18836d8` | #6        | Dual-license under MIT or Apache-2.0 — adds `LICENSE-APACHE`, renames `LICENSE` → `LICENSE-MIT`, updates README + CONTRIBUTING. Path-rename is a consumer-visible change.              |
+| Commit    | Source PR | Why included                                                                                                                                                                                             |
+| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `893e253` | #1        | rulesets JSON files (`.github/rulesets/*.json`)                                                                                                                                                          |
+| `80099fc` | #2        | AGENTS.md / PR template / RELEASES.md / guard-main-docs.yml                                                                                                                                              |
+| `bb5dce9` | #3        | bundle restructure + changelog generator + governance + RELEASES rewrite                                                                                                                                 |
+| `0647342` | #4        | `feat(bundle)!:` anc-pivot — vendor agentnative-spec, drop dup checker. **BREAKING** in `bundle/` contract; ships in `0.x` minor per RELEASES.md "Version bump procedure".                               |
+| `0e04e53` | #5        | **MIXED** — Step 11 plan addendum + bundle trim. Cherry-pick must drop the `docs/plans/` hunk so the diff against `main` carries only `bundle/SKILL.md` + `bundle/getting-started.md`.                   |
+| `5d93913` | (direct)  | Delete `.github/rulesets/README.md`                                                                                                                                                                      |
+| `18836d8` | #6        | Dual-license under MIT or Apache-2.0 — adds `LICENSE-APACHE`, renames `LICENSE` → `LICENSE-MIT`, updates README + CONTRIBUTING. Path-rename is a consumer-visible change.                                |
+| `c0101fd` | #7        | Rename install endpoint to `/skill` in three prose files (`README.md`, `RELEASES.md`, `CONTRIBUTING.md`). Cross-repo coordinated rename — site flipping `anc.dev/install` → `anc.dev/skill` in parallel. |
 
-  Excluded (would trip `guard-main-docs.yml`): `632b4d1`, `e8d46e4`, `774f969`, `81b0a8e`, `56f27a1` — all
-  `docs/plans/` only.
+  Excluded (would trip `guard-main-docs.yml`): `632b4d1`, `e8d46e4`, `774f969`, `81b0a8e`, `56f27a1`, `b19a14c`,
+  `dc76a11` — all `docs/plans/` only.
 
   **In-cherry-pick edits (land on `release/v0.2.0` directly, not on `dev` first):**
 
 - **Re-vendor `bundle/spec/` against agentnative-spec `v0.3.0`.** Run `SPEC_REF=v0.3.0 scripts/sync-spec.sh` after the
-    spec `v0.3.0` tag publishes (launch-wave step 1). Commit on `release/v0.2.0` as `chore(spec): re-vendor bundle/spec
-    to v0.3.0`. Without this, the bundle ships spec v0.2.0 (`draft` principles) while consumers pulling via `git clone`
-    from `main` would see content out-of-sync with `anc.dev`.
+  spec `v0.3.0` tag publishes (launch-wave step 1). Commit on `release/v0.2.0` as `chore(spec): re-vendor bundle/spec to
+  v0.3.0`. Without this, the bundle ships spec v0.2.0 (`draft` principles) while consumers pulling via `git clone` from
+  `main` would see content out-of-sync with `anc.dev`.
 - **Bump AGENTS.md `SPEC_REF` example** from the current `v0.2.1` illustrative value to `v0.3.0` to match what this
-    release actually vendors. ~1-line edit; same commit as re-vendor or its own `docs(skill): bump SPEC_REF example`.
+  release actually vendors. ~1-line edit; same commit as re-vendor or its own `docs(skill): bump SPEC_REF example`.
 - **Add `## Coordinated cross-repo releases` paragraph to RELEASES.md.** Brief framing (~3-5 lines) on how skill
-    releases coordinate with spec releases (re-vendor `bundle/spec/`) and how site `install.json` re-pins to each new
-    skill release commit SHA. Same commit as the re-vendor; durable framing not specific to v0.3.0 launch wave.
+  releases coordinate with spec releases (re-vendor `bundle/spec/`) and how site `install.json` re-pins to each new
+  skill release commit SHA. Same commit as the re-vendor; durable framing not specific to v0.3.0 launch wave.
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
 - [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
 
