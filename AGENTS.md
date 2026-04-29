@@ -23,7 +23,7 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
 | `references/`                                                                            | ✓                        | Implementation guidance: framework idioms (Rust + others), project structure, Rust/clap patterns.                                  |
 | `templates/`                                                                             | ✓                        | Drop-in starter files for greenfield Rust CLIs (`clap-main.rs`, `error-types.rs`, `output-format.rs`, `agents-md-template.md`).    |
 | `VERSION`                                                                                | ✓                        | Single-line current version. `bin/check-update` reads this for the upgrade comparison.                                             |
-| `scripts/sync-spec.sh`                                                                   | —                        | Vendor `agentnative-spec` into `spec/` at a pinned `SPEC_REF`. Mirror of the agentnative-cli script.                               |
+| `scripts/sync-spec.sh`                                                                   | —                        | Vendor the latest `agentnative-spec` v\* tag into `spec/`. Mirror of the agentnative-cli script.                                   |
 | `scripts/generate-changelog.sh`                                                          | —                        | Release-time CHANGELOG generator (git-cliff + PR-body extraction).                                                                 |
 | `AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `README.md`, `SECURITY.md`                | —                        | Producer-repo docs.                                                                                                                |
 | `.github/rulesets/`                                                                      | —                        | Version-controlled GitHub repository rulesets.                                                                                     |
@@ -46,15 +46,16 @@ tooling agree.
 ## Spec sync
 
 The canonical principle text lives in [`brettdavies/agentnative`](https://github.com/brettdavies/agentnative). This repo
-vendors it via `scripts/sync-spec.sh` at a pinned `SPEC_REF`. To bump:
+vendors the latest released `v*` tag via `scripts/sync-spec.sh`. To resync:
 
 ```bash
-SPEC_REF=v0.3.0 scripts/sync-spec.sh    # pulls from $HOME/dev/agentnative-spec by default
-git diff spec/                           # review
+scripts/sync-spec.sh    # queries the remote first; falls back to $HOME/dev/agentnative-spec if offline
+git diff spec/          # review
 ```
 
-Then commit the result with a message like `chore: bump spec to agentnative-spec@v0.3.0`. The current pin is recorded in
-[`spec/README.md`](./spec/README.md) and the version itself is in `spec/VERSION`.
+Then commit the result with a message like `chore: bump spec to agentnative-spec@<version>`. The vendored version is
+recorded in `spec/VERSION`. Override `SPEC_REMOTE_URL` to query a different remote, or `SPEC_ROOT` to point at a
+non-default local checkout.
 
 ## Branch + release model
 
@@ -79,7 +80,7 @@ table.
   `release/*` branch — those paths are filtered by the cherry-pick pattern. Add to `dev` instead.
 - Modify `SKILL.md`'s `name` or `description` frontmatter without coordinating with consumers — those fields drive skill
   discovery on every host.
-- Re-tag a published version. Tags are immutable historical anchors that the install endpoints pin to.
+- Re-tag a published version. Tags are immutable historical anchors for released versions.
 - Add Rust/Cargo scaffolding. There is no Rust code in this repo and there should be none — the standard is
   language-prescriptive but the skill itself is markdown + a tiny bash update-check.
 

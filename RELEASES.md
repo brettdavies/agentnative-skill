@@ -7,7 +7,7 @@ PR number in its squash commit message, which keeps the history scannable, attri
 feature branch (feat/*, fix/*, chore/*, docs/*) → PR to dev (squash merge)
                                                 → cherry-pick non-docs commits to release/<slug>
                                                 → PR release/* to main (squash merge)
-                                                → tag v* on main → GitHub Release → site re-pins to commit SHA
+                                                → tag v* on main → GitHub Release
 ```
 
 This is the canonical brettdavies release pattern with `release/*` cherry-pick branches. Plans live on `dev` forever and
@@ -101,8 +101,7 @@ When the PR merges:
      --notes "$(awk '/^## \[<X.Y.Z>\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)"
    ```
 
-5. The site at `anc.dev/skill` re-pins via its own PR (separate repo, separate session). The handoff is the new commit
-   SHA plus a note if the bundle layout changed.
+Consumers detect the new release on their next `bin/check-update` run; nothing else to do here.
 
 `dev` keeps moving forward. Never reset or rebase `dev` after a release — it is forever.
 
@@ -145,10 +144,10 @@ flow above). There is no separate version-bump PR to `dev`. Picking the version 
 - **Patch** — doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump.
 - **Minor** — new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
   minor-level spec bump that adds requirements without tightening existing tiers.
-- **Major** — breaking changes to the bundle's contract: renaming `SKILL.md` frontmatter fields, restructuring
-  directory layout in ways that break existing skill installations, moving content between `` and the
-  producer-ops root, or vendoring a major-level spec bump (renamed/removed principles or tightened MUSTs that would
-  regress existing consumers).
+- **Major** — breaking changes to the bundle's contract: renaming `SKILL.md` frontmatter fields, restructuring directory
+  layout in ways that break existing skill installations, moving content between `` and the producer-ops root, or
+  vendoring a major-level spec bump (renamed/removed principles or tightened MUSTs that would regress existing
+  consumers).
 
 The skill's version is independent of the spec it vendors. A spec bump that doesn't affect the skill's surface (e.g.,
 prose-only edits) can ship as a patch even when the spec went minor. Use the SemVer guidance above against the *skill's*
@@ -179,7 +178,7 @@ Three rulesets are committed under `.github/rulesets/` and applied to the repo v
 - **`protect-dev.json`** — required signatures, deletion blocked, non-fast-forward blocked. No PR-requirement at the
   ruleset level; the PR-only norm is enforced by convention.
 - **`protect-tags.json`** — `v*` tags: deletion, force-push (re-tag), and updates all blocked. Tags are immutable
-  historical anchors that the site's `install.json` pins to.
+  historical anchors for released versions.
 
 ### Apply (post-public-flip)
 

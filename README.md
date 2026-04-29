@@ -19,12 +19,12 @@ agentnative-skill/
 ├── getting-started.md      three working loops; canonical anc invocations
 ├── bin/
 │   └── check-update        consumer-side update-check script (gstack-style)
-├── spec/                   vendored from agentnative-spec at a pinned ref (do not edit)
+├── spec/                   vendored from agentnative-spec (do not edit)
 ├── references/             implementation guidance: framework idioms, project structure, Rust/clap patterns
 ├── templates/              drop-in starter files (clap-main, error-types, output-format, agents-md-template)
 ├── VERSION                 single-line current version (read by bin/check-update)
 ├── scripts/
-│   ├── sync-spec.sh        vendor agentnative-spec into spec/ at a pinned ref
+│   ├── sync-spec.sh        vendor the latest agentnative-spec v* tag into spec/
 │   └── generate-changelog.sh  release-time CHANGELOG generator (git-cliff + PR-body extraction)
 ├── docs/plans/             engineering plans (dev-only — guarded out of main)
 ├── .github/                workflows, rulesets, issue templates, PR template
@@ -60,8 +60,8 @@ prompted by `bin/check-update`.
 - [`bin/check-update`](./bin/check-update) — periodic version check. Compares local `VERSION` to GitHub `main`, emits
   `UPGRADE_AVAILABLE` so the agent can offer to `git pull`.
 - [`spec/`](./spec/) — vendored canonical principle text from
-  [`agentnative-spec`](https://github.com/brettdavies/agentnative). See [`spec/README.md`](./spec/README.md) for the pin
-  and resync procedure. **Do not edit by hand.**
+  [`agentnative-spec`](https://github.com/brettdavies/agentnative). See [`spec/README.md`](./spec/README.md) for the
+  resync procedure. **Do not edit by hand.**
 - [`references/`](./references/) — implementation guidance: framework idioms (Rust + others), project structure,
   Rust/clap patterns. Used when remediating `anc` findings.
 - [`templates/`](./templates/) — drop-in starting points for greenfield Rust CLIs (`clap-main.rs`, `error-types.rs`,
