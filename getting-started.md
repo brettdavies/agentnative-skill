@@ -3,7 +3,7 @@
 This skill teaches agents how to design, build, or audit a CLI for use by other agents. The work is one of three loops;
 pick the one that matches your starting point. The canonical checker is
 [`anc`](https://github.com/brettdavies/agentnative-cli); the canonical principle text is in
-[`bundle/spec/principles/`](./spec/principles/).
+[`spec/principles/`](./spec/principles/).
 
 ## You have an existing CLI
 
@@ -12,12 +12,12 @@ pick the one that matches your starting point. The canonical checker is
 anc check --output json . > scorecard.json
 
 # 2. For each FAIL, look up the cited requirement_id (e.g. `p1-must-no-interactive`)
-#    in bundle/spec/principles/p<N>-*.md — frontmatter `requirements[]`.
+#    in spec/principles/p<N>-*.md — frontmatter `requirements[]`.
 
 # 3. Apply the fix. Patterns live in:
-#      bundle/references/rust-clap-patterns.md                (Rust/clap)
-#      bundle/references/framework-idioms.md                  (Rust idioms)
-#      bundle/references/framework-idioms-other-languages.md  (Click, argparse, Cobra, Commander, yargs, oclif, Thor)
+#      references/rust-clap-patterns.md                (Rust/clap)
+#      references/framework-idioms.md                  (Rust idioms)
+#      references/framework-idioms-other-languages.md  (Click, argparse, Cobra, Commander, yargs, oclif, Thor)
 #    Re-run `anc check` until the scorecard is clean.
 ```
 
@@ -30,13 +30,13 @@ apply (e.g. `human-tui` for tools that legitimately intercept the TTY), `--binar
 cargo init my-tool && cd my-tool
 
 # Starter files. Encode P1–P7 by construction.
-cp <skill-root>/bundle/templates/clap-main.rs          src/main.rs
-cp <skill-root>/bundle/templates/error-types.rs        src/error.rs
-cp <skill-root>/bundle/templates/output-format.rs      src/output.rs
-cp <skill-root>/bundle/templates/agents-md-template.md AGENTS.md   # fill placeholders
+cp <skill-root>/templates/clap-main.rs          src/main.rs
+cp <skill-root>/templates/error-types.rs        src/error.rs
+cp <skill-root>/templates/output-format.rs      src/output.rs
+cp <skill-root>/templates/agents-md-template.md AGENTS.md   # fill placeholders
 
 # Add to Cargo.toml: clap (derive, env), serde, serde_json, thiserror,
-# libc (SIGPIPE), clap_complete. See bundle/references/project-structure.md.
+# libc (SIGPIPE), clap_complete. See references/project-structure.md.
 
 anc check --output json    # run continuously as you build
 ```
@@ -44,8 +44,8 @@ anc check --output json    # run continuously as you build
 ## You're building in another language
 
 `anc`'s source-analysis layer is Rust-only; its behavioral layer (`anc check --command <name>`) runs against any
-compiled binary on `PATH`. Read `bundle/spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic
-requirements, and `bundle/references/framework-idioms-other-languages.md` for per-framework idioms.
+compiled binary on `PATH`. Read `spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic
+requirements, and `references/framework-idioms-other-languages.md` for per-framework idioms.
 
 ## Installing anc
 
@@ -60,10 +60,10 @@ Binary name: `anc`. Prebuilt releases at <https://github.com/brettdavies/agentna
 
 | Question                                        | Where                                                     |
 | ----------------------------------------------- | --------------------------------------------------------- |
-| What does P3 mean?                              | `bundle/spec/principles/p3-progressive-help-discovery.md` |
-| What spec version does this bundle ship?        | `bundle/spec/VERSION`                                     |
-| How do I implement `<pattern>` in Rust/clap?    | `bundle/references/rust-clap-patterns.md`                 |
-| How do I implement `<pattern>` in Python/Go/JS? | `bundle/references/framework-idioms-other-languages.md`   |
+| What does P3 mean?                              | `spec/principles/p3-progressive-help-discovery.md` |
+| What spec version does this bundle ship?        | `spec/VERSION`                                     |
+| How do I implement `<pattern>` in Rust/clap?    | `references/rust-clap-patterns.md`                 |
+| How do I implement `<pattern>` in Python/Go/JS? | `references/framework-idioms-other-languages.md`   |
 | File a spec question or proposal                | <https://github.com/brettdavies/agentnative>              |
 | File an `anc` bug                               | <https://github.com/brettdavies/agentnative-cli>          |
 | File a skill-bundle issue                       | <https://github.com/brettdavies/agentnative-skill>        |

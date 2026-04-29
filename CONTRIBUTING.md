@@ -1,14 +1,14 @@
 # Contributing to `agentnative-skill`
 
-Thanks for your interest. This repo is the agent-facing skill bundle that pairs with two siblings:
+Thanks for your interest. This repo is the agent-facing skill that pairs with two siblings:
 
 - [`agentnative`](https://github.com/brettdavies/agentnative) (the spec) — canonical principle text. Vendored here at
-  `bundle/spec/`.
+  `spec/`.
 - [`agentnative-cli`](https://github.com/brettdavies/agentnative-cli) (`anc`) — the canonical compliance checker.
 
-This skill bundle does **not** define principles (the spec does) and does **not** check compliance (`anc` does). It
-teaches agents how to use them and supplies surrounding context (idioms, templates, getting-started). Route
-contributions accordingly.
+This skill does **not** define principles (the spec does) and does **not** check compliance (`anc` does). It teaches
+agents how to use them and supplies surrounding context (idioms, templates, getting-started). Route contributions
+accordingly.
 
 ## Where to file what
 
@@ -16,7 +16,7 @@ contributions accordingly.
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Propose a new principle, change MUST/SHOULD/MAY tiers, etc.     | [`brettdavies/agentnative`](https://github.com/brettdavies/agentnative) (the spec)  |
 | Report an `anc check` bug, or propose a new checker feature     | [`brettdavies/agentnative-cli`](https://github.com/brettdavies/agentnative-cli)     |
-| Improve a starter template, add a language idiom, fix the guide | This repo — issue + PR. Templates: **Bug report** or **Principle proposal**.        |
+| Improve a starter template, add a language idiom, fix the guide | This repo — issue + PR. Templates: **Bug report** or **Bundle proposal**.           |
 | Bump the vendored spec to a newer tag                           | This repo — run `scripts/sync-spec.sh` and PR the diff.                             |
 | Operate as an agent in this repo                                | Read [`AGENTS.md`](./AGENTS.md) first (lint commands, hard rules, common pitfalls). |
 
@@ -45,34 +45,34 @@ procedure in [`RELEASES.md`](./RELEASES.md).
 
   ```bash
   markdownlint-cli2 '**/*.md' '!node_modules/**'
-  shellcheck --severity=style scripts/*.sh
+  shellcheck --severity=style scripts/*.sh bin/*
   actionlint .github/workflows/*.yml
   ```
 
-## Bundle vs producer-ops boundary
+## Repo layout
 
-The repository is split into:
+The repo ships to consumers as a flat `git clone`. After install, the host (Claude Code, Codex, Cursor, OpenCode)
+auto-discovers `SKILL.md` at the install root and ignores everything else. Producer-side files (`scripts/`, `docs/`,
+`.github/`, `cliff.toml`, `AGENTS.md`, `CONTRIBUTING.md`, `RELEASES.md`) clone alongside but are inert at runtime.
 
-- **`bundle/`** — what consumers install via `anc.dev/skill`. `SKILL.md`, `getting-started.md`, vendored `spec/`,
-  `references/`, `templates/`.
-- **Everything else** — producer-side ops: governance (`AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `SECURITY.md`),
-  release tooling (`scripts/`, `cliff.toml`), CI (`.github/workflows/`), rulesets (`.github/rulesets/`), engineering
-  plans (`docs/plans/`).
+**Read at runtime by the host:** `SKILL.md`, `getting-started.md`, `bin/check-update`, `spec/`, `references/`,
+`templates/`, `VERSION`.
 
-Do not move producer-ops files into `bundle/`. Do not move bundle content out of `bundle/`. The split is what keeps
-consumer skill directories clean.
+**Producer-side, inert at runtime:** `scripts/`, `docs/plans/`, `.github/`, `cliff.toml`, the producer-docs above.
 
-## Touching the bundle
+## Touching the skill content
 
-- **`bundle/spec/`** is vendored. Do not edit by hand. Substantive principle changes happen in
-  `brettdavies/agentnative`; bring them here by re-running `scripts/sync-spec.sh` at a new `SPEC_REF`.
-- **`bundle/SKILL.md`** is the host-discovered entry point. Changes to its `name` or `description` frontmatter affect
-  skill discovery on every host — coordinate before changing.
-- **`bundle/getting-started.md`** is the agent's first read after `SKILL.md`. Keep it short and concrete; cite spec
-  paths and `anc` invocations rather than restating the principles.
-- **`bundle/references/`** holds implementation guidance (Rust/clap patterns, framework idioms, project structure). When
-  `anc --fix` lands upstream, these may shrink — they exist today because the agent has to apply remediations by hand.
-- **`bundle/templates/`** are starter files. They encode principles by construction. Changes here should be informed by
+- **`spec/`** is vendored. Do not edit by hand. Substantive principle changes happen in `brettdavies/agentnative`; bring
+  them here by re-running `scripts/sync-spec.sh` at a new `SPEC_REF`.
+- **`SKILL.md`** is the host-discovered entry point. Changes to its `name` or `description` frontmatter affect skill
+  discovery on every host — coordinate before changing.
+- **`getting-started.md`** is the agent's first read after `SKILL.md`. Keep it short and concrete; cite spec paths and
+  `anc` invocations rather than restating the principles.
+- **`bin/check-update`** is the consumer-side update-check script. It compares local `VERSION` to GitHub `main` and
+  emits `UPGRADE_AVAILABLE` for the SKILL.md preamble. Treat as load-bearing — agents rely on it to detect staleness.
+- **`references/`** holds implementation guidance (Rust/clap patterns, framework idioms, project structure). When `anc
+  --fix` lands upstream, these may shrink — they exist today because the agent has to apply remediations by hand.
+- **`templates/`** are starter files. They encode principles by construction. Changes here should be informed by
   `agentnative-cli`'s reference patterns to avoid drift; the cross-repo alignment story is documented in the spec repo's
   `AGENTS.md`.
 
@@ -91,5 +91,7 @@ By contributing, you agree your contributions are dual-licensed under the same t
 at the consumer's option. No CLA. The Apache-2.0 side carries the standard contributor patent grant under §3 of the
 license.
 
-Vendored content under `bundle/spec/` is CC BY 4.0 (upstream); contributions to that directory should happen upstream in
+Vendored content under `spec/` is CC BY 4.0 (upstream); contributions to that directory should happen upstream in
 [`agentnative-spec`](https://github.com/brettdavies/agentnative).
+</content>
+</invoke>

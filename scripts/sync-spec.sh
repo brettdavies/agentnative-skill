@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Vendor agentnative-spec into bundle/spec/.
+# Vendor agentnative-spec into spec/.
 #
 # Extracts files at a pinned git ref via `git show <ref>:<path>` so the user's
 # spec working tree is not perturbed. The vendored tree ships as part of the
@@ -16,7 +16,7 @@
 #   SPEC_REF   Git ref (tag, branch, or SHA) to vendor. Default: v0.2.0
 #
 # Resync cadence: rerun after every new agentnative-spec tag. Stale orphan
-# files in bundle/spec/principles/ (e.g., from a spec rename) are accepted;
+# files in spec/principles/ (e.g., from a spec rename) are accepted;
 # `git status` surfaces them at commit time.
 #
 # Mirror of agentnative-cli/scripts/sync-spec.sh; only DEST_DIR differs.
@@ -27,7 +27,7 @@ SPEC_ROOT="${SPEC_ROOT:-$HOME/dev/agentnative-spec}"
 SPEC_REF="${SPEC_REF:-v0.2.0}"
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DEST_DIR="$REPO_ROOT/bundle/spec"
+DEST_DIR="$REPO_ROOT/spec"
 DEST_PRINCIPLES="$DEST_DIR/principles"
 
 if [[ ! -d "$SPEC_ROOT/.git" ]]; then

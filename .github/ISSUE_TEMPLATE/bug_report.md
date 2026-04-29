@@ -34,8 +34,8 @@ Before filing:
 
 ## Environment
 
-- Bundle version (`cat bundle/VERSION` if cloned, or the tag you installed): vX.Y.Z
-- Pinned spec version (`cat bundle/spec/VERSION`): vX.Y.Z
+- Bundle version (`cat VERSION` if cloned, or the tag you installed): vX.Y.Z
+- Pinned spec version (`cat spec/VERSION`): vX.Y.Z
 - Host (Claude Code / Cursor / Codex / other):
 - `anc --version` (if a workflow involving anc is at issue):
 - OS and shell:
