@@ -534,6 +534,23 @@ task from the bootstrap session remains open** — task #15.
 - **Add `## Coordinated cross-repo releases` paragraph to RELEASES.md.** Brief framing (~3-5 lines) on how skill
   releases coordinate with spec releases (re-vendor `bundle/spec/`) and how site `install.json` re-pins to each new
   skill release commit SHA. Same commit as the re-vendor; durable framing not specific to v0.3.0 launch wave.
+
+  **Launch-eve trap — admin-bypass on the first release PR.** The `protect-main` ruleset requires three status
+  checks: `markdownlint`, `shellcheck`, and `guard-docs / check-forbidden-docs`. The third comes from
+  `guard-main-docs.yml`, which currently exists only on `dev` (it landed via PR #2 = `80099fc`, never reached `main`).
+  GitHub evaluates `pull_request` workflows from the BASE branch (`main`); for the FIRST release PR (`release/v0.2.0`
+  → `main`), the guard-docs check cannot run because its workflow file isn't on `main` yet. The required check sits
+  unfulfilled forever. The release-PR cherry-pick INCLUDES `guard-main-docs.yml` (via the `80099fc` row above), so
+  once it merges, all subsequent main-targeting PRs work normally — this is a one-time chicken-and-egg.
+
+  **Resolution (chosen 2026-04-28):** admin-bypass the first release PR. The existing `bypass_actors` on
+  `protect-main` (`actor_type: RepositoryRole, actor_id: 5, bypass_mode: always`) allows the merge despite the
+  missing required check. Bypass is logged at the remote (same mechanism used during the PR #5 redo on `protect-dev`
+  earlier this session). One-off; no follow-up bypass expected for v0.3.0+ releases.
+
+  Rejected alternatives: (a) pre-edit the ruleset to drop the guard-docs check then restore — adds two ruleset edits
+  and a launch-eve restore step that's easy to forget; (b) pre-land `guard-main-docs.yml` to `main` via a chore PR —
+  hits the same chicken-and-egg, just earlier.
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
 - [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
 
