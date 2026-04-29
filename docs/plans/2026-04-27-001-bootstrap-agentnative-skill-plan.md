@@ -602,6 +602,23 @@ task from the bootstrap session remains open** — task #15.
   from the cherry-pick range, since the substantive `bundle/SKILL.md` + `bundle/getting-started.md` edits in #5
   were superseded by PR #9's flatten before launch.
 
+  **End-to-end smoke (2026-04-29 post-3b) — v0.2.0 install + upgrade-detection verified live:**
+
+  Cleanroom clone from `main` into `/tmp/agentnative-skill-smoketest` via
+  `git clone --depth 1 https://github.com/brettdavies/agentnative-skill.git`. Three checks against the real
+  `raw.githubusercontent.com/brettdavies/agentnative-skill/main/VERSION`:
+
+  | # | Setup                                              | Expected                              | Got                                                        |
+  | - | -------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
+  | 1 | Flat install layout                                | `SKILL.md` at install root            | ✅ 18 entries at root incl. `SKILL.md`, `bin/check-update` |
+  | 2 | `VERSION=0.1.0`, fresh cache                       | `UPGRADE_AVAILABLE 0.1.0 0.2.0`       | ✅ exact match                                             |
+  | 3 | `VERSION=0.2.0`, fresh cache (UP_TO_DATE silent)   | empty stdout, exit 0, cache written   | ✅ silent, exit 0, `last-update-check` written             |
+  | 4 | `VERSION=0.2.0`, warm cache (TTL fast path)        | empty stdout, no curl, exit 0         | ✅ silent, exit 0, no second cache write                   |
+
+  Settles the load-bearing claims from PR #9 (flat layout) and PR #8 (consumer-side update-check) end-to-end
+  against published artifacts. Skill side of the launch wave is verifiably launch-ready; remaining wave items
+  are all site-side / manual.
+
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
 - [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
 
