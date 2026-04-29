@@ -27,15 +27,15 @@ Route check before filing:
 ## Proposal
 
 <!-- One paragraph: what should the bundle do that it does not do today? Frame as a concrete change to one or more
-     of: bundle/SKILL.md, bundle/getting-started.md, bundle/references/<file>, bundle/templates/<file>. -->
+     of: SKILL.md, getting-started.md, references/<file>, templates/<file>. -->
 
 ## Type of change
 
-- [ ] New starter template under `bundle/templates/`
-- [ ] New reference doc under `bundle/references/`
-- [ ] Update to `bundle/SKILL.md` (entry-point structure or routing)
-- [ ] Update to `bundle/getting-started.md` (new flow, new invocation)
-- [ ] Idioms for a new language/framework in `bundle/references/framework-idioms-other-languages.md`
+- [ ] New starter template under `templates/`
+- [ ] New reference doc under `references/`
+- [ ] Update to `SKILL.md` (entry-point structure or routing)
+- [ ] Update to `getting-started.md` (new flow, new invocation)
+- [ ] Idioms for a new language/framework in `references/framework-idioms-other-languages.md`
 - [ ] Other (describe)
 
 ## Prior art
@@ -50,7 +50,7 @@ Route check before filing:
      ideal; an outline is acceptable for early-stage proposals. -->
 
 ```diff
-<!-- bundle/<file> -->
+<!-- <file> -->
 ```
 
 ## Compatibility

@@ -137,8 +137,8 @@ flow above). There is no separate version-bump PR to `dev`. Picking the version 
 - **Patch** — doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump.
 - **Minor** — new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
   minor-level spec bump that adds requirements without tightening existing tiers.
-- **Major** — breaking changes to the bundle's contract: renaming `bundle/SKILL.md` frontmatter fields, restructuring
-  directory layout in ways that break existing skill installations, moving content between `bundle/` and the
+- **Major** — breaking changes to the bundle's contract: renaming `SKILL.md` frontmatter fields, restructuring
+  directory layout in ways that break existing skill installations, moving content between `` and the
   producer-ops root, or vendoring a major-level spec bump (renamed/removed principles or tightened MUSTs that would
   regress existing consumers).
 
