@@ -129,6 +129,14 @@ Branching from `dev` and then `gio trash`-ing the guarded paths seems simpler bu
 whenever `dev` and `main` have diverged. The file appears as "added" on both sides with different content. Always branch
 from `origin/main` and cherry-pick onto it.
 
+## Spec re-vendoring
+
+The bundle vendors a snapshot of [`agentnative-spec`](https://github.com/brettdavies/agentnative) under `spec/`. When
+the spec ships a new tag (e.g., `v0.3.0`), this skill re-vendors via `scripts/sync-spec.sh` on the `release/v<X.Y.Z>`
+branch — same commit as the version bump, message `chore(spec): re-vendor spec to <version>`. The script auto-resolves
+the latest upstream tag from the remote, so no manual version selection is needed. Without re-vendoring, the bundle
+ships stale spec content while consumers see the new version on `anc.dev`.
+
 ## Version bump procedure
 
 The version bump and CHANGELOG generation both happen on the `release/v<X.Y.Z>` branch (steps 5–6 of the cherry-pick
