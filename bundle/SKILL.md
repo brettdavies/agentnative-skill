@@ -16,12 +16,49 @@ The standard for CLI tools designed to be operated by AI agents. Three artifacts
 
 | Artifact                                                         | Role                                                                                                                                                                               |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`agentnative-spec`](https://github.com/brettdavies/agentnative) | Canonical text of the seven principles. Frontmatter `requirements[]` is the machine-readable contract. Vendored into [`bundle/spec/`](./spec/) at a pinned ref.                    |
+| [`agentnative-spec`](https://github.com/brettdavies/agentnative) | Canonical text of the seven principles. Frontmatter `requirements[]` is the machine-readable contract. Vendored into [`bundle/spec/`](./spec/) — snapshot refreshed each release.  |
 | [`anc`](https://github.com/brettdavies/agentnative-cli)          | The compliance checker. Reads target source/binary, emits a JSON scorecard whose entries cite spec `requirement_id`s. The runtime authority.                                       |
 | **This skill** (`agent-native-cli`)                              | The agent-facing guide. Tells the agent how to invoke `anc`, how to navigate the spec when remediating findings, and where the implementation patterns and starter templates live. |
 
 The skill does **not** implement principles checking. `anc` does. The skill teaches agents to use `anc` and supplies the
 surrounding context (spec, idioms, templates) that `anc`'s findings reference.
+
+## Update check
+
+On first invocation per session, run `bundle/bin/check-update`. It compares this bundle's `VERSION` against `main` on
+GitHub and prints one of:
+
+| Output                               | Meaning                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| (empty)                              | Up to date, snoozed, disabled, or check skipped (broken install, no network).   |
+| `UPGRADE_AVAILABLE <local> <remote>` | A newer release is on `main`. Surface the upgrade flow below before continuing. |
+
+```bash
+bash "$(dirname "$0")/bin/check-update"
+```
+
+Exit code is always 0; failures degrade silently.
+
+### Inline upgrade flow
+
+When stdout is `UPGRADE_AVAILABLE <local> <remote>`, ask the user via `AskUserQuestion`:
+
+> `agent-native-cli` **v{remote}** is available (you're on v{local}). Upgrade now?
+
+Three options:
+
+- **"Yes, upgrade now"** — run `git -C <bundle-parent-dir> pull --ff-only`. Report the new HEAD and the upgrade outcome.
+  The bundle root is the parent of `bundle/`; `git -C ../.. pull --ff-only` from `bundle/bin/` works for the default
+  install layout (`~/<host>/skills/agent-native-cli/`). If `--ff-only` rejects (uncommitted edits or divergent history),
+  surface git's error verbatim and stop — do not auto-stash.
+- **"Not now"** — write `$HOME/.cache/agent-native-cli/update-snoozed` in the format `<remote> <level> <epoch>`, where
+  `<level>` is `1` (24h reminder), `2` (48h), or `3` (7 days), escalating each time the user defers. Tell the user the
+  next reminder window.
+- **"Never ask again"** — `touch $HOME/.cache/agent-native-cli/disabled` and tell the user how to re-enable (`rm
+  $HOME/.cache/agent-native-cli/disabled`).
+
+State directory: `$HOME/.cache/agent-native-cli/`. All three files (`last-update-check`, `update-snoozed`, `disabled`)
+live there; the script auto-creates the directory on first slow-path fetch.
 
 ## Start here
 
@@ -30,9 +67,9 @@ language), the canonical `anc check` invocations, and a "where things live" map.
 
 ## The seven principles
 
-Defined in [`bundle/spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` @ `v0.2.0` — see
-[`bundle/spec/README.md`](./spec/README.md) for the pin and resync instructions). One file per principle, each with
-machine-readable `requirements[]` frontmatter:
+Defined in [`bundle/spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` — currently `v0.2.0`; see
+[`bundle/spec/README.md`](./spec/README.md) for resync instructions). One file per principle, each with machine-readable
+`requirements[]` frontmatter:
 
 | #   | File                                                                                                                 | Subject                           |
 | --- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
