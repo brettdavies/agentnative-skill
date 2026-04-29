@@ -93,6 +93,12 @@ if [ -z "$LOCAL" ]; then
   exit 0
 fi
 
+# Validate local: same shape we expect from remote. A malformed VERSION
+# (corrupt install, shell-injection attempt) should fail closed silently.
+if ! echo "$LOCAL" | grep -qE '^[0-9]+\.[0-9.]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+  exit 0
+fi
+
 # ─── Step 3: Check cache freshness ────────────────────────────
 # UP_TO_DATE: 60min TTL (detect new releases promptly)
 # UPGRADE_AVAILABLE: 720min TTL (keep nagging on a workday cadence)
@@ -129,24 +135,32 @@ if [ -f "$CACHE_FILE" ]; then
 fi
 
 # ─── Step 4: Slow path — fetch remote version ─────────────────
-mkdir -p "$STATE_DIR"
+# Graceful: read-only $STATE_DIR or other write failure → silent exit 0.
+mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
 
-REMOTE="$(curl -sf --max-time 5 "$REMOTE_URL" 2>/dev/null || true)"
-REMOTE="$(echo "$REMOTE" | tr -d '[:space:]')"
+# Distinguish curl failure (don't cache; retry next invocation) from
+# curl success with garbage response (cache as UP_TO_DATE to suppress
+# retry storms when upstream is misconfigured).
+CURL_RC=0
+REMOTE_RAW="$(curl -sf --max-time 5 "$REMOTE_URL" 2>/dev/null)" || CURL_RC=$?
+if [ "$CURL_RC" -ne 0 ]; then
+  exit 0
+fi
+REMOTE="$(echo "$REMOTE_RAW" | tr -d '[:space:]')"
 
 # Validate: must look like a SemVer (allow pre-release / build metadata).
 # Reject HTML error pages, garbage responses, etc.
 if ! echo "$REMOTE" | grep -qE '^[0-9]+\.[0-9.]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
+  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE" 2>/dev/null || true
   exit 0
 fi
 
 if [ "$LOCAL" = "$REMOTE" ]; then
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
+  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE" 2>/dev/null || true
   exit 0
 fi
 
-echo "UPGRADE_AVAILABLE $LOCAL $REMOTE" > "$CACHE_FILE"
+echo "UPGRADE_AVAILABLE $LOCAL $REMOTE" > "$CACHE_FILE" 2>/dev/null || true
 if check_snooze "$REMOTE"; then
   exit 0
 fi
