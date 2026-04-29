@@ -101,7 +101,7 @@ When the PR merges:
      --notes "$(awk '/^## \[<X.Y.Z>\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)"
    ```
 
-5. The site at `anc.dev/install` re-pins via its own PR (separate repo, separate session). The handoff is the new commit
+5. The site at `anc.dev/skill` re-pins via its own PR (separate repo, separate session). The handoff is the new commit
    SHA plus a note if the bundle layout changed.
 
 `dev` keeps moving forward. Never reset or rebase `dev` after a release — it is forever.
