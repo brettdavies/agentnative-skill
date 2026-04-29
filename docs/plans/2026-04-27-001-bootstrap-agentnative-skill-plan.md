@@ -503,11 +503,11 @@ task from the bootstrap session remains open** — task #15.
 > step 2 (CLI) and the bundle re-vendor here both pin to spec v0.3.0. Slip → push launch 24h. Skill is in the launch
 > wave, not optional.
 
-- [ ] **v0.2.0 release** *(bootstrap session task #15 — scheduled for launch eve, Tue 2026-04-28 PT)*. Cut
-  `release/v0.2.0` from `origin/main`, cherry-pick the non-docs commits since `v0.1.0`, bump `VERSION` to `0.2.0`,
-  regenerate CHANGELOG via `scripts/generate-changelog.sh`, PR to `main`, squash-merge, tag `v0.2.0` on `main`, create
-  GitHub Releases for `v0.1.0` (back-fill) and `v0.2.0`. Per the corrected release pattern above. Cherry-pick scope as
-  of 2026-04-28:
+- [x] **v0.2.0 release** *(bootstrap session task #15 — executed 2026-04-29 PT, one day after launch-eve schedule due to
+  the upstream spec PR #15 review block)*. **Step 3a complete:** `release/v0.2.0` cut from `origin/main`, cherry-picks
+  landed in the order documented below, regenerated CHANGELOG via `scripts/generate-changelog.sh`, PR #12 squash-merged
+  to `main` 2026-04-29 ~16:38 PT (commit `2b10c84` on `main`). **Step 3b pending:** annotated tag `v0.2.0` + GitHub
+  Release (commands in PR #12 body's Deployment Notes). Cherry-pick scope as of 2026-04-28 (original plan):
 
 | Commit    | Source PR | Why included                                                                                                                                                                                             |
 | --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -551,6 +551,54 @@ task from the bootstrap session remains open** — task #15.
   Rejected alternatives: (a) pre-edit the ruleset to drop the guard-docs check then restore — adds two ruleset edits
   and a launch-eve restore step that's easy to forget; (b) pre-land `guard-main-docs.yml` to `main` via a chore PR —
   hits the same chicken-and-egg, just earlier.
+
+  **Executed scope (2026-04-29) — what actually shipped:**
+
+  The 2026-04-28 plan diverged on three axes during launch-eve execution. Captured here for the historical record;
+  the bootstrap-side decisions above are preserved verbatim.
+
+- **In-cherry-pick spec re-vendor → real PR (#10).** The `chore(spec): re-vendor bundle/spec to v0.3.0` commit
+    originally drafted as `837ab9a` (later amended to `1640460`) was converted into PR #10 against `dev` so the v0.2.0
+    CHANGELOG could carry a curated bullet for the spec bump. Direct cherry-picks have no PR body for
+    `scripts/generate-changelog.sh` to extract from, so the in-cherry-pick path silently lost that entry. The same
+    content shipped via PR #10's squash; the only durable RELEASES.md addition was `## Spec re-vendoring` (a simpler
+    section than the originally-planned `## Coordinated cross-repo releases`, which was rewritten mid-flight to drop the
+    SHA-pin downstream framing per the update-check plan U6 scrub).
+- **Two extra PRs added to launch-wave scope.** PR #11 (`chore(sync-spec): drop SHA-pin claims, modernize to
+    remote-first vendoring`) eliminated all SHA-pin model claims across `RELEASES.md`/`AGENTS.md`/`README.md`/
+    `CONTRIBUTING.md`/`spec/README.md` and rewrote `scripts/sync-spec.sh` to query the remote first with local fallback
+    (no `SPEC_REF`, no manual version bumps). PR #13 (`chore(lint): exclude CHANGELOG.md from markdownlint`) added the
+    generated CHANGELOG to `.markdownlint-cli2.yaml` ignores after the rich PR-body bullets tripped MD013 on the release
+    CI run.
+- **Admin-bypass turned out unnecessary.** The launch-eve concern in §"Launch-eve trap" above was pessimistic. GitHub
+    actually evaluated `guard-main-docs.yml` from the PR's head branch (which carries the workflow via PR #2 `80099fc`
+    in the cherry-pick chain) and the `guard-docs / check-forbidden-docs` check ran and passed on PR #12. No bypass was
+    required. The bypass machinery remains in place for any future genuine chicken-and-egg.
+
+  **Final cherry-pick chain on `release/v0.2.0` (post-execution):**
+
+| Commit    | Source         | Why included                                                                        |
+| --------- | -------------- | ----------------------------------------------------------------------------------- |
+| `893e253` | #1             | rulesets JSON files                                                                 |
+| `80099fc` | #2             | AGENTS.md / PR template / RELEASES.md / guard-main-docs.yml                         |
+| `bb5dce9` | #3             | bundle restructure + changelog generator + governance + RELEASES rewrite            |
+| `0647342` | #4             | `feat(bundle)!:` anc-pivot — vendor agentnative-spec, drop dup checker              |
+| `9f6e276` | (direct)       | Delete `.github/rulesets/README.md`                                                 |
+| `23e1a76` | (direct)       | Trim trailing platform comment on `cargo install` line                              |
+| `18836d8` | #6             | Dual-license under MIT or Apache-2.0                                                |
+| `c0101fd` | #7             | Rename install endpoint to `/skill`                                                 |
+| `8be19e6` | #8             | feat(bundle): consumer-side update-check mechanism (U1+U2 of the update-check plan) |
+| `34b1da3` | #9             | refactor!: flatten `bundle/*` to repo root for plain `git-clone` install            |
+| `4461806` | #10            | chore(spec): re-vendor `spec/` to v0.3.0 + RELEASES `## Spec re-vendoring` section  |
+| `fb50d18` | #11            | chore(sync-spec): drop SHA-pin claims, modernize to remote-first vendoring          |
+| `e67523e` | #13            | chore(lint): exclude `CHANGELOG.md` from markdownlint                               |
+| `d66d5bd` | (release prep) | chore(release): v0.2.0 — VERSION bump + regenerated CHANGELOG                       |
+
+  PR #5 (docs-only public-flip follow-up `0e04e53`) stayed on `dev` per the docs-cherry-pick rule. The original
+  table above listed it under "MIXED" with a hunk-drop instruction; in the executed flow it was simply omitted
+  from the cherry-pick range, since the substantive `bundle/SKILL.md` + `bundle/getting-started.md` edits in #5
+  were superseded by PR #9's flatten before launch.
+
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
 - [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
 
