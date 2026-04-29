@@ -325,6 +325,20 @@ Test expectation: manual smoke testing per Verification below. Formal `bats` tes
 - `shellcheck bundle/bin/check-update` clean (or only narrow disables documented inline).
 - `bash -n bundle/bin/check-update` (syntax check) passes.
 
+**Production smoke (post-v0.2.0 launch, 2026-04-29 ~17:25 PT):** end-to-end verification against the real
+`raw.githubusercontent.com/brettdavies/agentnative-skill/main/VERSION` after the v0.2.0 tag was published. Path is now
+`bin/check-update` (post-flatten via PR #9), not `bundle/bin/check-update`.
+
+- Fresh clone via `git clone --depth 1 https://github.com/brettdavies/agentnative-skill.git` into `/tmp/`: 18 entries at
+  install root including `SKILL.md`, `bin/`, `spec/`, `references/`, `templates/`, `VERSION=0.2.0`; `bin/check-update`
+  mode `100755`. Confirms the flat-layout install model from PR #9.
+- `rm -rf $HOME/.cache/agent-native-cli/ && echo '0.1.0' > VERSION && bash bin/check-update` → `UPGRADE_AVAILABLE 0.1.0
+  0.2.0` (exact). Exercises the upgrade-detection path against the live remote.
+- `rm -rf $HOME/.cache/agent-native-cli/ && echo '0.2.0' > VERSION && bash bin/check-update` → empty stdout, exit 0;
+  cache file `$HOME/.cache/agent-native-cli/last-update-check` written with `UP_TO_DATE 0.2.0` (17 bytes incl. newline).
+  Exercises the silent-success cold-start path.
+- Re-run within 60min TTL → empty stdout, exit 0, no second cache write. Exercises the cache-hit fast path.
+
 ---
 
 - [x] U2. **Update `bundle/SKILL.md` preamble + drop "pinned ref" prose from bundle docs** — done 2026-04-29 via PR #8

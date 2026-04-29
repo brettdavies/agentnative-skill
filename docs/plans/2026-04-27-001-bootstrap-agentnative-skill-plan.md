@@ -509,8 +509,12 @@ task from the bootstrap session remains open** — task #15.
   to `main` 2026-04-29 ~16:38 PT (commit `2b10c84` on `main`). **Step 3b complete:** annotated tag `v0.2.0` pushed
   (`054c249` tag-object SHA, points at squash-merge commit `2b10c84`); GitHub Release published 2026-04-29 22:16 UTC
   with the CHANGELOG.md `## [0.2.0]` section as release notes
-  (<https://github.com/brettdavies/agentnative-skill/releases/tag/v0.2.0>). Cherry-pick scope as of 2026-04-28 (original
-  plan):
+  (<https://github.com/brettdavies/agentnative-skill/releases/tag/v0.2.0>). **Production smoke (2026-04-29 ~17:25 PT)**
+  validated the install model + upgrade-detection end-to-end: `git clone --depth 1` lands `SKILL.md` at the install root
+  (PR #9 flat-layout claim confirmed); `bin/check-update` correctly emits `UPGRADE_AVAILABLE 0.1.0 0.2.0` against the
+  real GitHub raw URL when local VERSION is downgraded, and silently exits 0 when versions match (with cache hit on
+  re-run within TTL). Full transcript in `docs/plans/2026-04-28-001-feat-update-check-mechanism-plan.md` U1 §
+  "Production smoke". Cherry-pick scope as of 2026-04-28 (original plan):
 
 | Commit    | Source PR | Why included                                                                                                                                                                                             |
 | --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -601,23 +605,6 @@ task from the bootstrap session remains open** — task #15.
   table above listed it under "MIXED" with a hunk-drop instruction; in the executed flow it was simply omitted
   from the cherry-pick range, since the substantive `bundle/SKILL.md` + `bundle/getting-started.md` edits in #5
   were superseded by PR #9's flatten before launch.
-
-  **End-to-end smoke (2026-04-29 post-3b) — v0.2.0 install + upgrade-detection verified live:**
-
-  Cleanroom clone from `main` into `/tmp/agentnative-skill-smoketest` via
-  `git clone --depth 1 https://github.com/brettdavies/agentnative-skill.git`. Three checks against the real
-  `raw.githubusercontent.com/brettdavies/agentnative-skill/main/VERSION`:
-
-  | # | Setup                                              | Expected                              | Got                                                        |
-  | - | -------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
-  | 1 | Flat install layout                                | `SKILL.md` at install root            | ✅ 18 entries at root incl. `SKILL.md`, `bin/check-update` |
-  | 2 | `VERSION=0.1.0`, fresh cache                       | `UPGRADE_AVAILABLE 0.1.0 0.2.0`       | ✅ exact match                                             |
-  | 3 | `VERSION=0.2.0`, fresh cache (UP_TO_DATE silent)   | empty stdout, exit 0, cache written   | ✅ silent, exit 0, `last-update-check` written             |
-  | 4 | `VERSION=0.2.0`, warm cache (TTL fast path)        | empty stdout, no curl, exit 0         | ✅ silent, exit 0, no second cache write                   |
-
-  Settles the load-bearing claims from PR #9 (flat layout) and PR #8 (consumer-side update-check) end-to-end
-  against published artifacts. Skill side of the launch wave is verifiably launch-ready; remaining wave items
-  are all site-side / manual.
 
 - [x] ~~**`allow_auto_merge`.**~~ Done — required explicit toggle (did not self-resolve on flip).
 - [x] ~~**Secret scanning + push protection.**~~ Done — required explicit toggle.
