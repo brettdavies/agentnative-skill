@@ -80,6 +80,13 @@ ignores:
   - "target/**"  # Rust build artifacts; harmless for non-Rust projects
   - ".git/**"
   - "*.min.md"
+  # Vendored agentnative-spec content. Edited upstream; we do not enforce
+  # this repo's lint rules on it. Resync via scripts/sync-spec.sh.
+  - "spec/CHANGELOG.md"
+  # Generated artifact. scripts/generate-changelog.sh writes single-line
+  # bullets per PR; line-length wrapping would conflict with the generator.
+  # CHANGELOG.md is regenerated, never hand-edited.
+  - "CHANGELOG.md"
 
 # Fix automatically when --fix is used
 fix: true

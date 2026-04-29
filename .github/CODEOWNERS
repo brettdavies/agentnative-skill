@@ -1,6 +1,9 @@
-# Mandatory review on anything that runs on user machines at install time.
-# See: master plan risk row "Shell scripts in producer repo execute on user machines".
+# Mandatory review on producer-ops paths that determine what ships and how.
+# The bundle/ tree is content (markdown + templates) and is reviewed via normal
+# PR rules; bundle/spec/ specifically is vendored and not edited by hand
+# (see scripts/sync-spec.sh and bundle/spec/README.md).
 
-scripts/**             @brettdavies
-.github/workflows/**   @brettdavies
-.github/CODEOWNERS     @brettdavies
+scripts/**              @brettdavies
+.github/workflows/**    @brettdavies
+.github/rulesets/**     @brettdavies
+.github/CODEOWNERS      @brettdavies
