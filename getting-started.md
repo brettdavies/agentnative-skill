@@ -44,8 +44,8 @@ anc check --output json    # run continuously as you build
 ## You're building in another language
 
 `anc`'s source-analysis layer is Rust-only; its behavioral layer (`anc check --command <name>`) runs against any
-compiled binary on `PATH`. Read `spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic
-requirements, and `references/framework-idioms-other-languages.md` for per-framework idioms.
+compiled binary on `PATH`. Read `spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic requirements, and
+`references/framework-idioms-other-languages.md` for per-framework idioms.
 
 ## Installing anc
 
@@ -58,12 +58,12 @@ Binary name: `anc`. Prebuilt releases at <https://github.com/brettdavies/agentna
 
 ## Where things live
 
-| Question                                        | Where                                                     |
-| ----------------------------------------------- | --------------------------------------------------------- |
+| Question                                        | Where                                              |
+| ----------------------------------------------- | -------------------------------------------------- |
 | What does P3 mean?                              | `spec/principles/p3-progressive-help-discovery.md` |
 | What spec version does this bundle ship?        | `spec/VERSION`                                     |
 | How do I implement `<pattern>` in Rust/clap?    | `references/rust-clap-patterns.md`                 |
 | How do I implement `<pattern>` in Python/Go/JS? | `references/framework-idioms-other-languages.md`   |
-| File a spec question or proposal                | <https://github.com/brettdavies/agentnative>              |
-| File an `anc` bug                               | <https://github.com/brettdavies/agentnative-cli>          |
-| File a skill-bundle issue                       | <https://github.com/brettdavies/agentnative-skill>        |
+| File a spec question or proposal                | <https://github.com/brettdavies/agentnative>       |
+| File an `anc` bug                               | <https://github.com/brettdavies/agentnative-cli>   |
+| File a skill-bundle issue                       | <https://github.com/brettdavies/agentnative-skill> |
