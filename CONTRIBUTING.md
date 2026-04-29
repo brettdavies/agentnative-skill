@@ -53,7 +53,7 @@ procedure in [`RELEASES.md`](./RELEASES.md).
 
 The repository is split into:
 
-- **`bundle/`** — what consumers install via `anc.dev/install`. `SKILL.md`, `getting-started.md`, vendored `spec/`,
+- **`bundle/`** — what consumers install via `anc.dev/skill`. `SKILL.md`, `getting-started.md`, vendored `spec/`,
   `references/`, `templates/`.
 - **Everything else** — producer-side ops: governance (`AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `SECURITY.md`),
   release tooling (`scripts/`, `cliff.toml`), CI (`.github/workflows/`), rulesets (`.github/rulesets/`), engineering

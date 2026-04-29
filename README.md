@@ -42,7 +42,7 @@ The skill bundle is **`bundle/`**. Everything outside `bundle/` is producer-side
 
 ## Install
 
-See [anc.dev/install](https://anc.dev/install) for the supported hosts (Claude Code, Cursor, Codex, etc.) and the exact
+See [anc.dev/skill](https://anc.dev/skill) for the supported hosts (Claude Code, Cursor, Codex, etc.) and the exact
 install commands.
 
 The install fetches `bundle/` (only) at a tagged commit SHA into the host's skills directory — for example
