@@ -4,10 +4,15 @@ description: >-
   Guide to designing, building, and auditing CLI tools for use by AI agents. Pairs with
   [`anc`](https://github.com/brettdavies/agentnative-cli) (the canonical compliance checker) and
   [`agentnative-spec`](https://github.com/brettdavies/agentnative) (the canonical principle text, vendored at
-  `spec/`). Provides starter templates, language-specific implementation idioms, and a short
-  getting-started guide that points agents at `anc check --output json`. Use when designing a new CLI tool,
-  reviewing one for agent-readiness, or remediating findings from `anc`. Triggers on agentic CLI, agent-native,
-  CLI design, CLI standard, agent-first, CLI for agents, agent-friendly CLI, CLI compliance, anc.
+  `spec/`). Provides starter templates, language-specific implementation idioms (Rust/clap, Python Click & argparse,
+  Go Cobra, JS Commander/yargs/oclif, Ruby Thor), and a getting-started guide that points agents at
+  `anc check --output json` and `anc skill install <host>`. Use when designing a new CLI tool, building a Rust/clap
+  binary intended for agents, reviewing one for agent-readiness, claiming the agent-native badge, or remediating
+  findings from `anc`. Triggers on agentic CLI, agent-native, CLI design, CLI standard, agent-first, CLI for agents,
+  agent-friendly CLI, CLI compliance, agent-readiness, anc, anc check, anc skill install, agent-native badge,
+  scorecard, audit-profile, Rust CLI, clap derive. SKIP when the user is building a TUI app meant for humans (use
+  `--audit-profile human-tui` rather than this skill), writing a non-CLI library, or asking unrelated Rust questions
+  not specifically about agent-readiness of a CLI.
 ---
 
 # Agent-Native CLI
@@ -23,51 +28,27 @@ The standard for CLI tools designed to be operated by AI agents. Three artifacts
 The skill does **not** implement principles checking. `anc` does. The skill teaches agents to use `anc` and supplies the
 surrounding context (spec, idioms, templates) that `anc`'s findings reference.
 
-## Update check
+## First action: update check
 
-On first invocation per session, run `bin/check-update`. It compares this bundle's `VERSION` against `main` on GitHub
-and prints one of:
-
-| Output                               | Meaning                                                                         |
-| ------------------------------------ | ------------------------------------------------------------------------------- |
-| (empty)                              | Up to date, snoozed, disabled, or check skipped (broken install, no network).   |
-| `UPGRADE_AVAILABLE <local> <remote>` | A newer release is on `main`. Surface the upgrade flow below before continuing. |
+Run once per session before doing real work:
 
 ```bash
 bash "$(dirname "$0")/bin/check-update"
 ```
 
-Exit code is always 0; failures degrade silently.
-
-### Inline upgrade flow
-
-When stdout is `UPGRADE_AVAILABLE <local> <remote>`, ask the user via `AskUserQuestion`:
-
-> `agent-native-cli` **v{remote}** is available (you're on v{local}). Upgrade now?
-
-Three options:
-
-- **"Yes, upgrade now"** — run `git -C <bundle-parent-dir> pull --ff-only`. Report the new HEAD and the upgrade outcome.
-  The bundle root is the parent of ``; `git -C ../.. pull --ff-only` from `bin/` works for the default install layout
-  (`~/<host>/skills/agent-native-cli/`). If `--ff-only` rejects (uncommitted edits or divergent history), surface git's
-  error verbatim and stop — do not auto-stash.
-- **"Not now"** — write `$HOME/.cache/agent-native-cli/update-snoozed` in the format `<remote> <level> <epoch>`, where
-  `<level>` is `1` (24h reminder), `2` (48h), or `3` (7 days), escalating each time the user defers. Tell the user the
-  next reminder window.
-- **"Never ask again"** — `touch $HOME/.cache/agent-native-cli/disabled` and tell the user how to re-enable (`rm
-  $HOME/.cache/agent-native-cli/disabled`).
-
-State directory: `$HOME/.cache/agent-native-cli/`. All three files (`last-update-check`, `update-snoozed`, `disabled`)
-live there; the script auto-creates the directory on first slow-path fetch.
+Empty output → continue. `UPGRADE_AVAILABLE <local> <remote>` → prompt the user via `AskUserQuestion` (Yes / Not now /
+Never). Full prompt text, snooze ladder, and state-file layout are in
+[`references/update-check.md`](./references/update-check.md). Exit code is always `0`; failures degrade silently.
 
 ## Start here
 
 → **[`getting-started.md`](./getting-started.md)** — the three working loops (existing CLI / new Rust CLI / other
-language), the canonical `anc check` invocations, and a "where things live" map.
+language), the canonical `anc check` invocations, the `anc skill install <host>` installer, and a "where things live"
+map.
 
 ## The seven principles
 
-Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` — currently `v0.2.0`; see
+Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` — currently `v0.3.0`; see
 [`spec/README.md`](./spec/README.md) for resync instructions). One file per principle, each with machine-readable
 `requirements[]` frontmatter:
 
@@ -82,6 +63,38 @@ Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-
 | P7  | [`p7-bounded-high-signal-responses.md`](./spec/principles/p7-bounded-high-signal-responses.md)                       | Bounded, High-Signal Responses    |
 
 Do not paraphrase the principles inside this skill — read the spec files directly. They are the source of truth.
+
+## The anc loop: check → fix → re-check → claim badge
+
+Once `anc` is installed (one-line install in [`getting-started.md`](./getting-started.md)), the work is a four-step
+loop:
+
+**1. Check.** `anc check --output json . > scorecard.json`. The JSON envelope is schema `0.5` and contains:
+
+- `summary` — `total / pass / warn / fail / skip / error` count.
+- `coverage_summary` — `must / should / may`, each with `total` + `verified`. `must.verified == must.total` is the bar
+  for "no MUST violations".
+- `badge.eligible` (bool), `badge.score_pct` (int), `badge.embed_markdown` (string or `null`), `badge.scorecard_url`,
+  `badge.badge_url`, `badge.convention_url`. **80%** is the eligibility floor; below it, `embed_markdown` is `null` and
+  the convention says do not advertise a badge.
+- `results[]` — per-check entries citing `requirement_id`, `status`, and `evidence`.
+- `audit_profile` — the exemption category in effect (or `null`).
+- `tool / anc / run / target` metadata — identifies the scored tool, the `anc` build, the invocation, and the resolved
+  target.
+
+**2. Fix.** For each `fail`, look up the cited `requirement_id` (e.g. `p1-must-no-interactive`) in
+`spec/principles/p<N>-*.md`'s `requirements[]` frontmatter. Apply the fix using the implementation references below.
+Re-run with `--principle <N>` to focus on one principle while iterating.
+
+**3. Re-check.** Re-run `anc check --output json .` until `summary.fail == 0` and `coverage_summary.must.verified ==
+coverage_summary.must.total`. Use `--audit-profile <category>` to suppress checks that don't apply to the tool class —
+`human-tui` (TUIs that legitimately intercept the TTY), `file-traversal` (reserved), `posix-utility` (cat / sed / awk
+style), `diagnostic-only` (read-only tools). Suppressed checks emit `Skip` with structured evidence so readers see what
+was excluded.
+
+**4. Claim the badge.** Once `badge.eligible == true` (≥80%), copy `badge.embed_markdown` into the project's README. The
+`text` output appends an embed hint after the summary line whenever the floor is cleared; below the floor, nothing
+badge-related is printed (the convention's "do not nag" rule).
 
 ## Implementation guidance (when fixing findings)
 
@@ -108,16 +121,23 @@ Drop-in starting points for greenfield Rust CLIs. Each encodes the relevant prin
 
 ## Compliance checking
 
-Use `anc`. Install once:
+Use `anc`. Install once via Homebrew, cargo, or self-install:
 
 ```bash
 brew install brettdavies/tap/agentnative   # binary is `anc`
 cargo install agentnative
 ```
 
-Recommended invocations and the full agent loop are in [`getting-started.md`](./getting-started.md). Do not write shell
-scripts to grep for principle violations — `anc` already implements (and supersedes) every check that approach could
-produce.
+To install **this skill bundle** into a host's canonical skills directory, use `anc`'s built-in installer:
+
+```bash
+anc skill install claude_code              # also: codex, cursor, factory, kiro, opencode
+anc skill install --dry-run claude_code    # print resolved git command without spawning
+```
+
+Recommended `anc check` invocations and the full agent loop are in [`getting-started.md`](./getting-started.md). Do not
+write shell scripts to grep for principle violations — `anc` already implements (and supersedes) every check that
+approach could produce.
 
 ## Sources
 
