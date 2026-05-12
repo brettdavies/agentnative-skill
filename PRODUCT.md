@@ -1,10 +1,27 @@
-# PRODUCT.md
+# PRODUCT.md: skill bundle channel design context
 
 Channel-specific design context for the **skill bundle channel** of agentnative. Inherits the shared identity, voice
 anchor, audiences, and universal anti-patterns from `BRAND.md` — synced from
 [`agentnative-spec`](https://github.com/brettdavies/agentnative) alongside `spec/principles/`. Until that sync runs,
 read the source at [`brettdavies/agentnative/BRAND.md`](https://github.com/brettdavies/agentnative/blob/main/BRAND.md).
 See [`spec/README.md`](./spec/README.md) for resync instructions.
+
+## Inheritance
+
+The skill bundle channel sits in a three-tier waterfall. Each tier owns a different concern; nothing duplicates.
+
+1. **Universal — `BRAND.md`.** Shared identity, voice anchor, audiences, universal anti-patterns. Not yet vendored
+   locally; today it lives at
+   [`brettdavies/agentnative/BRAND.md`](https://github.com/brettdavies/agentnative/blob/main/BRAND.md) and will land in
+   this repo when [`scripts/sync-spec.sh`](scripts/sync-spec.sh) (or a sibling prose-tooling sync) is extended to vendor
+   it alongside `spec/principles/`.
+2. **Channel delta — this file (`PRODUCT.md`).** Instructional voice, second-person imperative allowed (the bundle
+   teaches agents how to invoke `anc`), terse and agent-loadable. The narrative companion to the shipped bundle content
+   at the repo root.
+3. **Bundle — repo root.** The shipped skill: [`SKILL.md`](SKILL.md), [`getting-started.md`](getting-started.md),
+   [`references/`](references/), [`templates/`](templates/), [`bin/`](bin/), and the vendored [`spec/`](spec/). What an
+   agent loads into runtime via `~/.claude/skills/agent-native-cli/`, `~/.cursor/skills/agent-native-cli/`, and
+   equivalent paths under Codex / OpenCode / Factory / Kiro. Built from the same commit as `PRODUCT.md`.
 
 ## Channel — skill bundle
 
