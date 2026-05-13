@@ -79,4 +79,4 @@ The pattern in `BRAND.md`, specialized for the skill channel:
 
 This file is the skill-channel `PRODUCT.md`. The spec channel's equivalent lives at
 [`agentnative-spec/PRODUCT.md`](https://github.com/brettdavies/agentnative/blob/main/PRODUCT.md); the site channel's at
-`~/dev/agentnative-site/PRODUCT.md`. Cross-channel content is in `BRAND.md`, synced from the spec repo.
+`agentnative-site/PRODUCT.md`. Cross-channel content is in `BRAND.md`, synced from the spec repo.
