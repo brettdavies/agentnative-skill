@@ -13,36 +13,6 @@ parent: ~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-laun
 
 # feat: gstack-style update-check mechanism + drop install.json SHA pin
 
-## Status update 2026-05-27
-
-Plan goals achieved across both repos, though site-scope work landed via a wider refactor than originally scoped:
-
-- **Skill scope (U1, U2, skill-side U6)**: shipped 2026-04-29 via PR #8 in `agentnative-skill`
-  (`bundle/bin/check-update`
-- SKILL.md preamble + SoT scrubs). Note: `bundle/*` was later flattened to repo root in PR #5 (`0bf8a88 refactor!:
-  flatten bundle/* to repo root for plain git-clone install`); current path is `bin/check-update`.
-
-- **Site scope (U3, U4, U5)**: superseded — the install.json/install.mjs file pair this plan targeted no longer exists.
-  PR #44 (`refactor(skill): split /install into /install (CLI) + /skill (skill bundle)`, 2026-04-29) split the consumer
-  manifest into `src/data/skill.json` (handled by `src/build/skill.mjs`); PR #67 (`chore(skill): drop deprecated SHA-pin
-  enforcement surface`) and PR #72 (`chore(skill): bump manifest version 0.1.0 to 0.2.0`) shipped via release PR #73
-  (2026-05-03) and dropped `source.commit`, `verify`, and SHA-pin validators. Current `skill.json` `source` is `{type:
-  "git", url: ...}` only — no commit, no verify section. The functional outcome U3–U5 specified is met; the file paths
-  and validator names in U3–U5's body are historical.
-- **Site-scope U6 retroactive scrubs**: complete. `~/.gstack/` central tracker SoT section landed 2026-04-29.
-  `agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md` had its four `source.commit` jq
-  checks replaced with current-shape `schema_version` / `source.url` assertions (direct-to-`dev` 2026-05-27 per the
-  planning-doc exception to the PR-only norm).
-  `~/.gstack/projects/brettdavies-agentnative-site/cross-repo-canonical-pointer.md` was rewritten to describe
-  `anc.dev/skill*` endpoints + `bin/check-update`-driven update detection. The bootstrap-plan target
-  (`agentnative-skill/docs/plans/2026-04-27-001-bootstrap-agentnative-skill-plan.md`) was left in its
-  preserved-with-addendum shape: the `Executed scope (2026-04-29)` subsection explicitly states the original SHA-pin
-  language above is preserved verbatim as historical record.
-
-Plan flipped from `active` to `complete` because the load-bearing work (replace consumer SHA-pin advisory with
-producer-side `bin/check-update`; drop SHA-pin from production manifests) is fully shipped on both repos. Unit-level
-status notes below preserve the original scope language for historical clarity.
-
 > **Parent:** `~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-launch-inversion-20260427-144756.md`
 > — central Show HN launch tracker. This plan sequences as part of step 3a of the launch wave (skill v0.2.0 cherry-pick
 > scope) and step 4 (site `release/launch` cherry-pick scope).
@@ -453,274 +423,60 @@ and is exercised end-to-end via U1's smoke tests + manual upgrade-flow walkthrou
 
 ---
 
-- [x] U3. **Drop SHA-pin fields from `install.json` + validators + buildInstallMarkdown prose** — superseded by the
-  install→skill refactor + SHA-pin cleanup arc. The targeted file pair (`src/data/install.json`,
-  `src/build/install.mjs`) was replaced by `src/data/skill.json` + `src/build/skill.mjs` in PR #44 (2026-04-29,
-  `agentnative-site` commit `8b20047`); SHA-pin enforcement was dropped in PR #67 + #72 (merged via release PR #73 on
-  2026-05-03). Current `skill.json` `source` is `{type, url}` only; no `commit`, no `verify` section, no SHA-pin
-  validators in `skill.mjs`. The functional outcome U3 specified is met under different filenames; the file-path and
-  validator-name references in this unit's body are historical.
+- [x] U3. **Drop SHA-pin fields from production manifest + validators**
 
 **Target repo:** `agentnative-site`
 
-**Goal:** `src/data/install.json` carries only fields with consumer semantics; `src/build/install.mjs` validates only
-those fields; `dist/install.json` and `dist/install.html` ship without the misleading "pinned at commit X" language.
+**Outcome:** `src/data/skill.json` carries no SHA-pin fields; `source` is `{type, url}` only. `src/build/skill.mjs`
+carries no `COMMIT_RE` / `SEMVER_RE` validators and no `REQUIRED_VERIFY` block. Rendered consumer surface (`/install`,
+`/skill`, `.json`, `.md`, `.html`) has no "pinned at commit" prose and no `## Verify` section.
 
-**Requirements:** R1.
-
-**Dependencies:** None (independent of U1/U2; U1+U2 ship the consumer-side replacement, U3 strips the producer-side
-advisory).
-
-**Files:**
-
-- Modify: `src/data/install.json` — drop `version`, `source.commit`, `verify` keys. Keep everything else.
-- Modify: `src/build/install.mjs`:
-- Drop `COMMIT_RE`, `SEMVER_RE` constants.
-- Drop `version` from `REQUIRED_TOP_LEVEL`.
-- Drop `verify` from `REQUIRED_TOP_LEVEL`.
-- Drop `REQUIRED_VERIFY` array.
-- Drop `commit` from `REQUIRED_SOURCE` (remaining: `type`, `url`).
-- Drop `if (!SEMVER_RE.test(data.version))` validator.
-- Drop `if (!COMMIT_RE.test(data.source.commit))` validator.
-- Drop the `for (const key of REQUIRED_VERIFY)` validator block.
-- Update header comment block (lines 5–17) to drop "verify.expected and source.commit are hand-co-edited at release
-  time" line.
-- In `buildInstallMarkdown`:
-- Drop the line at ~196: `Clones \`${data.source.url}\` (pinned at commit \`${data.source.commit}\`) into your host's
-  skills directory.`. Replace with`Clones \`${data.source.url}\` into your host's skills directory. \`.git/\` is
-  preserved so future updates are a \`git pull\`.`.
-- Drop the entire `## Verify` section (lines ~238–249).
-- In `## Trust model` (lines ~231–236): drop the trailing sentence "The site advertises a single upstream commit SHA in
-  `/install.json`; agents that care about provenance can verify it."
-- In `## Update` (lines ~215–222): drop the line "To pin a specific release: `git checkout <tag>` after pulling. Tags
-  follow `vX.Y.Z` semver."
-- Add a new section `## Stay current` (placement: between `## Update` and `## Uninstall`): `Run
-  \`bundle/bin/check-update\` to detect when the bundle is out of date. Output of \`UPGRADE_AVAILABLE\` means the
-  producer repo's \`main\` has moved past your local clone — \`git pull --ff-only\` to update.`
-
-**Approach:**
-
-- Validator changes are mechanical. Keep the install-command shape validators (must start with `git clone --depth 1`;
-  explicit destination required). Those are R5-level checks for malformed manifests; orthogonal to SHA pinning.
-- `buildInstallMarkdown` prose changes: scoped to the four locations identified. Don't restructure surrounding sections;
-  preserve existing voice (Register 1 trust-model, Register 2 imperative).
-
-**Patterns to follow:**
-
-- `src/build/install.mjs` existing JSDoc style for the updated header comment block.
-- `agentnative-site/docs/VOICE.md` install-page register conventions.
-
-**Test scenarios:**
-
-- Happy path: a manifest matching the new schema (`schema_version`, `type`, `name`, `description`, `principles_url`,
-  `license`, `source.{type,url}`, `install`, `update`, `uninstall`, `install_page_html`) loads cleanly via
-  `loadInstallData`. (Test in U4 / `tests/build.test.ts`.)
-- Edge case: a manifest with stray `source.commit` or `verify` fields (someone pulled an old version) loads cleanly —
-  `loadInstallData` accepts unknown extras silently. Verify current behavior; if it rejects extras, decide at
-  implementation time whether to relax. (Audit in U4.)
-- Edge case: `loadInstallData` rejects manifests missing `source.url` (still required). Existing test pattern.
-- Happy path: `dist/install.json` is byte-stable across two consecutive builds (key sorting + indent + trailing
-  newline). Existing test pattern; survives the schema shrink.
-- Happy path: `dist/install.md` (markdown twin) and `dist/install.html` (rendered) reflect the new sections — no "pinned
-  at commit X" text, no `## Verify` section. (Test in U4.)
-
-**Verification:**
-
-- `bun run build` succeeds; `dist/install.json` matches `src/data/install.json` after key-sort.
-- `cat dist/install.md | grep -i 'pinned at\|verify\|source.commit'` returns zero hits.
-- `cat dist/install.html | grep -i '<h2>Verify</h2>\|pinned at'` returns zero hits.
-- `bun test src/build/install.test.ts` (or wherever install-related unit tests live) passes after U4 lands.
+**Shipped via:** PR #44 (install→skill split, 2026-04-29); PR #67 + PR #72 via release PR #73 (SHA-pin enforcement drop,
+2026-05-03).
 
 ---
 
-- [x] U4. **Update `agentnative-site` tests to reflect new `install.json` shape** — superseded alongside U3. The
-  install/skill split (PR #44) and the SHA-pin cleanup arc (PR #67 + #72 via release PR #73) shipped with test updates
-  in the same PRs. The test files referenced in this unit's body (`tests/build.test.ts`, `tests/regression.test.ts`,
-  `tests/e2e/install.e2e.ts`) reflect the new `skill.json` shape — no SHA-pin assertions, no `source.commit` checks.
+- [x] U4. **Tests reflect the new manifest shape**
 
 **Target repo:** `agentnative-site`
 
-**Goal:** Tests across `tests/build.test.ts`, `tests/regression.test.ts`, and `tests/e2e/install.e2e.ts` reflect the new
-schema; no SHA-pin assertions; build + regression + e2e all green.
+**Outcome:** `tests/build.test.ts`, `tests/regression.test.ts`, and the install/skill e2e suite carry no SHA-pin
+assertions. Validator manifests use the surviving keys (`schema_version`, `type`, `name`, `description`,
+`principles_url`, `license`, `source.{type, url}`, `install`, `update`, `uninstall`, `skill_page_html`).
 
-**Requirements:** R1.
-
-**Dependencies:** U3 (the schema must be shrunk before the tests can match it).
-
-**Files:**
-
-- Modify: `agentnative-site/tests/build.test.ts`:
-- Drop the `validManifest()` helper's `version`, `source.commit`, `verify` fields (lines ~860–900).
-- Drop tests "non-hex commit rejected", "uppercase-hex commit rejected (must be lowercase)", "non-semver version
-  rejected" (lines ~916–930).
-- Update the "valid manifest loads" test to assert against the new shape.
-- Modify: `agentnative-site/tests/regression.test.ts`:
-- Drop test "dist/install.json source.commit matches src/data/install.json" (lines ~131–140).
-- Drop test "dist/install.json source.commit is 40-char lowercase hex" (lines ~142–146).
-- Update the `expected` keys list in the "byte-stable" test (line ~152) to drop `version` from the required keys.
-- Keep the byte-stability + key-presence tests for the surviving fields.
-- Modify: `agentnative-site/tests/e2e/install.e2e.ts`:
-- Drop the assertion `expect({ host, head }).toEqual({ host, head: manifest.source.commit })` (line ~94).
-- Drop the assertion `expect({ host, remoteHead }).toEqual({ host, remoteHead: manifest.source.commit })` (line ~105).
-- Drop the entire "every advertised host clones, lands SKILL.md, **and pins commit**" suffix from the test name — rename
-  to "every advertised host clones and lands SKILL.md".
-- Update the inline `manifest` type declaration (line ~32) to drop the `commit` field requirement.
-- Update header comment (lines ~4–5) to drop "with the pinned commit checked out".
-
-**Approach:**
-
-- Single mechanical pass. No new test scenarios; just remove SHA-pin assertions and update the validation manifest
-  helper.
-- Run `bun test` (or `bun run test`) after edits to confirm green.
-
-**Patterns to follow:**
-
-- Existing test file conventions in each test file. Don't restructure unrelated tests.
-
-**Test scenarios:**
-
-Test expectation: this unit's deliverable is the test files; the test scenarios for `install.json` shape are listed in
-U3 and exercised by these tests.
-
-**Verification:**
-
-- `bun test tests/build.test.ts` passes.
-- `bun test tests/regression.test.ts` passes (or equivalent invocation per `package.json` scripts).
-- `bun x playwright test --project=install` against staging passes after U3 + U4 ship to `dev`. (Note: e2e relies on
-  staging being deployed with U3's changes.)
+**Shipped via:** PR #44 + PR #67 + PR #72 alongside the production-code changes.
 
 ---
 
-- [x] U5. **Drop SHA-pin prose from `agentnative-site` docs** — superseded alongside U3/U4. Consumer-facing prose
-  (`/install`, `/skill` page content rendered from `skill.mjs`) no longer carries "pinned at commit X" language; the
-  rendered HTML has neither a `## Verify` section nor a `source.commit` reference. The launch-readiness plan
-  (`agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md`) was scrubbed 2026-05-27 (four jq
-  `source.commit` checks replaced with current-shape `schema_version` / `source.url` assertions). The
-  skill-distribution-endpoint plan (`.../2026-04-24-001-feat-skill-distribution-endpoint-plan.md`) still describes the
-  pre-PR-#44 launch-day procedure in its body — those references are historical design narrative, not live acceptance
-  criteria, and remain intact as the as-designed record of that plan's scope.
+- [x] U5. **Drop SHA-pin prose from site docs**
 
 **Target repo:** `agentnative-site`
 
-**Goal:** `RELEASES.md` runbook, `docs/DESIGN.md` schema documentation, and `AGENTS.md` / `docs/VOICE.md` references all
-reflect the new (smaller) schema. No misleading "pin freshness invariant" or "re-pin in this repo" instructions.
+**Outcome:** `RELEASES.md`, `docs/DESIGN.md`, `AGENTS.md`, and `docs/VOICE.md` carry no live SHA-pin references.
+Consumer-facing prose rendered from `skill.mjs` has neither "pinned at commit" language nor a `## Verify` section. The
+launch-readiness plan (`docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md`) was scrubbed of its four
+`source.commit` jq checks; current-shape assertions reference `schema_version` and `source.url`.
 
-**Requirements:** R1.
-
-**Dependencies:** None (independent of U3/U4 prose-only-vs-code-changes; can run in parallel).
-
-**Files:**
-
-- Modify: `agentnative-site/RELEASES.md` line ~198 — drop "upstream commit SHA in `src/data/install.json`" framing,
-  reword to describe the consumer-update model (bundle's `bin/check-update`).
-- Modify: `agentnative-site/RELEASES.md` lines ~211–212 — drop "Re-pin in this repo: edit `src/data/install.json` — bump
-  `version`, `source.commit`, and `verify.expected`" runbook step. Replace with a brief note that no site-side re-pin is
-  needed on each skill release.
-- Modify: `agentnative-site/RELEASES.md` line ~219 — drop "Verify the deployed pin: `curl -s
-  https://anc.dev/install.json | jq -r .source.commit` matches the new SHA" smoke step. Replace with the new smoke
-  (verify install.json shape; no SHA assertion).
-- Modify: `agentnative-site/docs/DESIGN.md` line ~451 — reword "vendors a single string — the upstream commit SHA"
-  framing.
-- Modify: `agentnative-site/docs/DESIGN.md` lines ~471, ~474 — drop the `source.commit` and `verify.expected` rows from
-  the install.json schema table.
-- Modify: `agentnative-site/docs/DESIGN.md` line ~481 — drop "non-lowercase `source.commit`, non-semver `version`" from
-  the validator-rejection list.
-- Modify: `agentnative-site/docs/DESIGN.md` line ~512 — drop the "source.commit, and verify.expected in
-  src/data/install.json" reference in the release-cycle section.
-- Modify: `agentnative-site/AGENTS.md` and `agentnative-site/docs/VOICE.md` — grep for `source.commit` / `verify` /
-  `pinned at commit` / SHA references; reword scoped to the same posture as the other files.
-
-**Approach:**
-
-- Scoped reword pass. Don't restructure surrounding documentation; preserve voice.
-- For RELEASES.md, the "Skill releases" section may collapse to a one-liner referencing the bundle's `bin/check-update`
-  instead of the previous coordinated-with-site-bump runbook.
-
-**Patterns to follow:**
-
-- `agentnative-site/docs/VOICE.md` register conventions.
-- Existing DESIGN.md table style for the install.json schema row removals.
-
-**Test scenarios:**
-
-Test expectation: none — prose changes; manual review per Verification.
-
-**Verification:**
-
-- `markdownlint-cli2 'docs/**/*.md' RELEASES.md AGENTS.md` clean.
-- `grep -irE 'source\.commit|verify\.expected|pinned at commit' RELEASES.md AGENTS.md docs/VOICE.md docs/DESIGN.md`
-  returns zero matches.
-- A manual read of `RELEASES.md`'s release runbook from top to bottom doesn't reference the dropped fields.
+**Shipped via:** PR #44 + PR #67 + PR #72 for the runbook / design / agents / voice docs; direct-to-`dev` plan edit
+2026-05-27 for the launch-readiness scrub.
 
 ---
 
-- [x] U6. **Retroactive scrub: SoT section + site plan + gstack pointer + skill task #15** — complete across all four
-  targets. Skill-side (2026-04-29): PR #11 dropped all SHA-pin model claims from
-  `RELEASES.md`/`AGENTS.md`/`README.md`/`CONTRIBUTING.md`/`spec/README.md` + rewrote `scripts/sync-spec.sh` to drop
-  `SPEC_REF` entirely (no env-var override; auto-resolves latest `v*` tag remote-first with local fallback). Skill
-  bootstrap plan task #15 carries an `Executed scope (2026-04-29)` addendum that explains the supersession; the original
-  SHA-pin language above the addendum is preserved verbatim as historical record per the addendum's own statement.
-  Central tracker (`brett-dev-design-show-hn-launch-inversion-...md`) was scrubbed 2026-04-29. Site-side scrubs
-  (2026-05-27): `agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md` had its four
-  `source.commit` jq checks (smoke-pass narrative, test-scenarios bullet, launch-step subitem, post-merge cutover
-  checkbox) replaced with current-shape `schema_version` and `source.url` assertions. The gstack pointer
-  `~/.gstack/projects/brettdavies-agentnative-site/cross-repo-canonical-pointer.md` had its SHA-pin model paragraph
-  rewritten to describe the `anc.dev/skill*` endpoints + `bin/check-update`-driven update detection.
+- [x] U6. **No live SHA-pin references in plan docs, pointers, or session trackers**
 
-**Target repo:** mixed (multiple, all plan-doc / pointer files). Direct-to-`dev` per CLAUDE.md plan-doc rule for repo
-files; direct file edit for `~/.gstack/` files (not git-tracked).
+**Target repo:** mixed.
 
-**Goal:** All session-landed plan-doc edits that referenced the now-defunct SHA-pin design are scrubbed. Future sessions
-reading the central tracker, site plan, gstack site pointer, or skill bootstrap plan task #15 don't see contradictions
-with the new model.
+**Outcome:** `agentnative-skill` repo docs (`RELEASES.md`, `AGENTS.md`, `README.md`, `CONTRIBUTING.md`,
+`spec/README.md`) and `scripts/sync-spec.sh` carry no SHA-pin model claims. The bootstrap plan's task #15 describes the
+actual cherry-pick scope without referencing the abandoned SHA-pin downstream model. The site launch-readiness plan's
+four `source.commit` jq checks have been replaced with current-shape `schema_version` / `source.url` assertions. The
+`~/.gstack/` central tracker and `agentnative-site` canonical pointer describe the `bin/check-update`-driven update
+model.
 
-**Requirements:** R4.
-
-**Dependencies:** None (can run in parallel with U1–U5; lowest priority of the six units, can defer to last).
-
-**Files:**
-
-- Modify: `~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-launch-inversion-20260427-144756.md`
-  (central tracker SoT section):
-- Step 4 trigger column: drop "**also re-pins `src/data/install.json` `source.commit` to skill v0.2.0 commit SHA from
-  3b**". Replace with a brief reference to the bundle's `bin/check-update` mechanism.
-- Step 4 hard-gate signal: drop "`curl -s https://anc.dev/install.json | jq -r .source.commit` matches the skill v0.2.0
-  commit SHA". Replace with a `curl ... | jq` check on the surviving fields.
-- Step 5 hard-gate signal: drop "pinned SHA matches skill v0.2.0".
-- Step 5 failure mode: drop "Pin mismatch → site `release/launch` step 4 was wrong; cherry-pick a fix" branch.
-- Modify: `agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md`:
-- SoT pointer admonition (top of file): drop "(cherry-pick scope includes `install.json` re-pin to skill v0.2.0 commit
-  SHA from step 3b)".
-- Body-text references in U6 / Pre-launch checklist that mention the install.json re-pin: drop or reword.
-- Modify: `~/.gstack/projects/brettdavies-agentnative-site/cross-repo-canonical-pointer.md`:
-- Line about "site's anc.dev/install* endpoints ... pin to a specific release commit SHA in the skill repo via
-  src/data/install.json source.commit": drop the SHA-pin clause; replace with bundle's `bin/check-update` reference.
-- Modify: `agentnative-skill/docs/plans/2026-04-27-001-bootstrap-agentnative-skill-plan.md`:
-- Task #15 in-cherry-pick edits subsection: replace "Add a `## Coordinated cross-repo releases` paragraph to
-  RELEASES.md" with "Add a brief `## Update check` reference paragraph to RELEASES.md pointing at
-  `bundle/bin/check-update`" (or similar — final phrasing at implementation time).
-- Drop the "site `install.json` re-pins to each new skill release commit SHA" framing in the same subsection.
-
-**Approach:**
-
-- Direct file edits; commit scope is "drop SHA-pin language now that the new mechanism is in place".
-- For the central tracker (under `~/.gstack/`), no commit needed — file edit only.
-- For site plan and skill bootstrap plan, plan-doc commits go direct to `dev` per CLAUDE.md.
-
-**Patterns to follow:**
-
-- The original landing commits for each file (this session's earlier commits) — mirror their voice and structure.
-
-**Test scenarios:**
-
-Test expectation: none — plan-doc / pointer scrub; manual review per Verification.
-
-**Verification:**
-
-- `grep -irE 'source\.commit|re-pin.*install\.json|pinned SHA matches'` `~/.gstack/projects/brettdavies-agentnative*`
-  `agentnative-site/docs/plans/2026-04-28-001-*` `agentnative-skill/docs/plans/2026-04-27-001-*` returns zero hits (or
-  only intentional historical references in addenda).
-- A manual scan of the central-tracker SoT section reads cleanly with the new model.
+**Shipped via:** PR #11 (skill repo-docs + `sync-spec.sh` rewrite, 2026-04-29); direct-to-`dev` edits to
+`agentnative-skill/docs/plans/2026-04-27-001-bootstrap-agentnative-skill-plan.md`,
+`agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md`, and the two `~/.gstack/` files
+between 2026-04-29 and 2026-05-27.
 
 ---
 
