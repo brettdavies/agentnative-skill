@@ -1,7 +1,6 @@
 # Releasing `agentnative-skill`
 
-Every change reaches `main` via this pipeline. Direct commits to `dev` or `main` are not permitted — every change has a
-PR number in its squash commit message, which keeps the history scannable, attributable, and changelog-ready.
+Operational runbook. Rationale lives in [`RELEASES-RATIONALE.md`](./RELEASES-RATIONALE.md).
 
 ```text
 feature branch (feat/*, fix/*, chore/*, docs/*) → PR to dev (squash merge)
@@ -10,9 +9,7 @@ feature branch (feat/*, fix/*, chore/*, docs/*) → PR to dev (squash merge)
                                                 → tag v* on main → GitHub Release
 ```
 
-This is the canonical brettdavies release pattern with `release/*` cherry-pick branches. Plans live on `dev` forever and
-`guard-main-docs.yml` blocks any `added` or `modified` engineering-doc files in PRs targeting `main`. The release-branch
-cherry-pick handles this cleanly: docs commits stay on `dev`, only feature/fix/chore commits go onto `release/*`.
+Direct commits to `dev` or `main` are not permitted: every change has a PR number in its squash commit message.
 
 ## Branches
 
@@ -20,13 +17,10 @@ cherry-pick handles this cleanly: docs commits stay on `dev`, only feature/fix/c
 | -------------------------------------- | ------------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
 | `main`                                 | Released bundle. Only release-merged commits.           | Forever.                                    | `.github/rulesets/protect-main.json` |
 | `dev`                                  | Integration. All feature PRs land here. Default branch. | Forever. Never delete.                      | `.github/rulesets/protect-dev.json`  |
-| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Feature work.                                           | One PR's worth. Auto-deleted on merge.      | None — squash into `dev` freely.     |
+| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Feature work.                                           | One PR's worth. Auto-deleted on merge.      | None. Squash into `dev` freely.      |
 | `release/*`                            | Head of a `release/* → main` PR.                        | One release's worth. Auto-deleted on merge. | None.                                |
 
-`dev` is a **forever branch**. Never delete it locally or remotely, even after a `release/* → main` merge. The next
-release cycle reuses the same `dev`. The repo's `delete_branch_on_merge: true` setting doesn't touch `dev` because `dev`
-is never the head of a PR — using a short-lived `release/*` head is what keeps the setting compatible with a forever
-integration branch.
+→ Rationale: [`RELEASES-RATIONALE.md` § Branching model](./RELEASES-RATIONALE.md#branching-model).
 
 ## Daily development (feature → dev)
 
@@ -41,109 +35,87 @@ gh pr create --base dev --title "feat(scope): what changed"
 
 - **Commit style**: [Conventional Commits](https://www.conventionalcommits.org/).
 - **PR body**: follow `.github/pull_request_template.md`. The `## Changelog` section is the source of truth for
-  user-facing release notes — `CHANGELOG.md` entries derive from it directly.
+  user-facing release notes; `CHANGELOG.md` entries derive from it directly. See [§ PR body](#pr-body).
+- **PR body prose scrub**: see [§ Prose scrubbing](#prose-scrubbing).
+
+## PR body
+
+Every PR (feature, fix, docs, release) uses `.github/pull_request_template.md` verbatim.
+
+- **No explainer prose anywhere in the body.** User-facing substance only.
+- **Changelog** subsections (`### Added` / `### Changed` / `### Fixed` / `### Removed` / `### Security`): 1-5 bullets
+  each, delete empty subsections, each bullet starts with a verb.
+- A PR with no user-facing impact (pure refactor, test-only, CI-only) leaves `## Changelog` empty or omits it.
+
+→ Rationale: [`RELEASES-RATIONALE.md` § PR body conventions](./RELEASES-RATIONALE.md#pr-body-conventions).
 
 ## Releasing dev to main
 
 Engineering docs (`docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/`) live on `dev` only.
-`guard-main-docs.yml` blocks any `added` or `modified` files under those paths from reaching `main`. Branching from
-`dev` and deleting docs on the way produces `add/add` merge conflicts whenever `dev` and `main` have diverged (the norm
-after the first squash merge). The cherry-pick pattern avoids this.
+`guard-main-docs.yml` blocks any `added` or `modified` files under those paths from reaching `main`.
 
 **Branch naming**: `release/v<X.Y.Z>` (preferred) or `release/<date>-<slug>`. Keep the slug short and descriptive.
 
 ```bash
-# 1. Cut release/* from main, NOT dev. Branching from dev causes add/add
-#    conflicts when dev and main have divergent histories.
+# 1. Cut release/* from main, NOT dev.
 git fetch origin
 git checkout -b release/v<X.Y.Z> origin/main
 
-# 2. List the dev commits not yet on main:
+# 2. List the dev commits not yet on main.
 git log --oneline dev --not origin/main
 
-# 3. Cherry-pick non-docs commits onto release/v<X.Y.Z>. Docs commits
-#    (anything that touched only docs/plans/, docs/solutions/,
-#    docs/brainstorms/, or docs/reviews/) stay on dev.
+# 3. Cherry-pick non-docs commits onto release/v<X.Y.Z>. Docs commits stay on dev.
 git cherry-pick <sha1> <sha2> ...
 
-# 4. Triple-diff verification — belt-and-suspenders sweep that catches both
-#    directions of drift before the release tag goes out:
-#
-#    A. main → release  (what users will see; the intended ship surface)
-#    B. release → dev   (should be empty for non-doc paths until the
-#                        bump/CHANGELOG commits land, and even then should
-#                        only list those release-prep files — anything else
-#                        is a missed cherry-pick)
-#    C. dev → main      (sanity: phantom commits dev "appears ahead" on
-#                        because cherry-pick rewrites SHAs post-squash)
-git diff origin/main..HEAD --stat                                                # A
-git diff HEAD..origin/dev --name-only | grep -v '^docs/' || echo "(none)"        # B
-git diff origin/dev..origin/main --stat | tail -5                                # C
-#
-# Re-confirm no guarded paths leaked (this caught the original miss class):
+# 4. Triple-diff verification.
+git diff origin/main..HEAD --stat                                              # A: ship surface
+git diff HEAD..origin/dev --name-only | grep -v '^docs/' || echo "(none)"      # B: no missed picks
+git diff origin/dev..origin/main --stat | tail -5                              # C: phantom-commits sanity
+
+# Re-confirm no guarded paths leaked.
 git diff origin/main..HEAD --name-only \
   | grep -E '^(docs/plans|docs/brainstorms|docs/ideation|docs/reviews|docs/solutions|\.context)' \
-  && echo "LEAKED — reset and redo" || echo "(clean — no guarded paths)"
-#
-# Patch-id cherry check — catches commits on dev that have NO patch-id
-# equivalent on release. The file-level diff in B misses this class when
-# the same content happens to land via a different commit.
-#
-# IMPORTANT: in a squash-merge workflow this output is noisy. Every '+'
-# line needs human triage — it does NOT auto-block the release. Expected
-# sources of '+' lines that are NOT real misses:
-#
-#   1. Historical commits squash-merged in prior releases. The squash
-#      commit on main has a different patch-id than the dev commits it
-#      consolidates, so old commits show as '+' forever. Anything older
-#      than the previous release tag is almost always this.
-#   2. Cherry-picks where conflict resolution stripped guarded paths
-#      (docs/plans, docs/brainstorms, etc.) or otherwise altered the
-#      tree. Same source-code intent, different patch-id.
-#   3. Intentionally skipped commits — docs-only commits, release-prep
-#      backports, revert-and-redo prep steps.
-#
-# A real miss looks like: a recent feat/fix/chore commit on dev whose
-# *file content* is not yet on main. To triage a '+' line:
-#
-#   git show <sha> --stat                       # what did it touch?
-#   git diff origin/main..HEAD -- <those-files> # already on release?
-#
-# If every touched file is guarded (docs/plans/, docs/brainstorms/, etc.)
-# OR the content is already on main via a prior squash, it's a false
-# positive — no action. Otherwise cherry-pick the commit and re-run the
-# triple-diff.
-git cherry HEAD origin/dev | grep '^+' || echo "(none — release is patch-equivalent through dev)"
-#
-# If B lists any non-docs path you didn't expect, fetch dev, identify the
-# commit (`git log dev --not origin/main`), cherry-pick it, re-run the
-# triple-diff. Missed cherry-picks have shipped to main on this and sibling
-# repos before — this step is the cheap way to catch them.
+  && echo "LEAKED — reset and redo" || echo "(clean)"
+
+# Patch-id cherry check (noisy in squash-merge workflow; triage per-line).
+git cherry HEAD origin/dev | grep '^+' || echo "(none)"
 
 # 5. Bump VERSION on the release branch.
 echo '<X.Y.Z>' > VERSION
 
-# 6. Generate CHANGELOG entries from PR bodies. NEVER hand-edit CHANGELOG.md —
-#    the script is authoritative. It reads cliff.toml + each cherry-picked PR's
-#    ## Changelog section and prepends a versioned [<X.Y.Z>] entry.
+# 6. Re-vendor the spec if a new tag has shipped upstream.
+scripts/sync-spec.sh
+git add spec/ && git commit -m "chore(spec): re-vendor spec to <version>" || true
+
+# 7. Generate CHANGELOG entries from PR bodies.
 scripts/generate-changelog.sh
 # (the script extracts <X.Y.Z> from the branch name release/v<X.Y.Z>)
 
-# 7. Commit the version bump and generated changelog.
+# 8. Scrub CHANGELOG.md via Vale + LanguageTool + unslop. See § Prose scrubbing.
+#    Fix findings on upstream PR bodies, never by hand-editing CHANGELOG.md.
+
+# 9. Commit the version bump and generated changelog.
 git add VERSION CHANGELOG.md
 git commit -m "chore(release): v<X.Y.Z>"
 
-# 8. Push and open the PR:
+# 10. Push and open the PR. Scrub body in /tmp/ first.
 git push -u origin release/v<X.Y.Z>
-gh pr create --base main --head release/v<X.Y.Z> --title "release: v<X.Y.Z> — <one-line summary>"
+gh pr create --base main --head release/v<X.Y.Z> \
+  --title "release: v<X.Y.Z> — <one-line summary>" --body-file /tmp/body.md
 ```
 
 When the PR merges:
 
 1. The squash commit lands on `main` with the PR body as its message.
 2. `release/v<X.Y.Z>` is auto-deleted.
-3. Tag the new `main` HEAD: `git checkout main && git pull && git tag -a v<X.Y.Z> -m "v<X.Y.Z>" && git push origin
-   v<X.Y.Z>`.
+3. Tag the new `main` HEAD:
+
+   ```bash
+   git checkout main && git pull
+   git tag -a v<X.Y.Z> -m "v<X.Y.Z>"
+   git push origin v<X.Y.Z>
+   ```
+
 4. Create the GitHub Release using the generated CHANGELOG section:
 
    ```bash
@@ -153,81 +125,81 @@ When the PR merges:
 
 Consumers detect the new release on their next `bin/check-update` run; nothing else to do here.
 
-`dev` keeps moving forward. Never reset or rebase `dev` after a release — it is forever.
+`dev` keeps moving forward. Never reset or rebase `dev` after a release: it is forever.
 
-### CHANGELOG is generated, never hand-written
-
-`scripts/generate-changelog.sh` (with `cliff.toml`) is the only sanctioned way to update `CHANGELOG.md`. The script:
-
-- Runs `git-cliff` to prepend a versioned entry for commits since the last tag.
-- Walks each squash-merged PR's body, extracts the `## Changelog` section's `### Added` / `### Changed` / `### Fixed` /
-  `### Documentation` subsections, and replaces the auto-generated bullets with the curated PR-body content (with author
-  and PR-link attribution).
-
-If a PR's `## Changelog` section is empty, that PR's entry is omitted from the changelog (the convention in
-[`.github/pull_request_template.md`](.github/pull_request_template.md): empty section = no user-facing change). To fix a
-wrong CHANGELOG entry, fix the input — edit the squash-merged PR body, then re-run the script. Do **not** edit
-`CHANGELOG.md` directly.
-
-`scripts/generate-changelog.sh --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`) —
-wire this into the release-branch CI if/when one is added.
-
-### Why branch from main, not dev
-
-Branching from `dev` and then `gio trash`-ing the guarded paths seems simpler but produces `add/add` merge conflicts
-whenever `dev` and `main` have diverged. The file appears as "added" on both sides with different content. Always branch
-from `origin/main` and cherry-pick onto it.
-
-## Spec re-vendoring
-
-The bundle vendors a snapshot of [`agentnative-spec`](https://github.com/brettdavies/agentnative) under `spec/`. When
-the spec ships a new tag (e.g., `v0.3.0`), this skill re-vendors via `scripts/sync-spec.sh` on the `release/v<X.Y.Z>`
-branch — same commit as the version bump, message `chore(spec): re-vendor spec to <version>`. The script auto-resolves
-the latest upstream tag from the remote, so no manual version selection is needed. Without re-vendoring, the bundle
-ships stale spec content while consumers see the new version on `anc.dev`.
+→ Rationale + triple-diff false-positive triage:
+[`RELEASES-RATIONALE.md` § Triple-diff verification](./RELEASES-RATIONALE.md#triple-diff-verification). CHANGELOG
+mechanics: [`RELEASES-RATIONALE.md` § CHANGELOG generation](./RELEASES-RATIONALE.md#changelog-generation). Spec
+re-vendoring: [`RELEASES-RATIONALE.md` § Spec-vendor pipeline](./RELEASES-RATIONALE.md#spec-vendor-pipeline).
 
 ## Version bump procedure
 
-The version bump and CHANGELOG generation both happen on the `release/v<X.Y.Z>` branch (steps 5–6 of the cherry-pick
+The version bump and CHANGELOG generation both happen on the `release/v<X.Y.Z>` branch (steps 5-7 of the cherry-pick
 flow above). There is no separate version-bump PR to `dev`. Picking the version is the only manual decision:
 
-- **Patch** — doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump.
-- **Minor** — new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
+- **Patch**: doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump.
+- **Minor**: new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
   minor-level spec bump that adds requirements without tightening existing tiers.
-- **Major** — breaking changes to the bundle's contract: renaming `SKILL.md` frontmatter fields, restructuring directory
-  layout in ways that break existing skill installations, moving content between `` and the producer-ops root, or
-  vendoring a major-level spec bump (renamed/removed principles or tightened MUSTs that would regress existing
-  consumers).
+- **Major**: breaking changes to the bundle's contract (renaming `SKILL.md` frontmatter fields, restructuring directory
+  layout in ways that break existing skill installations, moving content between subdirectories and the producer-ops
+  root, or vendoring a major-level spec bump).
 
-The skill's version is independent of the spec it vendors. A spec bump that doesn't affect the skill's surface (e.g.,
-prose-only edits) can ship as a patch even when the spec went minor. Use the SemVer guidance above against the *skill's*
-observable behaviour, not the spec's.
+→ Rationale: [`RELEASES-RATIONALE.md` § Spec-vendor pipeline](./RELEASES-RATIONALE.md#spec-vendor-pipeline) (skill
+version is independent of spec version).
 
-## PRs and changelog generation
+## Prose scrubbing
 
-Every PR **must** follow `.github/pull_request_template.md`. The template's `## Changelog` section has these
-subsections:
+Three release-flow artifacts live outside any automated prose check and need a manual scrub before they ship:
 
-- `### Added` — new user-visible features or capabilities (new principles, new checks, new templates).
-- `### Changed` — changes to existing behavior (e.g., a check's pass/fail criteria tightens).
-- `### Fixed` — bug fixes (e.g., a check produces false positives).
-- `### Removed` — removed features or APIs.
-- `### Security` — security-relevant changes (e.g., a script that ran on user machines now refuses an unsafe path).
+- PR bodies (`gh pr create` / `gh pr edit` send body text directly to GitHub).
+- `CHANGELOG.md` (a generated artifact built from upstream PR bodies).
+- Release-PR bodies (composed after `CHANGELOG.md` has been generated).
 
-A PR that lands with an empty or missing `## Changelog` section silently drops its user-facing notes from the next
-release. If a PR truly has no user-facing impact (pure refactor, test-only, CI-only), leave the section empty — the PR
-still appears in git history.
+The canonical Vale + LanguageTool rule packs and orchestrator behaviour live in the spec repo at
+[`~/dev/agentnative-spec/docs/architecture/voice-enforcement.md`](https://github.com/brettdavies/agentnative/blob/dev/docs/architecture/voice-enforcement.md).
+Until those packs are vendored into this repo via a `scripts/sync-spec.sh` extension (a deferred follow-up), the scrub
+commands point at the spec checkout directly.
+
+```bash
+# 1. Save the artifact to /tmp/.
+gh pr view <num> --json body --jq .body > /tmp/body.md         # for PR body edits
+# cp CHANGELOG.md /tmp/body.md                                 # for changelog scrub
+
+# 2. Vale (against the spec's rule packs).
+vale --no-global --config ~/dev/agentnative-spec/.vale.ini --output=line --minAlertLevel=error /tmp/body.md
+
+# 3. LanguageTool grammar check via lt_check (~/dotfiles/config/shell/languagetool.sh).
+#    Skips cleanly if LT is unreachable. Inspect: `lt_rules`, `lt_info`. See
+#    ~/dev/agentnative-spec/CONTRIBUTING.md § Voice enforcement for the
+#    install-vs-required nuance.
+lt_check /tmp/body.md
+
+# 4. unslop (em-dash density and AI-unique structural patterns).
+~/.claude/skills/unslop/scripts/score.py /tmp/body.md
+
+# 5. Apply fixes per finding. Re-run until 0 blocking and unslop score is 0.
+
+# 6. Apply the cleaned version.
+gh pr edit <num> --body-file /tmp/body.md     # for PR body edits
+# scripts/generate-changelog.sh                # for CHANGELOG.md (re-runs the PR-body fetch from GitHub)
+```
+
+For a `CHANGELOG.md` finding, fix the upstream PR body and regenerate. Hand-editing `CHANGELOG.md` directly produces
+drift the next regeneration overwrites.
+
+→ Rationale + which artifacts need this:
+[`RELEASES-RATIONALE.md` § Prose scrubbing scope](./RELEASES-RATIONALE.md#prose-scrubbing-scope).
 
 ## Branch protection
 
 Three rulesets are committed under `.github/rulesets/` and applied to the repo via the GitHub API:
 
-- **`protect-main.json`** — required signatures, linear history, squash-only merges via PR with CODEOWNERS review,
+- **`protect-main.json`**: required signatures, linear history, squash-only merges via PR with CODEOWNERS review,
   required status checks (`markdownlint`, `shellcheck`, `guard-docs / check-forbidden-docs`), creation/deletion blocked,
   non-fast-forward blocked.
-- **`protect-dev.json`** — required signatures, deletion blocked, non-fast-forward blocked. No PR-requirement at the
-  ruleset level; the PR-only norm is enforced by convention.
-- **`protect-tags.json`** — `v*` tags: deletion, force-push (re-tag), and updates all blocked. Tags are immutable
+- **`protect-dev.json`**: required signatures, deletion blocked, non-fast-forward blocked. PR-only norm is enforced by
+  convention.
+- **`protect-tags.json`**: `v*` tags. Deletion, force-push (re-tag), and updates all blocked. Tags are immutable
   historical anchors for released versions.
 
 ### Apply (post-public-flip)
@@ -255,9 +227,7 @@ gh api repos/brettdavies/agentnative-skill/rulesets --jq '.[] | "\(.id)\t\(.name
 gh api -X PUT repos/brettdavies/agentnative-skill/rulesets/<id> --input .github/rulesets/protect-main.json
 ```
 
-### Status-check context pitfall
-
-`required_status_checks[].context` strings must match exactly what GitHub publishes for each check. For this repo:
+### Status-check contexts (verified)
 
 | Check              | Source                                         | Context (verified)                  |
 | ------------------ | ---------------------------------------------- | ----------------------------------- |
@@ -271,10 +241,15 @@ Confirm post-CI with:
 gh api repos/brettdavies/agentnative-skill/commits/<sha>/check-runs --jq '.check_runs[].name'
 ```
 
+→ Rationale (inline vs reusable, three-ruleset shape):
+[`RELEASES-RATIONALE.md` § Branch protection](./RELEASES-RATIONALE.md#branch-protection).
+
 ## Related docs
 
-- [`AGENTS.md`](./AGENTS.md) — repo layout, lint commands, what agents must not do.
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — how to propose changes.
-- [`.github/pull_request_template.md`](.github/pull_request_template.md) — PR body structure with changelog sections.
-- [`.github/rulesets/README.md`](.github/rulesets/README.md) — ruleset apply + verify procedure.
-- [`CHANGELOG.md`](./CHANGELOG.md) — released versions and their notes.
+- [`RELEASES-RATIONALE.md`](./RELEASES-RATIONALE.md) (release flow rationale, CHANGELOG pipeline, branch-protection
+  pitfalls)
+- [`AGENTS.md`](./AGENTS.md) (repo layout, lint commands, what agents must not do)
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) (how to propose changes)
+- [`.github/pull_request_template.md`](.github/pull_request_template.md) (PR body structure with changelog sections)
+- [`.github/rulesets/README.md`](.github/rulesets/README.md) (ruleset apply + verify procedure)
+- [`CHANGELOG.md`](./CHANGELOG.md) (released versions and their notes)
