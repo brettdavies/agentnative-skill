@@ -1,0 +1,95 @@
+name: "Bundle bug"
+description: "Report a bug in the skill bundle (stale example, broken link, contradiction with the spec, drift in `getting-started.md`)."
+title: "bug: <short description>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Route check before filing:**
+
+        - For bugs in `anc` (the checker itself — wrong scorecard, missing check, false positive), file on the
+          [linter repo](https://github.com/brettdavies/agentnative-cli/issues/new/choose).
+        - For substantive principle changes (new principles, MUST/SHOULD/MAY tier changes), file on the
+          [spec repo](https://github.com/brettdavies/agentnative/issues/new/choose).
+        - This tracker is for skill-bundle bugs: stale templates, broken links, wrong invocations in
+          `getting-started.md`, drift between vendored spec and other bundle docs, etc.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: "One or two sentences. Include the file, the cited example, and the unexpected behavior."
+    validations:
+      required: true
+  - type: textarea
+    id: what-expected
+    attributes:
+      label: What you expected
+      description: "One sentence — what should the bundle have said or done instead?"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce
+      description: "Numbered steps + exact commands or quoted bundle content. Redact paths and credentials."
+      placeholder: |
+        1.
+        2.
+        3.
+
+        ```bash
+        # exact commands
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "Bundle version, pinned spec version, host runtime, `anc --version` if relevant, OS and shell."
+      placeholder: |
+        - Bundle version (`cat VERSION` if cloned, or the tag you installed): vX.Y.Z
+        - Pinned spec version (`cat spec/VERSION`): vX.Y.Z
+        - Host (Claude Code / Cursor / Codex / OpenCode / other):
+        - `anc --version` (if a workflow involving anc is at issue):
+        - OS and shell:
+    validations:
+      required: true
+  - type: textarea
+    id: why-bundle-bug
+    attributes:
+      label: Why this is a bundle bug (not spec or anc)
+      description: |
+        Optional but useful. If a getting-started flow doesn't work, explain whether the breakage is in this bundle's
+        prose (fixable here) vs. in `anc`'s behavior (file in agentnative-cli) vs. in the principle text itself
+        (file in agentnative-spec).
+    validations:
+      required: false
+  - type: textarea
+    id: ai-disclosure
+    attributes:
+      label: AI disclosure
+      description: "One sentence: what part of this report was AI-written, what was human-written?"
+      placeholder: "Reproduction observed by hand; analysis section was AI-assisted."
+    validations:
+      required: true
+  - type: textarea
+    id: agent-instructions
+    attributes:
+      label: For agents
+      description: "Agents: expand this section before filing."
+      value: |
+        <details>
+        <summary>Agent filing instructions</summary>
+
+        1. **Search first.** Run `gh search issues --repo brettdavies/agentnative-skill "<keywords>"` to check for
+           duplicates.
+        2. **Route check.** Verify this is a skill-bundle bug, not an `anc` checker bug (file in agentnative-cli) or
+           a spec issue (file in agentnative).
+        3. **AI disclosure is required.** Fill the field above honestly.
+        4. See [CONTRIBUTING.md](https://github.com/brettdavies/agentnative-skill/blob/main/CONTRIBUTING.md) for full
+           guidelines.
+        </details>
+    validations:
+      required: false
