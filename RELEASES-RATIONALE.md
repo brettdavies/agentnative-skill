@@ -139,6 +139,31 @@ This is why `main` (not `dev`) must be the published-release pointer: a `git clo
 `bin/check-update` compares against `main`. Cutting a release without fast-forwarding `main` would mean consumers never
 see the new VERSION.
 
+## Why backport `main` → `dev` after publish
+
+Once a release tag publishes, `scripts/sync-dev-after-release.sh` backports the release-bookkeeping files from `main` to
+`dev` so future feature branches inherit the correct baseline. Two files move: `VERSION` (overwritten with the released
+number) and `CHANGELOG.md` (copied verbatim from `origin/main`, which is authoritative for the changelog).
+
+Without the backport, `dev` keeps the pre-release `VERSION` indefinitely (the release bump lives only on the `release/*`
+branch that was squash-merged to `main` and never touched `dev`). Feature branches cut from `dev` then carry a stale
+baseline — confusing during review, and load-bearing in two places: (a) `bin/check-update` compares the caller's local
+`VERSION` against the producer repo's `main`, so a stale local `VERSION` from a `dev` clone would falsely report
+`UPGRADE_AVAILABLE` on a current main; (b) the `chore(spec)` re-vendor commit message references the current bundle
+version.
+
+The backport lands directly on `dev` (one signed commit, no PR). This is a deliberate exception to the PR-only norm on
+`dev` documented in [`RELEASES.md`](./RELEASES.md) — the change is mechanical (no design content) and the script's
+idempotency makes it safe to re-run. The exception holds only for this script's output; everything else still lands on
+`dev` via PR.
+
+The script is idempotent: it exits 0 with no commit when `VERSION` and `CHANGELOG.md` already match `main`. Safe to
+re-run, safe to invoke from automation that doesn't track whether the last release was already backported.
+
+Mirror of `~/dev/agentnative-cli/scripts/sync-dev-after-release.sh`. The cli variant additionally regenerates
+`Cargo.lock` via `cargo build --release` after surgically updating `Cargo.toml`'s `[package].version`; the skill bundle
+is markdown-only and ships no lock file, so those steps drop.
+
 ## Prose scrubbing scope
 
 Three release-flow artifacts live outside any automated prose check and need a manual scrub before they ship:
