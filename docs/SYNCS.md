@@ -11,14 +11,17 @@ repo to its three sibling repos (`agentnative` spec, `agentnative-site`, `agentn
 
 | Source                                             | Mechanism                       | What's synced                                               | Trigger / cadence                                                                                          | Drift check                                                                                                                                                    |
 | -------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `brettdavies/agentnative` (spec) @ latest `v*` tag | `scripts/sync-spec.sh` (manual) | `principles/p*-*.md` + `VERSION` + `CHANGELOG.md` → `spec/` | Re-run on the `release/v<X.Y.Z>` branch as part of every release (see `RELEASES.md` §"Spec re-vendoring"). | None automated — relies on the release-branch checklist. The script itself is idempotent; `git status` after a re-run surfaces orphan files from spec renames. |
+| `brettdavies/agentnative` (spec); default latest `v*` tag, or any branch/tag/SHA via `--ref` | `scripts/sync-spec.sh` (manual) | `principles/p*-*.md` + `VERSION` + `CHANGELOG.md` → `spec/` | Re-run on the `release/v<X.Y.Z>` branch as part of every release (see `RELEASES.md` §"Spec re-vendoring"). Cross-repo coordination: rerun with `--ref dev` (or a SHA) to consume in-flight spec work before a release cuts. | None automated — relies on the release-branch checklist. The script itself is idempotent; `git status` after a re-run surfaces orphan files from spec renames. The script prints the resolved short SHA on every run regardless of ref type so the release branch can record the exact pin. |
 
 **Mechanism notes:**
 
-- Resolution is **remote-first**: queries `https://github.com/brettdavies/agentnative.git` for the latest `v*` tag,
-  shallow-clones it into a temp dir, extracts files via `git show` so neither working tree is perturbed.
-- Falls back to a local checkout (`$HOME/dev/agentnative-spec`, override with `SPEC_ROOT`) only when the remote query
-  fails.
+- Resolution uses `gh api` against `https://github.com/brettdavies/agentnative.git` (override with `SPEC_REMOTE_URL`).
+  Pulls VERSION, CHANGELOG.md, and `principles/p*-*.md` individually via the contents endpoint at the resolved ref. No
+  clone, no tarball — branches, tags, and SHAs all take the same code path via `?ref=<X>`.
+- Default ref is the latest `v*` tag, resolved via the same API. `--ref <branch|tag|SHA>` (or `SPEC_REF=<ref>` env var)
+  vendors any explicit ref for cross-repo coordination of in-flight spec work that hasn't released yet.
+- Falls back to a local checkout (`$HOME/dev/agentnative-spec`, override with `SPEC_ROOT`) only when `gh api` is
+  unreachable (offline / unauthenticated). The local-fallback path uses `git` against `SPEC_ROOT`.
 - Mirror of `~/dev/agentnative-cli/scripts/sync-spec.sh` — only `DEST_DIR` differs. Keep them aligned when changing
   either.
 
