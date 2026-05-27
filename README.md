@@ -25,13 +25,17 @@ agentnative-skill/
 ├── templates/              drop-in starter files (clap-main, error-types, output-format, agents-md-template)
 ├── VERSION                 single-line current version (read by bin/check-update)
 ├── scripts/
-│   ├── sync-spec.sh        vendor the latest agentnative-spec v* tag into spec/
-│   └── generate-changelog.sh  release-time CHANGELOG generator (git-cliff + PR-body extraction)
+│   ├── sync-spec.sh                vendor the latest agentnative-spec v* tag into spec/
+│   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD
+│   └── generate-changelog.sh       release-time CHANGELOG generator (git-cliff + PR-body extraction)
 ├── docs/plans/             engineering plans (dev-only — guarded out of main)
 ├── .github/                workflows, rulesets, issue templates, PR template
 ├── AGENTS.md               project-level agent instructions FOR THIS REPO (producer-side)
+├── BRAND.md                universal voice and identity (vendored from agentnative-spec)
+├── PRODUCT.md              skill-bundle channel design context (inherits from BRAND.md)
 ├── CONTRIBUTING.md         how to propose changes
 ├── RELEASES.md             release procedure (cherry-pick from dev → release/* → main)
+├── RELEASES-RATIONALE.md   rationale companion to RELEASES.md (the WHY)
 ├── SECURITY.md             vulnerability disclosure
 ├── CHANGELOG.md            released versions (generated, never hand-edited)
 ├── cliff.toml              git-cliff configuration
@@ -68,7 +72,7 @@ prompted by `bin/check-update`.
 - [`templates/`](./templates/): drop-in starting points for greenfield Rust CLIs (`clap-main.rs`, `error-types.rs`,
   `output-format.rs`, `agents-md-template.md`).
 
-The principles are also published as a stable web reference at [anc.dev/p1](https://anc.dev/p1) through `/p7`.
+The principles are also published as a stable web reference at [anc.dev/p1](https://anc.dev/p1) through `/p8`.
 
 ## Versioning
 

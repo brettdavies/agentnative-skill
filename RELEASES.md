@@ -207,15 +207,20 @@ Three rulesets are committed under `.github/rulesets/` and applied to the repo v
 - **`protect-tags.json`**: `v*` tags. Deletion, force-push (re-tag), and updates all blocked. Tags are immutable
   historical anchors for released versions.
 
-### Apply (post-public-flip)
+### Apply
 
-The repo ships **PRIVATE** through the bootstrap window. GitHub's free tier does not allow rulesets on private repos.
-After visibility flips to public from the agentnative-site session:
+All three rulesets are already installed on this repo. Re-runnable for new repos or after a ruleset reset:
 
 ```bash
 gh api repos/brettdavies/agentnative-skill/rulesets -X POST --input .github/rulesets/protect-main.json
 gh api repos/brettdavies/agentnative-skill/rulesets -X POST --input .github/rulesets/protect-dev.json
 gh api repos/brettdavies/agentnative-skill/rulesets -X POST --input .github/rulesets/protect-tags.json
+```
+
+Verify installed rulesets:
+
+```bash
+gh api repos/brettdavies/agentnative-skill/rulesets --jq '.[] | "\(.id)\t\(.name)\t\(.target)"'
 ```
 
 See [`.github/rulesets/README.md`](.github/rulesets/README.md) for verification + negative tests.

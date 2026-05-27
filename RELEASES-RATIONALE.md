@@ -171,11 +171,12 @@ The third (`protect-tags.json`) treats `v*` tags as immutable historical anchors
 force-push (re-tag), and updates are all blocked. The bundle's `bin/check-update` and the `git clone --depth 1` install
 path both rely on `main` and on tag identity; a re-tagged release would lie to consumers about what they're installing.
 
-### Private-repo ruleset gap
+### Why the apply step is re-runnable
 
-The repo ships PRIVATE through the bootstrap window. GitHub's free tier does not allow rulesets on private repos.
-Rulesets must be applied after visibility flips to public from the agentnative-site session. The `apply` steps in
-RELEASES.md are deliberately written to be re-runnable post-flip.
+The three rulesets ship in `.github/rulesets/` and are applied via the GitHub API. The apply commands in RELEASES.md are
+deliberately idempotent so they survive: (a) the original public-flip from the bootstrap window when the repo was
+private (GitHub's free tier does not allow rulesets on private repos, so rulesets could not be applied until visibility
+flipped); (b) any future ruleset reset; (c) the same procedure being copied into a new repo's bootstrap.
 
 ### Status-check context strings
 
