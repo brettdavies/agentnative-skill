@@ -137,6 +137,24 @@ Consumers detect the new release on their next `bin/check-update` run; nothing e
 mechanics: [`RELEASES-RATIONALE.md` § CHANGELOG generation](./RELEASES-RATIONALE.md#changelog-generation). Spec
 re-vendoring: [`RELEASES-RATIONALE.md` § Spec-vendor pipeline](./RELEASES-RATIONALE.md#spec-vendor-pipeline).
 
+### After publish — sync `dev` with the release
+
+Once the release tag is published, backport the release-bookkeeping files from `main` to `dev`:
+
+```bash
+./scripts/sync-dev-after-release.sh v<X.Y.Z>
+git push origin dev
+```
+
+The script overwrites `VERSION` with the released number and copies `CHANGELOG.md` verbatim from `origin/main`, then
+commits the result directly to `dev` as one signed commit (no PR). Without this step `dev`'s `VERSION` and
+`CHANGELOG.md` stay frozen at the pre-release state, and future feature branches inherit the wrong baseline.
+
+The backport is idempotent: re-running on a `dev` already in sync exits 0 with no commit.
+
+→ Rationale:
+[`RELEASES-RATIONALE.md` § Why backport `main` → `dev` after publish](./RELEASES-RATIONALE.md#why-backport-main--dev-after-publish).
+
 ## Version bump procedure
 
 The version bump and CHANGELOG generation both happen on the `release/v<X.Y.Z>` branch (steps 5-7 of the cherry-pick
