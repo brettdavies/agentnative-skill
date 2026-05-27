@@ -1,14 +1,47 @@
 ---
 title: "feat: gstack-style update-check mechanism + drop install.json SHA pin"
 type: feat
-status: active
+status: complete
+completed_date: 2026-05-03
 skill_scope_status: complete
 skill_scope_completed_date: 2026-04-29
+site_scope_status: complete
+site_scope_completed_date: 2026-05-03
 date: 2026-04-28
 parent: ~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-launch-inversion-20260427-144756.md
 ---
 
 # feat: gstack-style update-check mechanism + drop install.json SHA pin
+
+## Status update 2026-05-27
+
+Plan goals achieved across both repos, though site-scope work landed via a wider refactor than originally scoped:
+
+- **Skill scope (U1, U2, skill-side U6)**: shipped 2026-04-29 via PR #8 in `agentnative-skill`
+  (`bundle/bin/check-update`
+- SKILL.md preamble + SoT scrubs). Note: `bundle/*` was later flattened to repo root in PR #5 (`0bf8a88 refactor!:
+  flatten bundle/* to repo root for plain git-clone install`); current path is `bin/check-update`.
+
+- **Site scope (U3, U4, U5)**: superseded — the install.json/install.mjs file pair this plan targeted no longer exists.
+  PR #44 (`refactor(skill): split /install into /install (CLI) + /skill (skill bundle)`, 2026-04-29) split the consumer
+  manifest into `src/data/skill.json` (handled by `src/build/skill.mjs`); PR #67 (`chore(skill): drop deprecated SHA-pin
+  enforcement surface`) and PR #72 (`chore(skill): bump manifest version 0.1.0 to 0.2.0`) shipped via release PR #73
+  (2026-05-03) and dropped `source.commit`, `verify`, and SHA-pin validators. Current `skill.json` `source` is `{type:
+  "git", url: ...}` only — no commit, no verify section. The functional outcome U3–U5 specified is met; the file paths
+  and validator names in U3–U5's body are historical.
+- **Site-scope U6 retroactive scrubs**: complete. `~/.gstack/` central tracker SoT section landed 2026-04-29.
+  `agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md` had its four `source.commit` jq
+  checks replaced with current-shape `schema_version` / `source.url` assertions (direct-to-`dev` 2026-05-27 per the
+  planning-doc exception to the PR-only norm).
+  `~/.gstack/projects/brettdavies-agentnative-site/cross-repo-canonical-pointer.md` was rewritten to describe
+  `anc.dev/skill*` endpoints + `bin/check-update`-driven update detection. The bootstrap-plan target
+  (`agentnative-skill/docs/plans/2026-04-27-001-bootstrap-agentnative-skill-plan.md`) was left in its
+  preserved-with-addendum shape: the `Executed scope (2026-04-29)` subsection explicitly states the original SHA-pin
+  language above is preserved verbatim as historical record.
+
+Plan flipped from `active` to `complete` because the load-bearing work (replace consumer SHA-pin advisory with
+producer-side `bin/check-update`; drop SHA-pin from production manifests) is fully shipped on both repos. Unit-level
+status notes below preserve the original scope language for historical clarity.
 
 > **Parent:** `~/.gstack/projects/brettdavies-agentnative/brett-dev-design-show-hn-launch-inversion-20260427-144756.md`
 > — central Show HN launch tracker. This plan sequences as part of step 3a of the launch wave (skill v0.2.0 cherry-pick
@@ -420,7 +453,13 @@ and is exercised end-to-end via U1's smoke tests + manual upgrade-flow walkthrou
 
 ---
 
-- [ ] U3. **Drop SHA-pin fields from `install.json` + validators + buildInstallMarkdown prose**
+- [x] U3. **Drop SHA-pin fields from `install.json` + validators + buildInstallMarkdown prose** — superseded by the
+  install→skill refactor + SHA-pin cleanup arc. The targeted file pair (`src/data/install.json`,
+  `src/build/install.mjs`) was replaced by `src/data/skill.json` + `src/build/skill.mjs` in PR #44 (2026-04-29,
+  `agentnative-site` commit `8b20047`); SHA-pin enforcement was dropped in PR #67 + #72 (merged via release PR #73 on
+  2026-05-03). Current `skill.json` `source` is `{type, url}` only; no `commit`, no `verify` section, no SHA-pin
+  validators in `skill.mjs`. The functional outcome U3 specified is met under different filenames; the file-path and
+  validator-name references in this unit's body are historical.
 
 **Target repo:** `agentnative-site`
 
@@ -494,7 +533,10 @@ advisory).
 
 ---
 
-- [ ] U4. **Update `agentnative-site` tests to reflect new `install.json` shape**
+- [x] U4. **Update `agentnative-site` tests to reflect new `install.json` shape** — superseded alongside U3. The
+  install/skill split (PR #44) and the SHA-pin cleanup arc (PR #67 + #72 via release PR #73) shipped with test updates
+  in the same PRs. The test files referenced in this unit's body (`tests/build.test.ts`, `tests/regression.test.ts`,
+  `tests/e2e/install.e2e.ts`) reflect the new `skill.json` shape — no SHA-pin assertions, no `source.commit` checks.
 
 **Target repo:** `agentnative-site`
 
@@ -549,7 +591,14 @@ U3 and exercised by these tests.
 
 ---
 
-- [ ] U5. **Drop SHA-pin prose from `agentnative-site` docs**
+- [x] U5. **Drop SHA-pin prose from `agentnative-site` docs** — superseded alongside U3/U4. Consumer-facing prose
+  (`/install`, `/skill` page content rendered from `skill.mjs`) no longer carries "pinned at commit X" language; the
+  rendered HTML has neither a `## Verify` section nor a `source.commit` reference. The launch-readiness plan
+  (`agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md`) was scrubbed 2026-05-27 (four jq
+  `source.commit` checks replaced with current-shape `schema_version` / `source.url` assertions). The
+  skill-distribution-endpoint plan (`.../2026-04-24-001-feat-skill-distribution-endpoint-plan.md`) still describes the
+  pre-PR-#44 launch-day procedure in its body — those references are historical design narrative, not live acceptance
+  criteria, and remain intact as the as-designed record of that plan's scope.
 
 **Target repo:** `agentnative-site`
 
@@ -605,15 +654,18 @@ Test expectation: none — prose changes; manual review per Verification.
 
 ---
 
-- [x] U6. **Retroactive scrub: SoT section + site plan + gstack pointer + skill task #15** — substantially complete for
-  skill scope as of 2026-04-29. Skill-side: PR #11 dropped all SHA-pin model claims from
+- [x] U6. **Retroactive scrub: SoT section + site plan + gstack pointer + skill task #15** — complete across all four
+  targets. Skill-side (2026-04-29): PR #11 dropped all SHA-pin model claims from
   `RELEASES.md`/`AGENTS.md`/`README.md`/`CONTRIBUTING.md`/`spec/README.md` + rewrote `scripts/sync-spec.sh` to drop
   `SPEC_REF` entirely (no env-var override; auto-resolves latest `v*` tag remote-first with local fallback). Skill
-  bootstrap plan task #15 in-cherry-pick subsection updated 2026-04-29 with executed-scope addendum (this commit).
-  Central tracker (`brett-dev-design-show-hn-launch-inversion-...md`) updated 2026-04-29 with skill-side step 3a done +
-  step 4 trigger/gate-signal scrub. **Still pending in a parallel session (out of skill scope):** site plan
-  `2026-04-28-001-feat-show-hn-launch-readiness-plan.md` U-N references, `agentnative-site/cross-repo-canonical-
-  pointer.md`. Tracked alongside U3–U5 (the agentnative-site `install.json` shape changes).
+  bootstrap plan task #15 carries an `Executed scope (2026-04-29)` addendum that explains the supersession; the original
+  SHA-pin language above the addendum is preserved verbatim as historical record per the addendum's own statement.
+  Central tracker (`brett-dev-design-show-hn-launch-inversion-...md`) was scrubbed 2026-04-29. Site-side scrubs
+  (2026-05-27): `agentnative-site/docs/plans/2026-04-28-001-feat-show-hn-launch-readiness-plan.md` had its four
+  `source.commit` jq checks (smoke-pass narrative, test-scenarios bullet, launch-step subitem, post-merge cutover
+  checkbox) replaced with current-shape `schema_version` and `source.url` assertions. The gstack pointer
+  `~/.gstack/projects/brettdavies-agentnative-site/cross-repo-canonical-pointer.md` had its SHA-pin model paragraph
+  rewritten to describe the `anc.dev/skill*` endpoints + `bin/check-update`-driven update detection.
 
 **Target repo:** mixed (multiple, all plan-doc / pointer files). Direct-to-`dev` per CLAUDE.md plan-doc rule for repo
 files; direct file edit for `~/.gstack/` files (not git-tracked).
