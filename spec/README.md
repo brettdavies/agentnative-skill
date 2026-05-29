@@ -24,11 +24,12 @@ remote. The script extracts files via `git show`, so neither source's working tr
 
 ## Layout
 
-| Path               | Source in `agentnative-spec` | Purpose                                                       |
-| ------------------ | ---------------------------- | ------------------------------------------------------------- |
-| `VERSION`          | `VERSION`                    | Spec version string; the skill's vendored `SPEC_VERSION`      |
-| `CHANGELOG.md`     | `CHANGELOG.md`               | Spec change history; informational                            |
-| `principles/p*.md` | `principles/p*.md`           | Frontmatter `requirements[]` is the machine-readable contract |
+| Path                    | Source in `agentnative-spec` | Purpose                                                       |
+| ----------------------- | ---------------------------- | ------------------------------------------------------------- |
+| `VERSION`               | `VERSION`                    | Spec version string; the skill's vendored `SPEC_VERSION`      |
+| `CHANGELOG.md`          | `CHANGELOG.md`               | Spec change history; informational                            |
+| `principles/p*.md`      | `principles/p*.md`           | Frontmatter `requirements[]` is the machine-readable contract |
+| `principles/scoring.md` | `principles/scoring.md`      | Leaderboard formula, badge eligibility floor, and color bands |
 
 Each principle file has a YAML frontmatter block with `id`, `title`, `last-revised`, `status`, and `requirements[]`.
 Each `requirements[]` entry carries a stable `id` (e.g. `p1-must-no-interactive`), a `level` (`must`/`should`/`may`), an

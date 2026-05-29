@@ -2,10 +2,10 @@
 # Vendor agentnative-spec into spec/.
 #
 # Default behavior: resolves the latest v* tag of agentnative-spec via the
-# GitHub API and pulls VERSION, CHANGELOG.md, and principles/p*-*.md at
-# that tag. The vendored tree ships as part of the skill bundle so
-# consuming agents carry the canonical principle text alongside the skill
-# metadata.
+# GitHub API and pulls VERSION, CHANGELOG.md, principles/p*-*.md, and
+# principles/scoring.md at that tag. The vendored tree ships as part of
+# the skill bundle so consuming agents carry the canonical principle text
+# alongside the skill metadata.
 #
 # Override behavior (--ref / SPEC_REF): vendors an explicit branch HEAD,
 # tag, or commit SHA instead of the latest v* tag. Use for cross-repo
@@ -238,7 +238,11 @@ if [[ "$copied" -eq 0 ]]; then
     exit 1
 fi
 
-echo "wrote $copied principle file(s) to $DEST_PRINCIPLES"
+# scoring.md is a named spec doc (leaderboard ranking methodology), not a
+# p*-*.md principle, so it's fetched explicitly rather than via the glob.
+fetch_file "principles/scoring.md" "$DEST_PRINCIPLES/scoring.md"
+
+echo "wrote $copied principle file(s) + scoring.md to $DEST_PRINCIPLES"
 echo "wrote VERSION + CHANGELOG.md to $DEST_DIR"
 echo
 echo "next: review \`git diff\` for unexpected changes, then commit."
