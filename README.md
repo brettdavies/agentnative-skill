@@ -8,7 +8,7 @@ This skill is the fourth artifact in a four-repo ecosystem:
 | Repo                                                                        | Role                                                           |
 | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | [`agentnative`](https://github.com/brettdavies/agentnative) (the spec)      | Canonical text of the eight principles. CC BY 4.0.             |
-| [`agentnative-cli`](https://github.com/brettdavies/agentnative-cli) (`anc`) | The compliance checker. MIT / Apache-2.0.                      |
+| [`agentnative-cli`](https://github.com/brettdavies/agentnative-cli) (`anc`) | The compliance auditor. MIT / Apache-2.0.                      |
 | [`agentnative-site`](https://github.com/brettdavies/agentnative-site)       | `anc.dev`: leaderboard, scorecards, live scoring.              |
 | **This repo** (`agentnative-skill`)                                         | The agent-facing guide. Vendors the spec; teaches `anc` usage. |
 
@@ -61,7 +61,7 @@ prompted by `bin/check-update`.
 
 - [`SKILL.md`](./SKILL.md): skill metadata + entry-point pointer.
 - [`getting-started.md`](./getting-started.md): three working loops (existing CLI / new Rust / other language);
-  canonical `anc check` invocations; "where things live" map.
+  canonical `anc audit` invocations; "where things live" map.
 - [`bin/check-update`](./bin/check-update): periodic version check. Compares local `VERSION` to GitHub `main`, emits
   `UPGRADE_AVAILABLE` so the agent can offer to `git pull`.
 - [`spec/`](./spec/): vendored canonical principle text from
@@ -91,7 +91,7 @@ Issues and PRs welcome. See [`CONTRIBUTING.md`](./CONTRIBUTING.md). Routing:
   substantive principle changes happen there first.
 - **`anc` bugs or feature requests** → file in
   [`brettdavies/agentnative-cli`](https://github.com/brettdavies/agentnative-cli). The skill teaches `anc` usage but
-  doesn't implement the checker.
+  doesn't implement the auditor.
 - **Skill issues** (templates, references, getting-started, layout) → file here.
 
 Branch + release model documented in [`RELEASES.md`](./RELEASES.md).

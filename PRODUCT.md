@@ -36,15 +36,15 @@ the skill bundle teaches the workflow that connects the two.
 
 ## Register
 
-- **Instructional voice.** Second-person imperative is the default. "Run `anc check . --output json` to score the repo."
-  Not "the skill recommends running `anc check`."
+- **Instructional voice.** Second-person imperative is the default. "Run `anc audit . --output json` to score the repo."
+  Not "the skill recommends running `anc audit`."
 - **Every action is a runnable command.** Code blocks contain commands the reader can paste. Pseudo-commands and
   prose-only "how to think about it" are out.
 - **Reference-shaped tables.** Where the artifact is a list of options, files, or trade-offs, render it as a table with
   stable column headers. The three-artifact table at the top of `SKILL.md` and the useful-flags paragraph in
   `getting-started.md` are the patterns.
 - **Triggers and keywords are first-class.** The skill's `description` frontmatter determines which agents discover the
-  skill. Keep it dense in the canonical vocabulary (`agentic CLI`, `agent-native`, `anc check`, `audit-profile`, …). The
+  skill. Keep it dense in the canonical vocabulary (`agentic CLI`, `agent-native`, `anc audit`, `audit-profile`, …). The
   opposite of marketing prose; closer to a search-index line.
 - **Cross-link to the spec, the linter, and the templates.** A skill that paraphrases what the spec says drifts. Link
   instead, and quote the requirement ID, not the prose.
@@ -56,7 +56,7 @@ These extend the universal bans in `BRAND.md`:
 - **No "in this guide we will…" preamble.** The agent skips it. Open with the action.
 - **No narrative scaffolding.** "First, we'll cover X. Then, Y. Finally, Z." Out. The TOC and section headings carry the
   structure; prose that recapitulates them is noise.
-- **No "consider doing X" hedges.** State the action. "Run `anc check`." Not "you might want to consider running `anc
+- **No "consider doing X" hedges.** State the action. "Run `anc audit`." Not "you might want to consider running `anc
   check`."
 - **No paraphrased spec content.** When the contract matters, link to `spec/principles/p<N>-*.md` and quote the
   requirement ID (`p1-must-no-interactive`), not the prose. Spec drift is silent and expensive when paraphrased.

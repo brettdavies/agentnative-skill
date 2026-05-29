@@ -1,15 +1,15 @@
 # Getting started
 
 This skill teaches agents how to design, build, or audit a CLI for use by other agents. The work is one of three loops;
-pick the one that matches your starting point. The canonical checker is
+pick the one that matches your starting point. The canonical auditor is
 [`anc`](https://github.com/brettdavies/agentnative-cli); the canonical principle text is in
 [`spec/principles/`](./spec/principles/).
 
 ## You have an existing CLI
 
 ```bash
-# 1. Run the checker.
-anc check --output json . > scorecard.json
+# 1. Run the auditor.
+anc audit --output json . > scorecard.json
 
 # 2. For each FAIL, look up the cited requirement_id (e.g. `p1-must-no-interactive`)
 #    in spec/principles/p<N>-*.md — frontmatter `requirements[]`.
@@ -18,14 +18,14 @@ anc check --output json . > scorecard.json
 #      references/rust-clap-patterns.md                (Rust/clap)
 #      references/framework-idioms.md                  (Rust idioms)
 #      references/framework-idioms-other-languages.md  (Click, argparse, Cobra, Commander, yargs, oclif, Thor)
-#    Re-run `anc check` until `summary.fail == 0` and
+#    Re-run `anc audit` until `summary.fail == 0` and
 #    `coverage_summary.must.verified == coverage_summary.must.total`.
 
 # 4. Claim the badge once `badge.eligible == true` (≥80%).
 #    Copy `badge.embed_markdown` from the JSON scorecard into the project's README.
 ```
 
-Useful flags: `--principle N` to focus on one principle, `--audit-profile <category>` to suppress checks that don't
+Useful flags: `--principle N` to focus on one principle, `--audit-profile <category>` to suppress audits that don't
 apply (`human-tui` for TUIs that legitimately intercept the TTY, `posix-utility` for cat/sed/awk-style stdin-primary
 tools, `diagnostic-only` for read-only tools, `file-traversal` reserved), `--binary` / `--source` to scope.
 
@@ -43,12 +43,12 @@ cp <skill-root>/templates/agents-md-template.md AGENTS.md   # fill placeholders
 # Add to Cargo.toml: clap (derive, env), serde, serde_json, thiserror,
 # libc (SIGPIPE), clap_complete. See references/project-structure.md.
 
-anc check --output json    # run continuously as you build
+anc audit --output json    # run continuously as you build
 ```
 
 ## You're building in another language
 
-`anc`'s source-analysis layer is Rust-only; its behavioral layer (`anc check --command <name>`) runs against any
+`anc`'s source-analysis layer is Rust-only; its behavioral layer (`anc audit --command <name>`) runs against any
 compiled binary on `PATH`. Read `spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic requirements, and
 `references/framework-idioms-other-languages.md` for per-framework idioms.
 
