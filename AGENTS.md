@@ -2,8 +2,8 @@
 
 Project-level agent instructions for `agentnative-skill` — the producer repo for the `agent-native-cli` skill.
 
-This repo is **not** a Rust CLI tool and **not** a compliance checker. It is the agent-facing guide that pairs with
-[`anc`](https://github.com/brettdavies/agentnative-cli) (the canonical checker) and
+This repo is **not** a Rust CLI tool and **not** a compliance auditor. It is the agent-facing guide that pairs with
+[`anc`](https://github.com/brettdavies/agentnative-cli) (the canonical auditor) and
 [`agentnative-spec`](https://github.com/brettdavies/agentnative) (the canonical principle text, vendored at `spec/`).
 The skill teaches agents how to use `anc` and supplies the surrounding context — spec, idioms, templates — that `anc`
 findings reference.
@@ -17,7 +17,7 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
 | Path                                                                                     | Read at runtime by host? | Purpose                                                                                                                            |
 | ---------------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `SKILL.md`                                                                               | ✓                        | Skill metadata + entry-point pointer to `getting-started.md`. The host's first read.                                               |
-| `getting-started.md`                                                                     | ✓                        | Three working loops (existing CLI / new Rust / other language); canonical `anc check` invocations.                                 |
+| `getting-started.md`                                                                     | ✓                        | Three working loops (existing CLI / new Rust / other language); canonical `anc audit` invocations.                                 |
 | `bin/check-update`                                                                       | ✓                        | Consumer-side update-check script. Compares local `VERSION` to GitHub `main`; emits `UPGRADE_AVAILABLE` for the SKILL.md preamble. |
 | `spec/`                                                                                  | ✓                        | Vendored copy of `agentnative-spec`. Canonical principle text + machine-readable `requirements[]`.                                 |
 | `references/`                                                                            | ✓                        | Implementation guidance: framework idioms (Rust + others), project structure, Rust/clap patterns.                                  |
@@ -81,7 +81,7 @@ table.
 - Edit anything under `spec/` by hand. It is vendored from `agentnative-spec`. Any required change is a PR against the
   spec repo, then a `scripts/sync-spec.sh` bump here.
 - Reimplement `anc`. The skill does not contain shell-script duplicates of `anc`'s checks. If you find yourself writing
-  `rg`-based grep checks, you're rebuilding what `anc` already does — use `anc check --output json` instead.
+  `rg`-based grep checks, you're rebuilding what `anc` already does — use `anc audit --output json` instead.
 - Commit anything under `docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, or `docs/reviews/` directly to a
   `release/*` branch — those paths are filtered by the cherry-pick pattern. Add to `dev` instead.
 - Modify `SKILL.md`'s `name` or `description` frontmatter without coordinating with consumers — those fields drive skill

@@ -11,7 +11,7 @@ body:
         - New principle, MUST/SHOULD/MAY tier change, or any substantive change to the standard itself → file on
           the [spec repo](https://github.com/brettdavies/agentnative/issues/new/choose). This skill bundle vendors
           the spec; principle changes happen there first, then arrive here via `scripts/sync-spec.sh`.
-        - New compliance check, change to scorecard semantics, or anything `anc check` does → file on the
+        - New compliance audit, change to scorecard semantics, or anything `anc audit` does → file on the
           [linter repo](https://github.com/brettdavies/agentnative-cli/issues/new/choose).
         - New starter template, reference doc, getting-started flow, idiom for a new language/framework, or any
           change to how this bundle teaches the existing principles → keep filing here.

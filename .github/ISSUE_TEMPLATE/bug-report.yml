@@ -8,7 +8,7 @@ body:
       value: |
         **Route check before filing:**
 
-        - For bugs in `anc` (the checker itself — wrong scorecard, missing check, false positive), file on the
+        - For bugs in `anc` (the auditor itself — wrong scorecard, missing check, false positive), file on the
           [linter repo](https://github.com/brettdavies/agentnative-cli/issues/new/choose).
         - For substantive principle changes (new principles, MUST/SHOULD/MAY tier changes), file on the
           [spec repo](https://github.com/brettdavies/agentnative/issues/new/choose).
@@ -85,7 +85,7 @@ body:
 
         1. **Search first.** Run `gh search issues --repo brettdavies/agentnative-skill "<keywords>"` to check for
            duplicates.
-        2. **Route check.** Verify this is a skill-bundle bug, not an `anc` checker bug (file in agentnative-cli) or
+        2. **Route check.** Verify this is a skill-bundle bug, not an `anc` auditor bug (file in agentnative-cli) or
            a spec issue (file in agentnative).
         3. **AI disclosure is required.** Fill the field above honestly.
         4. See [CONTRIBUTING.md](https://github.com/brettdavies/agentnative-skill/blob/main/CONTRIBUTING.md) for full

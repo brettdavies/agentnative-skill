@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 - `.github/ISSUE_TEMPLATE/principle_proposal.md` — substantive standards-change template.
 - `**Renamed:**` subsection in `.github/pull_request_template.md` (sync of the canonical update at `~/dotfiles/stow/github/dot-config/github/pull_request_template.md`). Sister sync PRs landing in agentnative-cli (#30 there) and agentnative-site (already on dev as commit 4437435).
 - Add vendored `bundle/spec/` tree (agentnative-spec @ v0.2.0): `VERSION`, `CHANGELOG.md`, `README.md`, and seven `principles/p*.md` files with machine-readable `requirements[]` frontmatter — canonical principle text the skill now points at instead of paraphrasing. by @brettdavies in [#4](https://github.com/brettdavies/agentnative-skill/pull/4)
-- Add `bundle/getting-started.md` covering three working agent loops (existing CLI / new Rust / other language), canonical `anc check --output json` invocations, and a "where things live" map.
+- Add `bundle/getting-started.md` covering three working agent loops (existing CLI / new Rust / other language), canonical `anc audit --output json` invocations, and a "where things live" map.
 - Add `scripts/sync-spec.sh` so the bundle can re-vendor agentnative-spec on demand.
 - `LICENSE-APACHE` — Apache 2.0 boilerplate, identical to the file in `agentnative-cli`. by @brettdavies in [#6](https://github.com/brettdavies/agentnative-skill/pull/6)
 - `bundle/bin/check-update` — script that compares the consumer's local `VERSION` against the producer repo's `main` and emits `UPGRADE_AVAILABLE <local> <remote>` (or empty when up-to-date / snoozed / disabled). Adapts the gstack pattern with cache TTL (60min UP_TO_DATE / 720min UPGRADE_AVAILABLE) and a 3-level snooze (24h / 48h / 7d). State directory: `$HOME/.cache/agent-native-cli/`. by @brettdavies in [#8](https://github.com/brettdavies/agentnative-skill/pull/8)
@@ -61,7 +61,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
-- Remove `bundle/scripts/check-compliance.sh` and 24 `bundle/scripts/checks/check-*.sh` files (plus `_helpers.sh`). `anc check --output json` is the canonical replacement. by @brettdavies in [#4](https://github.com/brettdavies/agentnative-skill/pull/4)
+- Remove `bundle/scripts/check-compliance.sh` and 24 `bundle/scripts/checks/check-*.sh` files (plus `_helpers.sh`). `anc audit --output json` is the canonical replacement. by @brettdavies in [#4](https://github.com/brettdavies/agentnative-skill/pull/4)
 - Remove `bundle/references/principles-deep-dive.md` (419-line hand-typed paraphrase of the spec; canonical text now lives at `bundle/spec/principles/`).
 - Remove `bundle/checklists/new-tool.md` (pre-anc manual checklist; replaced by `bundle/getting-started.md`).
 - All SHA-pin claims from public-facing markdown (`RELEASES.md`, `AGENTS.md`, `README.md`, `spec/README.md`, `CONTRIBUTING.md`): pipeline diagram's "site re-pins to commit SHA" step, the post-merge "site re-pins via its own PR" step, the `protect-tags.json` / `install endpoints` claims that tags are pinned to install endpoints, and the spec-vendor "pinned ref" / "pinned `SPEC_REF`" / "current pin is recorded" vocabulary across all docs. by @brettdavies in [#11](https://github.com/brettdavies/agentnative-skill/pull/11)
@@ -78,7 +78,7 @@ All notable changes to this project will be documented in this file.
 - `checklists/new-tool.md` — task checklist for starting a new agent-native CLI.
 - `references/` — five deep-dive references: principle specifications, framework idioms (Rust/clap and other languages),
   project structure, Rust/clap patterns.
-- `scripts/check-compliance.sh` — automated compliance checker that produces deterministic pass/warn/fail scorecards
+- `scripts/check-compliance.sh` — automated compliance auditor that produces deterministic pass/warn/fail scorecards
   across 24 checks in 9 groups.
 - `scripts/checks/` — individual check scripts plus shared `_helpers.sh`.
 - `templates/` — starter files: `AGENTS.md`, `clap-main.rs`, `error-types.rs`, `output-format.rs`.
