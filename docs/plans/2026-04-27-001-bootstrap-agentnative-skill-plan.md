@@ -107,7 +107,7 @@ Create at repo root (do **not** copy from master plan verbatim — write fresh c
 - **`LICENSE`** — MIT, year 2026, copyright Brett Davies. Match the form used in `~/dev/agentnative-site/LICENSE` if
   present (read it for exact wording); otherwise standard SPDX MIT text.
 - **`CHANGELOG.md`** — keepachangelog.com format. Initial section: `## [0.1.0] - 2026-04-27 — Initial release`. Bullets
-  describe the bundle (7 principles, 24 compliance checks, templates).
+  describe the bundle (7 principles, 24 compliance audits, templates).
 - **`VERSION`** — single line `0.1.0\n`. No frontmatter, no metadata. This is the source of truth for the version string
   the site reads at release time.
 - **`SECURITY.md`** — vulnerability disclosure policy. Channel: GitHub private security advisories
@@ -181,7 +181,7 @@ skills directory IS install.
 Includes:
 - SKILL.md (north-star standard, 7 principles)
 - checklists/, references/, scripts/, templates/
-- 24 compliance checks across 9 groups (scripts/checks/*)
+- 24 compliance audits across 9 groups (scripts/checks/*)
 - governance: LICENSE (MIT), CHANGELOG, VERSION, SECURITY.md, CODEOWNERS
 - CI: markdownlint + shellcheck
 

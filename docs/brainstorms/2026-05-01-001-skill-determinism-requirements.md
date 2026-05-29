@@ -10,7 +10,7 @@ related: docs/brainstorms/2026-05-01-002-anc-determinism-feature-asks-requiremen
 
 Closes the gaps surfaced by the 2026-05-01 SKILL.md self-review against `create-agent-skills`. Two-agent variance is the
 headline problem: two competent agents reading SKILL.md today can produce two different correct-looking-but-wrong
-handlers for the same `anc check` output. This document scopes the skill-side fixes that close that variance. Cross-repo
+handlers for the same `anc audit` output. This document scopes the skill-side fixes that close that variance. Cross-repo
 `anc` feature requests are tracked separately in
 [`2026-05-01-002-anc-determinism-feature-asks-requirements.md`](./2026-05-01-002-anc-determinism-feature-asks-requirements.md).
 
@@ -18,9 +18,9 @@ handlers for the same `anc check` output. This document scopes the skill-side fi
 
 Today's `SKILL.md`:
 
-- Describes the `anc check` JSON envelope in prose only (no sample, no shape).
+- Describes the `anc audit` JSON envelope in prose only (no sample, no shape).
 - Names the `results[].status` enum once in passing without enumerating values.
-- Does not document `anc check`'s exit-code contract.
+- Does not document `anc audit`'s exit-code contract.
 - Mentions "schema 0.5" once with no pinning guidance and no behaviour-on-bump.
 - Names four `--audit-profile` categories without a selection rule.
 - Stops the iteration loop on `summary.fail == 0` + `must.verified == must.total`, with no termination rule for `warn`s
@@ -59,7 +59,7 @@ not structure.
 
 1. **`SKILL.md` inline** — minimal snippet (~12–15 lines) right after the "1. Check." paragraph. Shows the envelope's
    top-level shape (`summary`, `coverage_summary`, `badge`, `results[]`). Always-loaded; pays for ~150 tokens.
-2. **`getting-started.md`** — even shorter snippet (3–5 lines) right after the `anc check --output json . >
+2. **`getting-started.md`** — even shorter snippet (3–5 lines) right after the `anc audit --output json . >
    scorecard.json` recipe in the "existing CLI" loop. Shows just `coverage_summary` + `badge` so an agent reading the
    recipe sees invocation→output side by side without scrolling. Pattern-match level only; not a parser spec.
 3. **`references/scorecard-shape.md`** — exhaustive sample (~50–60 lines) covering every top-level field, one
@@ -68,7 +68,7 @@ not structure.
 
 **Must include (exhaustive sample):** one entry per top-level field — `summary`, `coverage_summary`, `badge`, one
 `results[]` entry per status value, `audit_profile`, `tool`, `anc`, `run`, `target`. Real field names taken from a live
-`anc check --output json` run.
+`anc audit --output json` run.
 
 **Must show (exhaustive sample):** `summary.fail` (int), `coverage_summary.must.verified` (int), `badge.eligible`
 (bool), `badge.embed_markdown` (string|null), `results[].requirement_id` (kebab-case string), `results[].status` (one of
@@ -137,7 +137,7 @@ run bin/check-update for the skill bundle
 
 The current update-check is for the skill bundle, not `anc`; the skill should not silently assume `anc` exists.
 
-**Acceptance.** Cold-start sessions never reach `anc check` without first verifying or installing the binary.
+**Acceptance.** Cold-start sessions never reach `anc audit` without first verifying or installing the binary.
 
 ### R6. Spec-skew fallback
 
@@ -147,7 +147,7 @@ cites a `requirement_id` that does NOT exist in the bundle's vendored `spec/prin
 **Must include:**
 
 - The likely cause (anc shipped against newer spec than this bundle vendors).
-- The durable fix (`anc check --explain <id>`, **once shipped** — see sibling brief).
+- The durable fix (`anc audit --explain <id>`, **once shipped** — see sibling brief).
 - The interim fix (resync via `scripts/sync-spec.sh`, or fetch `spec/principles/p<N>-*.md` from `agentnative` `main`).
 - The non-fix (do not hallucinate a definition).
 
@@ -161,7 +161,7 @@ there. One paragraph per situation. Cover:
 - `badge.embed_markdown` placement — top of README, replacing existing badges, ordering relative to CI badges. Adopt
   whatever convention `anc.dev/badge` recommends; if it doesn't recommend one, propose one here and push it upstream.
 - Should I commit `scorecard.json`? — default no (artifact, regenerable). Override only for CI gating snapshots.
-- `anc check .` vs `--binary` vs `--source` — when each applies.
+- `anc audit .` vs `--binary` vs `--source` — when each applies.
 - `anc` panics or returns malformed JSON — pointer to issue tracker, do not retry blind.
 - `anc skill install` host not in registry — fallback to manual `git clone` (already in `getting-started.md`; cross-link
   from here).
@@ -175,7 +175,7 @@ Each entry: ≤4 lines. The goal is a fast index, not deep prose.
 **What.** Add `allowed-tools: Bash(anc *), Read` to SKILL.md frontmatter so the skill doesn't trigger permission prompts
 for the canonical commands.
 
-**Acceptance.** Mechanical — no user prompt on `anc check` invocations once the skill loads.
+**Acceptance.** Mechanical — no user prompt on `anc audit` invocations once the skill loads.
 
 ### R9. SKILL.md / getting-started.md / references/ boundary cleanup
 
@@ -185,7 +185,7 @@ is the first thing an agent reads — not a session-once meta-update side task.
 **File ownership:**
 
 - **SKILL.md owns:** discovery (frontmatter), preamble (what the skill is + where the three artifacts live), Quick Start
-  (one runnable `anc check` command), the `anc` contract (R2), the four-step loop overview, the principles index,
+  (one runnable `anc audit` command), the `anc` contract (R2), the four-step loop overview, the principles index,
   pointer to `getting-started.md` for procedural detail, pointer to runbook (R7), sources.
 - **`getting-started.md` owns:** the three working loops (existing CLI / new Rust / other language), full install steps
   for `anc` and the skill bundle, the "where things live" pointer table.
@@ -193,13 +193,13 @@ is the first thing an agent reads — not a session-once meta-update side task.
   runbook, update-check operational details. One topic per file, no cross-file overlap.
 
 **Reorder SKILL.md.** Today the order is: preamble → `## First action: update check` → `## Start here` → principles →
-anc loop → implementation guidance → starter code → compliance checking → sources. The update-check section is a
+anc loop → implementation guidance → starter code → compliance auditing → sources. The update-check section is a
 session-once side task; making it section #2 trains agents to read meta-update flow before they read the work flow.
 
 New order:
 
 1. Preamble (unchanged).
-2. **Quick Start** — one runnable `anc check --output json . > scorecard.json` line + the 12–15-line inline scorecard
+2. **Quick Start** — one runnable `anc audit --output json . > scorecard.json` line + the 12–15-line inline scorecard
    sample from R1.
 3. **The `anc` contract** (R2) — exit codes, status enum, schema-version pin, stable-vs-noise.
 4. **The anc loop** — four steps, conceptual (R4 termination rule folded in).
@@ -212,11 +212,11 @@ New order:
 8. Sources.
 
 This reorder also resolves the "first runnable thing in SKILL.md is `bash bin/check-update`" issue surfaced in external
-review: after the reorder, the first runnable thing is `anc check`.
+review: after the reorder, the first runnable thing is `anc audit`.
 
 **Must remove:**
 
-- The duplicated install block in `SKILL.md` § "Compliance checking" (lives in `getting-started.md` already).
+- The duplicated install block in `SKILL.md` § "Compliance auditing" (lives in `getting-started.md` already).
 - The duplicated four-step loop where `SKILL.md` § "The anc loop" and `getting-started.md` "existing CLI" section both
   walk it. Canonical homes: SKILL.md for the conceptual loop; `getting-started.md` for the runnable bash.
 - The two parallel index tables — SKILL.md "Implementation guidance" pointer table and `getting-started.md` "Where
@@ -233,7 +233,7 @@ review: after the reorder, the first runnable thing is `anc check`.
   claude_code` returns hits in exactly one file.
 - The four-step loop appears once in SKILL.md (conceptual) and the bash recipe form appears once in
   `getting-started.md`.
-- A first-time agent reading SKILL.md sees `anc check` as the first runnable command, not `bash bin/check-update`.
+- A first-time agent reading SKILL.md sees `anc audit` as the first runnable command, not `bash bin/check-update`.
 - The update-check section is no longer the second top-level heading.
 - SKILL.md stays under 200 lines after the cleanup.
 
@@ -392,17 +392,17 @@ audit-profile-selection + R1 scorecard-shape), ~250 lines in the merged R12 file
 - Two independently-prompted agents asked "parse this scorecard and report failures" produce structurally identical
   handlers.
 - An agent given a tool to audit and asked to pick `--audit-profile` arrives at the same answer as the human reviewer.
-- Cold-start sessions never call `anc check` against a missing binary.
+- Cold-start sessions never call `anc audit` against a missing binary.
 - An agent finishing a remediation loop stops when `badge.eligible == true`, not when every warn clears.
 - A finding citing a `requirement_id` not in the local vendored spec resolves deterministically.
-- A first-time agent reading SKILL.md sees a runnable `anc check` command before scrolling, and can find install
+- A first-time agent reading SKILL.md sees a runnable `anc audit` command before scrolling, and can find install
   instructions, the three working loops, and reference depth without re-reading SKILL.md (R9).
 - A new Python or Go CLI author has a starter that encodes P1/P2/P4 by construction (R11).
 - A grep across the repo for any single canonical command (e.g. `anc skill install claude_code`) returns hits in exactly
   one canonical location (R9).
 - One canonical Rust idioms reference exists (R12). `framework-idioms.md` and `rust-clap-patterns.md` are gone; no links
   in SKILL.md or `getting-started.md` are broken.
-- The first runnable command an agent encounters in SKILL.md is `anc check`, not `bash bin/check-update` (R9 reorder).
+- The first runnable command an agent encounters in SKILL.md is `anc audit`, not `bash bin/check-update` (R9 reorder).
 
 ## Open questions
 

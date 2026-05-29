@@ -6,6 +6,9 @@ latest upstream `v*` tag and ship inside the skill bundle so consumers carry the
 skill metadata. Each release of this bundle re-vendors against the latest spec tag. The currently vendored version is
 recorded in [`VERSION`](./VERSION).
 
+For the full spec landing page — leaderboard, badge convention, and acknowledgements — see [anc.dev](https://anc.dev) or
+the upstream [`README`](https://github.com/brettdavies/agentnative#readme).
+
 ## Resync
 
 Run from the repo root:
@@ -21,15 +24,16 @@ remote. The script extracts files via `git show`, so neither source's working tr
 
 ## Layout
 
-| Path               | Source in `agentnative-spec` | Purpose                                                       |
-| ------------------ | ---------------------------- | ------------------------------------------------------------- |
-| `VERSION`          | `VERSION`                    | Spec version string; the skill's vendored `SPEC_VERSION`      |
-| `CHANGELOG.md`     | `CHANGELOG.md`               | Spec change history; informational                            |
-| `principles/p*.md` | `principles/p*.md`           | Frontmatter `requirements[]` is the machine-readable contract |
+| Path                    | Source in `agentnative-spec` | Purpose                                                       |
+| ----------------------- | ---------------------------- | ------------------------------------------------------------- |
+| `VERSION`               | `VERSION`                    | Spec version string; the skill's vendored `SPEC_VERSION`      |
+| `CHANGELOG.md`          | `CHANGELOG.md`               | Spec change history; informational                            |
+| `principles/p*.md`      | `principles/p*.md`           | Frontmatter `requirements[]` is the machine-readable contract |
+| `principles/scoring.md` | `principles/scoring.md`      | Leaderboard formula, badge eligibility floor, and color bands |
 
 Each principle file has a YAML frontmatter block with `id`, `title`, `last-revised`, `status`, and `requirements[]`.
 Each `requirements[]` entry carries a stable `id` (e.g. `p1-must-no-interactive`), a `level` (`must`/`should`/`may`), an
-`applicability` (`universal` or `{if: <reason>}`), and a one-sentence `summary`. The `anc` checker
+`applicability` (`universal` or `{if: <reason>}`), and a one-sentence `summary`. The `anc` auditor
 ([brettdavies/agentnative-cli](https://github.com/brettdavies/agentnative-cli)) emits these IDs in its scorecard so
 agents can navigate from a finding directly to the requirement.
 

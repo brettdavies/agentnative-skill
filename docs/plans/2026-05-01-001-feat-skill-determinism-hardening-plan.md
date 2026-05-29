@@ -49,7 +49,7 @@ this plan soft-depends on; interim guidance ships here regardless.
   panics, skill-host fallback.
 - R8. `allowed-tools: Bash(anc *), Read` added to SKILL.md frontmatter.
 - R9. SKILL.md / `getting-started.md` / `references/` boundary cleanup + reorder so the first runnable command in
-  SKILL.md is `anc check`, not `bash bin/check-update`. SKILL.md kept under 200 lines.
+  SKILL.md is `anc audit`, not `bash bin/check-update`. SKILL.md kept under 200 lines.
 - R10. SKILL.md frontmatter audit beyond `allowed-tools` — description triggers, skip clause, kept-as-is decisions
   documented.
 - R11. New starter templates: `cargo-toml.md`, `cli-tests.rs`, `python-click/`, `go-cobra/`,
@@ -65,12 +65,12 @@ this plan soft-depends on; interim guidance ships here regardless.
 - R13. Subcommand index + target-resolution runbook entry (**plan-introduced, not origin-traced**). A short SKILL.md
   table covering the full `anc` subcommand surface (`check`, `generate`, `skill install`, `completions`, `help`, plus
   the bare-`anc`-defaults-to-`check` shortcut), so agents stop punting to `anc --help` for basic discovery. Plus an
-  expanded runbook entry covering all four target modes — `anc check .` (project mode), `--binary`, `--source`,
+  expanded runbook entry covering all four target modes — `anc audit .` (project mode), `--binary`, `--source`,
   `--command <name>` — with resolution rules for each. Closes the two gaps a 2026-05-01 peer review of the current
   SKILL.md surfaced ("the full subcommand surface" and "target resolution rules for `--binary` vs `--source` vs
   `--command` vs project mode").
 - R14. Deterministic-script hardening (dogfood gate, **plan-introduced 2026-05-04**). `bin/check-update` and
-  `scripts/sync-spec.sh` must pass `anc check --binary --audit-profile posix-utility` with `badge.eligible == true` —
+  `scripts/sync-spec.sh` must pass `anc audit --binary --audit-profile posix-utility` with `badge.eligible == true` —
   the skill audits CLIs against the agent-native spec, so the skill's own runtime scripts must pass that audit. Add
   `--output text|json`, `--quiet`, `--no-interactive`, `--timeout <s>` global flags (P1, P2, P7) to both. Add
   `--dry-run` (P5) and `--force` (P5) to `scripts/sync-spec.sh`. Move success-path status echoes from stdout to stderr
@@ -84,7 +84,7 @@ this plan soft-depends on; interim guidance ships here regardless.
 SKILL.md that surfaced two recurrent gaps the origin brainstorm did not anticipate; R14 added 2026-05-04 to make the
 skill's own scripts pass the audit the skill teaches — the dogfood gate. Success criteria from origin §Success Criteria;
 R13's success criterion is "an agent driving `anc` cold can enumerate the subcommand surface and pick the right target
-mode without reading `anc --help` source"; R14's is "`anc check --binary --audit-profile posix-utility` against
+mode without reading `anc --help` source"; R14's is "`anc audit --binary --audit-profile posix-utility` against
 `bin/check-update` and `scripts/sync-spec.sh` produces `badge.eligible == true` for both.")
 
 ---
@@ -118,7 +118,7 @@ mode without reading `anc --help` source"; R14's is "`anc check --binary --audit
 ### Relevant Code and Patterns
 
 - `SKILL.md` (146 lines today) — entry point; frontmatter + preamble + four loop steps + principles index +
-  implementation guidance + starter code + compliance checking + sources. R9 reorders this.
+  implementation guidance + starter code + compliance auditing + sources. R9 reorders this.
 - `getting-started.md` (85 lines) — three working loops + install + "Where things live". R9 dedupes against SKILL.md.
 - `references/framework-idioms.md` (137 lines, Free / Must / Anti-patterns scaffold, Rust-only) and
   `references/rust-clap-patterns.md` (209 lines, denser per-principle prose). R12 merges.
@@ -133,7 +133,7 @@ mode without reading `anc --help` source"; R14's is "`anc check --binary --audit
   (after `anc` is verified on PATH).
 - `spec/principles/p1-*.md` … `p7-*.md` — vendored at `spec/VERSION = 0.3.0`. Cited by R6 spec-skew fallback.
 
-### Live `anc 0.3.0` envelope (verified 2026-05-01 against `anc check --output json --command rg`)
+### Live `anc 0.3.0` envelope (verified 2026-05-01 against `anc audit --output json --command rg`)
 
 Top-level keys: `schema_version` (`"0.5"`), `spec_version` (`"0.3.0"`), `summary`, `coverage_summary`, `results`,
 `audit_profile`, `audience` (`"agent-optimized"` for rg), `badge`, `tool`, `anc`, `run`, `target`. Result entries carry
@@ -180,9 +180,9 @@ reserved for invocation errors only); until then, R2 documents this observed-but
 - **Envelope reality alignment.** Every envelope-shape claim in `SKILL.md` and `getting-started.md` is rewritten against
   `anc 0.3.0` live output. The brainstorm's R1 "Must show" field list is treated as advisory: where it says
   `requirement_id`, the docs ship `id` (the actual envelope field). **The two are different namespaces, not synonyms.**
-  Envelope `results[].id` is a CHECK id (`p3-help`, `p1-flag-existence`, `p6-sigpipe`); spec frontmatter
+  Envelope `results[].id` is an AUDIT id (`p3-help`, `p1-flag-existence`, `p6-sigpipe`); spec frontmatter
   `requirements[].id` is a REQUIREMENT id (`p1-must-no-interactive`, `p2-must-output-flag`). One check verifies one or
-  more requirements; the mapping lives in each principle file's body prose (e.g. p6's "Measured by check IDs
+  more requirements; the mapping lives in each principle file's body prose (e.g. p6's "Measured by audit IDs
   `p6-sigpipe`, `p6-no-color`, `p6-completions`, `p6-timeout`, `p6-agents-md`"). The previously-claimed "1:1 mapping"
   was wrong and is retracted across U4 / U5 / U8. The brainstorm's `tool/anc/run/target/badge.*` claims now match
   reality so they ship verbatim. New top-level fields the brainstorm did not enumerate (`audience`, `audience_reason`)
@@ -226,11 +226,11 @@ reserved for invocation errors only); until then, R2 documents this observed-but
   tool authors emit *their tool's* output against, not anc's audit envelope) is deferred to follow-up work — it's a
   different artifact and origin conflated the two.
 - **Verification posture.** PRs 1–6 are docs + templates. Most units verify via grep checks, line-count assertions,
-  cross-file link integrity, and byte-faithful comparison against `anc check --output json` output. Three units have
+  cross-file link integrity, and byte-faithful comparison against `anc audit --output json` output. Three units have
   executable verification: U13 (`cli-tests.rs` runs under `cargo test`), U15 + U18 (Python / Go starters compile or
   import cleanly). U14 is now docs-only (it documents the upstream `anc generate scorecard-schema` extraction path), so
   it carries no executable verification beyond grep checks and link integrity. **PR 7 is the executable-verification
-  exception:** U22 / U23 modify runtime bash scripts and U25 is the empirical dogfood gate (`anc check --binary` against
+  exception:** U22 / U23 modify runtime bash scripts and U25 is the empirical dogfood gate (`anc audit --binary` against
   both scripts).
 - **R14 dogfood gate (PR 7).** Approach is additive: new flag surfaces (`--output text|json`, `--quiet`,
   `--no-interactive`, `--timeout`, `--dry-run`, `--force`) extend the existing CLI; default behavior is preserved
@@ -255,7 +255,7 @@ reserved for invocation errors only); until then, R2 documents this observed-but
 - **OQ-origin-#6** (R11 PR split): split per language ecosystem. PR 4 Rust, PR 5 Python, PR 6 Go.
 - **OQ-origin-#7** (R12 vs R11 Rust): R12 first. PR 3 lands before PR 4.
 - **Field-name drift** (`results[].id` vs origin's `requirement_id`): use `id` (actual). The earlier "maps 1:1" framing
-  was wrong — envelope `id` and spec frontmatter `requirements[].id` are different namespaces (check id vs requirement
+  was wrong — envelope `id` and spec frontmatter `requirements[].id` are different namespaces (audit id vs requirement
   id). U4 / U5 / U8 carry the corrected framing and the principle-prose mapping path.
 
 ### Deferred to Implementation
@@ -270,7 +270,7 @@ reserved for invocation errors only); until then, R2 documents this observed-but
 - **`anc.dev/badge` placement convention** (R7 dependency): if the page does not enumerate placement values when U9
   lands, U9 proposes one (`top-of-readme` after the H1) and the proposal is mirrored to sibling brief A4.
 - **R14 CI integration**: PR 7 ships the manual dogfood gate (U25) plus a `CONTRIBUTING.md` note pinning re-runs to
-  edits of either script. Wiring the audit into CI as a regression gate (`gh workflow` entry running `anc check
+  edits of either script. Wiring the audit into CI as a regression gate (`gh workflow` entry running `anc audit
   --binary` on every PR touching `bin/` or `scripts/`) is **explicitly out of scope** for this plan and belongs to a
   follow-up CI-hardening PR. The manual gate is sufficient for the v0.4.0 release; CI integration is the next
   compounding step.
@@ -291,7 +291,7 @@ splitting preserves them.
 
 - U1. **R9: SKILL.md restructure + getting-started.md dedup**
 
-**Goal:** Reorder SKILL.md so the first runnable command is `anc check` (not `bash bin/check-update`). Eliminate
+**Goal:** Reorder SKILL.md so the first runnable command is `anc audit` (not `bash bin/check-update`). Eliminate
 cross-file duplication (install block, four-step loop, parallel index tables). Land the new section skeleton so U2–U9
 fill in their own slots without re-homing.
 
@@ -307,12 +307,12 @@ fill in their own slots without re-homing.
 **Approach:**
 
 - New SKILL.md section order: Preamble → `## Quick Start` (placeholder for U5's inline scorecard sample + the canonical
-  `anc check --output json . > scorecard.json` line) → `## Subcommand index` (placeholder for U21) → `## Anc contract`
+  `anc audit --output json . > scorecard.json` line) → `## Subcommand index` (placeholder for U21) → `## Anc contract`
   (placeholder for U4) → `## The anc loop` (conceptual four steps; U7 folds in termination rule, U8 folds in spec-skew)
   → `## The seven principles` index → `## Audit profile selection` (placeholder for U6) → `## Common situations`
   (one-paragraph pointer to `references/runbook.md`, U9 + U21 fill) → Pointer block → `## Update-check` (demoted to
   one-paragraph footnote pointing at `references/update-check.md`) → Sources.
-- Delete the duplicated install block in SKILL.md `## Compliance checking` (lives in `getting-started.md` already).
+- Delete the duplicated install block in SKILL.md `## Compliance auditing` (lives in `getting-started.md` already).
 - Delete the duplicated four-step loop where SKILL.md and `getting-started.md` both walk it. Canonical homes: SKILL.md
   for the conceptual loop; `getting-started.md` for the runnable bash recipe.
 - Merge SKILL.md's `## Implementation guidance` pointer table and `getting-started.md`'s `## Where things live` table
@@ -328,7 +328,7 @@ fill in their own slots without re-homing.
   `SKILL.md`, ≥1 in `getting-started.md` (origin R9 acceptance).
 - Verification: `grep -c 'anc skill install claude_code' SKILL.md getting-started.md` returns hits in exactly one file
   (`getting-started.md`).
-- Verification: First runnable command in SKILL.md (first fenced block after the preamble) is `anc check`, not `bash
+- Verification: First runnable command in SKILL.md (first fenced block after the preamble) is `anc audit`, not `bash
   bin/check-update`.
 - Verification: `wc -l SKILL.md` ≤ 200 after the full PR 1 lands (re-checked at end of PR 1, not at U1 alone since U2–U9
   add ~70 lines).
@@ -342,7 +342,7 @@ canonical location each; markdownlint clean.
 
 - U2. **R8: SKILL.md `allowed-tools` frontmatter**
 
-**Goal:** Add `allowed-tools: Bash(anc *), Read` to SKILL.md frontmatter so canonical `anc check` invocations don't
+**Goal:** Add `allowed-tools: Bash(anc *), Read` to SKILL.md frontmatter so canonical `anc audit` invocations don't
 trigger permission prompts on hosts that honor the field.
 
 **Requirements:** R8.
@@ -404,7 +404,7 @@ advisory in interactive mode, enforced under headless `claude -p`.
 - Verification: Update-check guidance in SKILL.md is a single paragraph referencing `references/update-check.md` (no
   full procedural body).
 
-**Verification:** Cold-start agent reading SKILL.md top-to-bottom encounters the anc precondition before any `anc check`
+**Verification:** Cold-start agent reading SKILL.md top-to-bottom encounters the anc precondition before any `anc audit`
 invocation.
 
 ---
@@ -453,7 +453,7 @@ Start; cross-link).
 - Verification: Section enumerates all five status values (`pass`, `warn`, `fail`, `skip`, `error`).
 - Verification: Section names `schema_version` as the pin path (not `tool.schema_version` or `anc.schema_version`).
 - Verification: Exit-code table has three rows, footnoted as interim with cross-link to sibling brief.
-- Verification: Exit-code table is empirically validated at unit time by running `anc check --output json --command
+- Verification: Exit-code table is empirically validated at unit time by running `anc audit --output json --command
   <cmd>` against at least three commands covering `summary.fail == 0` and `summary.fail > 0` cases (e.g. `rg`, `cat`,
   `echo`); the documented `$?` value matches observed behavior, the imperative `gate on summary.fail, not $?` line is
   present.
@@ -480,33 +480,33 @@ decision table is adjacent).
 
 - Create: `references/scorecard-shape.md`
 - Modify: `SKILL.md` (Quick Start fenced block)
-- Modify: `getting-started.md` ("existing CLI" loop section, after the canonical `anc check --output json . >
+- Modify: `getting-started.md` ("existing CLI" loop section, after the canonical `anc audit --output json . >
   scorecard.json` line)
 
 **Approach:**
 
 - **`references/scorecard-shape.md` (exhaustive).** One H1 + short preamble + a single fenced JSON block of the full
-  envelope with every top-level field populated. Use a synthesized but realistic envelope (start from `anc check
+  envelope with every top-level field populated. Use a synthesized but realistic envelope (start from `anc audit
   --output json --command rg`, then construct extra `results[]` entries to cover all five status values, all four
   audit-profile categories, and an `audience: agent-optimized` example). Below the JSON block, a per-field gloss table:
   `field path → type → semantics → stable for CI?`. Note that `audience` and `audience_reason` are top-level (not inside
   `audit_profile`).
 - **SKILL.md inline (~15 lines).** Truncated envelope showing only `summary`, `coverage_summary`, `badge`, and one
-  `results[]` entry. Placed immediately after the Quick Start `anc check ...` line. Comment ellipses (`/* ... */`) where
+  `results[]` entry. Placed immediately after the Quick Start `anc audit ...` line. Comment ellipses (`/* ... */`) where
   fields are elided.
 - **`getting-started.md` inline (~5 lines).** Even shorter — just `coverage_summary` + `badge.eligible` +
-  `badge.embed_markdown`. Placed right after the `anc check --output json . > scorecard.json` recipe.
+  `badge.embed_markdown`. Placed right after the `anc audit --output json . > scorecard.json` recipe.
 - **Field-name discipline.** All three samples use `results[].id` (the actual envelope field). The per-field gloss table
-  in `references/scorecard-shape.md` carries an explicit "**check id vs requirement id**" note: envelope `results[].id`
-  is a CHECK identifier (`p3-help`, `p1-flag-existence`, `p6-sigpipe`); spec frontmatter `requirements[].id` is a
+  in `references/scorecard-shape.md` carries an explicit "**audit id vs requirement id**" note: envelope `results[].id`
+  is an AUDIT identifier (`p3-help`, `p1-flag-existence`, `p6-sigpipe`); spec frontmatter `requirements[].id` is a
   REQUIREMENT identifier (`p1-must-no-interactive`, `p2-must-output-flag`). The two are different namespaces. Each
-  principle file's body prose maps check ids to the requirements they verify (e.g. p6's "Measured by check IDs
+  principle file's body prose maps audit ids to the requirements they verify (e.g. p6's "Measured by audit IDs
   `p6-sigpipe`, …"). To resolve a finding's spec text, read principle prose, not frontmatter alone. Sibling brief A2
   (`anc explain <id>`) is the durable resolver once it ships.
-- **Live envelope capture at unit time.** Implementer runs `anc check --output json --command rg` at U5 implementation
+- **Live envelope capture at unit time.** Implementer runs `anc audit --output json --command rg` at U5 implementation
   time and uses that output as the byte-faithful base for the exhaustive sample. Do not rely on a snapshot from this
   plan — `anc` may have moved between plan-write and unit-implementation; live capture is the freshness guarantee.
-- **`audience` semantic capture.** Before the per-field gloss table goes final, run `anc check --output json` against at
+- **`audience` semantic capture.** Before the per-field gloss table goes final, run `anc audit --output json` against at
   least four targets covering the observed `audience` values (sampled today: `agent-optimized`; null cases also
   observed). Enumerate the value set in the gloss row and document when `audience_reason` is present (today: when
   `audience == null`). If the value space is open-ended or not stable enough to enumerate, the gloss row says so
@@ -558,7 +558,7 @@ covering the hybrid-tool rule.
 **Approach:**
 
 - **SKILL.md table.** Four rows: `human-tui`, `posix-utility`, `diagnostic-only`, `file-traversal` (reserved). Columns:
-  when to pick (one-line rule), example tool, what gets suppressed. Glosses paraphrased from `anc check --help`'s value
+  when to pick (one-line rule), example tool, what gets suppressed. Glosses paraphrased from `anc audit --help`'s value
   list — but agents are pointed at `--help` for the authoritative description.
 - **SKILL.md `### Worked examples` sub-section** (added immediately under the 4-row table, ~10 lines). Three concrete
   hybrid-tool worked examples with explicit profile picks, addressing the determinism-acceptance concern that one-line
@@ -590,7 +590,7 @@ covering the hybrid-tool rule.
 - Verification: `references/audit-profile-selection.md` contains a `### Hybrid project rule` (or equivalent)
   sub-section.
 - Verification: Cross-link to sibling brief A6 present in the extended file.
-- Verification: The four profile names in the table match `anc check --help`'s `--audit-profile` value list
+- Verification: The four profile names in the table match `anc audit --help`'s `--audit-profile` value list
   (`human-tui`, `posix-utility`, `diagnostic-only`, `file-traversal`).
 - Verification (empirical determinism): give the SKILL.md `## Audit profile selection` section (table + worked examples)
   to 3 agents on a fourth hybrid tool not in the worked examples (e.g. `nvtop` — TUI by default but supports stdin-piped
@@ -615,7 +615,7 @@ loop, `warn`s are advisory, stop iterating when `badge.eligible == true`.
 
 **Approach:**
 
-- One paragraph (~5–10 lines) inserted at the end of step 3 (Re-check) or as a short coda before step 4 (Claim the
+- One paragraph (~5–10 lines) inserted at the end of step 3 (Re-audit) or as a short coda before step 4 (Claim the
   badge). Three bullets: (1) `must` gates the loop — continue until `must.verified == must.total`. (2) `warn`s are
   advisory — once `badge.eligible == true` (≥80%), stop iterating; do not push warns to pass unless the user explicitly
   asks. (3) `error` (the run-failure status, distinct from `fail`) means re-run — see runbook (U9).
@@ -634,7 +634,7 @@ loop, `warn`s are advisory, stop iterating when `badge.eligible == true`.
 - U8. **R6: Spec-skew fallback paragraph**
 
 **Goal:** Step 2 of `## The anc loop` (Fix.) carries a short paragraph or table row explaining the **two** failure modes
-agents hit when looking up a finding's `id`: (a) the namespace mismatch (envelope `id` is a check id, not a requirement
+agents hit when looking up a finding's `id`: (a) the namespace mismatch (envelope `id` is an audit id, not a requirement
 id), and (b) actual spec drift when the bundle's vendored `spec/principles/` is older than `anc`.
 
 **Requirements:** R6.
@@ -648,13 +648,13 @@ id), and (b) actual spec drift when the bundle's vendored `spec/principles/` is 
 **Approach:**
 
 - ~8–12 line paragraph inserted at the end of step 2. Two-part structure:
-- **Part A — namespace, not skew (always check this first).** The envelope's `results[].id` is a CHECK id (e.g.
+- **Part A — namespace, not skew (always check this first).** The envelope's `results[].id` is an AUDIT id (e.g.
   `p3-help`, `p1-flag-existence`, `p6-sigpipe`). The spec's `requirements[].id` is a REQUIREMENT id (e.g.
   `p1-must-no-interactive`, `p2-must-output-flag`). They are different namespaces. To resolve the spec text the check
-  references, read the matching principle file's body prose (e.g. `spec/principles/p6-*.md`'s "Measured by check IDs
+  references, read the matching principle file's body prose (e.g. `spec/principles/p6-*.md`'s "Measured by audit IDs
   `p6-sigpipe`, …" mapping line) — NOT the principle's frontmatter `requirements[]` block alone. If `anc explain <id>`
   is available (sibling brief A2), prefer it as the authoritative resolver.
-- **Part B — actual spec skew (only if Part A's principle file doesn't reference the check id).** (1) Likely cause —
+- **Part B — actual spec skew (only if Part A's principle file doesn't reference the audit id).** (1) Likely cause —
   `anc` shipped against a newer spec than this bundle vendors. (2) Interim fix — re-run `scripts/sync-spec.sh` to
   refresh the vendored spec, or fetch the missing `spec/principles/p<N>-*.md` from `agentnative` `main`. (3) Non-fix —
   do not hallucinate a spec definition; better to surface the gap to the user.
@@ -667,7 +667,7 @@ cross-link footnote.
 - Verification: SKILL.md step 2 contains both `scripts/sync-spec.sh` (interim fix) and the cross-link to sibling brief
   A2 (`anc explain`).
 - Verification: The paragraph explicitly says "do not hallucinate" or equivalent (origin R6 non-fix bullet).
-- Verification: Part A (namespace) appears before Part B (skew) and uses concrete examples — `p3-help` as a check id,
+- Verification: Part A (namespace) appears before Part B (skew) and uses concrete examples — `p3-help` as an audit id,
   `p1-must-no-interactive` as a requirement id — to make the namespace distinction unambiguous.
 - Verification: The paragraph names "principle file body prose" (NOT "frontmatter alone") as the resolution path.
 
@@ -696,10 +696,10 @@ SKILL.md `## Common situations` (the placeholder U1 created).
 1. **`badge.embed_markdown` placement.** Default convention: top of README, after the H1 title, alongside CI badges.
    Override only if `anc.dev/badge` publishes a different convention (check the page; if it doesn't enumerate placement,
    this entry's default applies and the proposal mirrors to sibling brief A4).
-2. **Should I commit `scorecard.json`?** Default no (artifact, regenerable from `anc check`). Override only for CI
-   gating snapshots. If you commit, gitignore `run.*` fields by post-processing or use the eventual `anc check --stable`
+2. **Should I commit `scorecard.json`?** Default no (artifact, regenerable from `anc audit`). Override only for CI
+   gating snapshots. If you commit, gitignore `run.*` fields by post-processing or use the eventual `anc audit --stable`
    (sibling brief A5).
-3. **`anc check .` vs `--binary` vs `--source`.** `anc check .` runs both source and behavioral analysis; `--binary`
+3. **`anc audit .` vs `--binary` vs `--source`.** `anc audit .` runs both source and behavioral analysis; `--binary`
    skips source (use when scoring a pre-built binary that isn't in this repo); `--source` skips behavioral (use when
    source-only feedback is wanted, e.g. PR review on a code-only diff).
 4. **`anc` panics or returns malformed JSON.** Pointer to `<https://github.com/brettdavies/agentnative-cli/issues>` with
@@ -754,22 +754,22 @@ expands its target-resolution entry).
 4. `completions` — emit shell completions for bash / zsh / fish / PowerShell.
 5. `help [subcommand]` — print help; equivalent to `--help`.
 
-- Footnote under the table: `anc <path>` (no subcommand) is shorthand for `anc check <path>` — see `anc --help` for the
+- Footnote under the table: `anc <path>` (no subcommand) is shorthand for `anc audit <path>` — see `anc --help` for the
   exact aliasing rules. Bare `anc` (no arguments) prints help and exits 2.
 - Subcommand list **must** be verified at unit time by running `anc --help` and reconciling the table against the live
   `Commands:` block. If `anc` ships a new subcommand between plan-write and U21 implementation, add it (or trim) so the
   table stays current.
 - **`references/runbook.md` target-resolution entry (replaces U9's entry 3).** Four-mode coverage:
-- **Project mode** (`anc check .`) — runs both source analysis (Rust-only today) and behavioral checks. Default when a
+- **Project mode** (`anc audit .`) — runs both source analysis (Rust-only today) and behavioral audits. Default when a
   path argument is given.
-- **`--binary`** — runs only behavioral checks against a pre-built binary at the given path. Use when scoring a binary
+- **`--binary`** — runs only behavioral audits against a pre-built binary at the given path. Use when scoring a binary
   that isn't built from source you control, or when source analysis would surface noise irrelevant to runtime behavior.
 - **`--source`** — runs only source analysis (Rust source-tree scanning). Use when source-only feedback is wanted (e.g.,
   PR review on a code-only diff before a binary is rebuilt).
-- **`--command <name>`** — resolves a binary from `PATH` and runs behavioral checks against it. The cross-repo audit
+- **`--command <name>`** — resolves a binary from `PATH` and runs behavioral audits against it. The cross-repo audit
   mode the skill's actual audience uses (auditing someone else's tool). Behavioral checks only — `anc` doesn't analyze
   source it didn't find via path resolution.
-- Cross-link the entry to `anc check --help` for the authoritative flag list.
+- Cross-link the entry to `anc audit --help` for the authoritative flag list.
 
 **Patterns to follow:** Existing `getting-started.md` "Where things live" table format for the SKILL.md subcommand
 index; existing `references/update-check.md` short-section voice for the runbook entry.
@@ -1376,7 +1376,7 @@ in this plan only, not in the shipped doc.
 
 - U22. **R14: `bin/check-update` agent-native upgrade**
 
-**Goal:** Make `bin/check-update` pass `anc check --binary --audit-profile posix-utility` with `badge.eligible == true`.
+**Goal:** Make `bin/check-update` pass `anc audit --binary --audit-profile posix-utility` with `badge.eligible == true`.
 Add agent-native flag surface (`--output text|json`, `--quiet`, `--no-interactive`, `--timeout <s>`); distinguish
 network-fail from up-to-date in JSON mode; preserve text-mode output and cache-file format byte-for-byte.
 
@@ -1433,7 +1433,7 @@ is byte-faithful to today; cache file is back-compat.
 
 - U23. **R14: `scripts/sync-spec.sh` agent-native upgrade**
 
-**Goal:** Make `scripts/sync-spec.sh` pass `anc check --binary --audit-profile posix-utility`. Add full P1 / P2 / P5 /
+**Goal:** Make `scripts/sync-spec.sh` pass `anc audit --binary --audit-profile posix-utility`. Add full P1 / P2 / P5 /
 P7 flag surface; move success-path status prose from stdout to stderr; emit JSON envelope for the success path; report
 idempotency when no work is needed; gate destructive overwrites of dirty `spec/`.
 
@@ -1549,9 +1549,9 @@ output and pick the right invocation flags without reading the script source.
 
 ---
 
-- U25. **R14: Dogfood gate via `anc check --binary`**
+- U25. **R14: Dogfood gate via `anc audit --binary`**
 
-**Goal:** Empirically verify both scripts pass `anc check --binary --audit-profile posix-utility` with `badge.eligible
+**Goal:** Empirically verify both scripts pass `anc audit --binary --audit-profile posix-utility` with `badge.eligible
 == true`. Document the audit invocation so contributors can re-run the gate after future edits.
 
 **Requirements:** R14 (acceptance gate).
@@ -1565,8 +1565,8 @@ output and pick the right invocation flags without reading the script source.
 
 **Approach:**
 
-- **Empirical gate at unit time.** Run `anc check --binary bin/check-update --audit-profile posix-utility --output json`
-  and `anc check --binary scripts/sync-spec.sh --audit-profile posix-utility --output json`. Capture both envelopes.
+- **Empirical gate at unit time.** Run `anc audit --binary bin/check-update --audit-profile posix-utility --output json`
+  and `anc audit --binary scripts/sync-spec.sh --audit-profile posix-utility --output json`. Capture both envelopes.
   Assert `badge.eligible == true` for both. If either fails, the failure modes from `results[]` are the punch list — fix
   in U22 / U23 and re-run before PR 7 merges.
 - **`references/runbook.md` entry 8.** Document the canonical audit invocation (the exact two commands above), the
@@ -1581,9 +1581,9 @@ output and pick the right invocation flags without reading the script source.
 
 **Test scenarios:**
 
-- Verification: `anc check --binary bin/check-update --audit-profile posix-utility --output json | jq .badge.eligible`
+- Verification: `anc audit --binary bin/check-update --audit-profile posix-utility --output json | jq .badge.eligible`
   returns `true`.
-- Verification: `anc check --binary scripts/sync-spec.sh --audit-profile posix-utility --output json | jq
+- Verification: `anc audit --binary scripts/sync-spec.sh --audit-profile posix-utility --output json | jq
   .badge.eligible` returns `true`.
 - Verification: `references/runbook.md` entry 8 contains both audit commands verbatim.
 - Verification: `CONTRIBUTING.md` references the runbook entry.
@@ -1613,7 +1613,7 @@ the skill's own runtime scripts pass that same audit at the badge-eligible bar.
   during discovery. U2 + U10 are the surface-touching units; U2 adds `allowed-tools`, U10 audits `description`. Both are
   additive — no rename, no removal of existing fields.
 - **Integration coverage.** Live `anc 0.3.0` integration is exercised by U5 (samples), U14 (schema validates real
-  envelope), U6 (audit-profile values match `anc check --help`). If `anc` ships a schema bump (sibling brief A1) before
+  envelope), U6 (audit-profile values match `anc audit --help`). If `anc` ships a schema bump (sibling brief A1) before
   this plan lands, U4's pin path may need to update from top-level `schema_version` to `anc.schema_version` — plan
   revision required at that point.
 - **Unchanged invariants.** `name: agent-native-cli` (R10's documented "no" — discoverability). The seven principle
@@ -1637,10 +1637,10 @@ the skill's own runtime scripts pass that same audit at the badge-eligible bar.
 | SKILL.md exceeds 200 lines after PR 1 lands (R9 ceiling violated).                                                | Low        | Low    | U1 verification checks line count at end of PR 1. Origin estimate is +45 lines net; budget is +54 lines, so margin exists. If exceeded, deferred guidance moves to `references/runbook.md` (U9) or extends `references/scorecard-shape.md` (U5).                                                                                         |
 | Trigger-keyword audit (U10 / OQ-origin-#5) finds the existing keyword list is fine and U10 has no work.           | Low        | Low    | OK — U10 commits only the kept-as-is rationale documentation in that case. Frontmatter remains unchanged. The unit still ships (one-paragraph commit).                                                                                                                                                                                   |
 | PR 5 / PR 6 reviewers (Python / Go specialists) push back on starter idioms.                                      | Med        | Low    | Each PR is intentionally scoped to one ecosystem so review is fast and targeted. Iterate within PR; do not block the rest of the plan.                                                                                                                                                                                                   |
-| Live `anc check` envelope used by U5 examples drifts before PR 1 lands.                                           | Low        | Low    | U5 verification re-runs `anc check --output json` at unit time and checks samples against current output. If drift detected, regenerate the samples — they're cheap.                                                                                                                                                                     |
+| Live `anc audit` envelope used by U5 examples drifts before PR 1 lands.                                           | Low        | Low    | U5 verification re-runs `anc audit --output json` at unit time and checks samples against current output. If drift detected, regenerate the samples — they're cheap.                                                                                                                                                                     |
 | `bin/check-update` cache file format compat breaks under PR 7 (cache consumed across an upgrade boundary).        | Low        | Low    | U22 keeps the cache file format unchanged (legacy `UP_TO_DATE <ver>` / `UPGRADE_AVAILABLE <old> <new>`); JSON appears at output time only. Verified by post-edit cache-file inspection in U22's test scenarios.                                                                                                                          |
 | `scripts/sync-spec.sh` stderr-discipline change breaks an unknown consumer that captured the success-path stdout. | Low        | Low    | Searched for callers; only invocation today is direct human run + this plan's U8 spec-skew fallback (which doesn't capture stdout). PR 7 changelog calls out the breaking change explicitly so any external consumer sees the migration note.                                                                                            |
-| `anc check --binary` against bash scripts surfaces unexpected gaps (e.g., missing P3 `after_help`, P6 SIGPIPE).   | Med        | Low    | U25 is the empirical gate; if either script fails, U22 / U23 absorb the punch list before merge. Acceptable to iterate within PR 7. If a finding requires an `anc`-side feature (e.g., bash-script-aware audit profile), defer with a sibling-brief item and document the suppression in U25's verification note.                        |
+| `anc audit --binary` against bash scripts surfaces unexpected gaps (e.g., missing P3 `after_help`, P6 SIGPIPE).   | Med        | Low    | U25 is the empirical gate; if either script fails, U22 / U23 absorb the punch list before merge. Acceptable to iterate within PR 7. If a finding requires an `anc`-side feature (e.g., bash-script-aware audit profile), defer with a sibling-brief item and document the suppression in U25's verification note.                        |
 
 ---
 
@@ -1656,7 +1656,7 @@ per unit for review legibility. Targets `dev`. Estimated total ~280 lines added/
 `getting-started.md`, and three new reference files (`runbook.md`, `scorecard-shape.md`, `audit-profile-selection.md`).
 Largest PR; contains the load-bearing reorder.
 
-Acceptance gate: SKILL.md ≤ 200 lines, first runnable command is `anc check`, all five `results[].status` values
+Acceptance gate: SKILL.md ≤ 200 lines, first runnable command is `anc audit`, all five `results[].status` values
 enumerated in `## Anc contract`, exhaustive scorecard sample parses as JSON, exit-code table empirically matches live
 `anc 0.3.0` behavior across at least three commands (one with `summary.fail == 0`, one with `summary.fail > 0`, one
 invocation error), R6 spec-skew paragraph distinguishes namespace-mismatch from actual-spec-drift, **subcommand index
@@ -1709,13 +1709,13 @@ cross-language sub-sections substantive (no longer stubs).
 
 ### Phase 7 — PR 7: Deterministic-script hardening (R14)
 
-Lands U22 + U23 + U24 + U25. The dogfood gate: makes `bin/check-update` and `scripts/sync-spec.sh` pass `anc check
+Lands U22 + U23 + U24 + U25. The dogfood gate: makes `bin/check-update` and `scripts/sync-spec.sh` pass `anc audit
 --binary --audit-profile posix-utility` with `badge.eligible == true`. Additive flag surfaces (no removals); cache-file
 format unchanged; one minor breaking change in `sync-spec.sh` (success-path status prose moves from stdout to stderr,
 called out in PR 7's changelog).
 
 Acceptance gate: `bin/check-update --help` and `scripts/sync-spec.sh --help` print the new flag surfaces; both scripts
-pass `anc check --binary --audit-profile posix-utility` with `badge.eligible == true` (the empirical gate, U25);
+pass `anc audit --binary --audit-profile posix-utility` with `badge.eligible == true` (the empirical gate, U25);
 `references/update-check.md` documents both modes' output contract and env-var overrides; `references/runbook.md`
 carries entries 7 (sync-spec runbook) and 8 (re-run-the-dogfood-audit); `CONTRIBUTING.md` references the audit gate;
 `shellcheck` clean on both scripts.
@@ -1730,7 +1730,7 @@ carries entries 7 (sync-spec runbook) and 8 (re-run-the-dogfood-audit); `CONTRIB
   and runbook." PR 2–6 changelogs scoped per-PR. PR 7's changelog calls out two user-facing additions and one minor
   breaking change: (1) `bin/check-update` and `scripts/sync-spec.sh` gain `--output json|text`, `--quiet`,
   `--no-interactive`, `--timeout` flags; `sync-spec.sh` additionally gains `--dry-run` and `--force`; (2) both scripts
-  pass the dogfood audit (`anc check --binary --audit-profile posix-utility`) at the badge-eligible bar; (3) **breaking
+  pass the dogfood audit (`anc audit --binary --audit-profile posix-utility`) at the badge-eligible bar; (3) **breaking
   change:** `sync-spec.sh` success-path status prose ("querying…", "vendoring…", "wrote N files") moves from stdout to
   stderr — consumers capturing the success-path stdout will see only the new single-line result token instead.
 - **VERSION bump.** All seven PRs ship in one consolidated release: `v0.4.0` from `v0.3.0`. The release covers the R9

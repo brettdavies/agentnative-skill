@@ -4,7 +4,7 @@ Thanks for your interest. This repo is the agent-facing skill that pairs with th
 
 - [`agentnative`](https://github.com/brettdavies/agentnative) (the spec): canonical principle text. Vendored here at
   `spec/`.
-- [`agentnative-cli`](https://github.com/brettdavies/agentnative-cli) (`anc`): the canonical compliance checker.
+- [`agentnative-cli`](https://github.com/brettdavies/agentnative-cli) (`anc`): the canonical compliance auditor.
 - [`agentnative-site`](https://github.com/brettdavies/agentnative-site) (`anc.dev`): the public site, leaderboard
   renderer, live-scoring loop, and skill-distribution endpoint.
 
@@ -27,7 +27,7 @@ structure or host-runtime support.
 For principle-level discussion (the spec's MUST/SHOULD/MAY tiers, including P8 on discoverability), file a
 `pressure-test` issue in the
 [spec repo](https://github.com/brettdavies/agentnative/issues/new?template=pressure-test.yml). For scoring engine or
-`anc check` work, file in the [CLI repo](https://github.com/brettdavies/agentnative-cli). Those discussions don't belong
+`anc audit` work, file in the [CLI repo](https://github.com/brettdavies/agentnative-cli). Those discussions don't belong
 here.
 
 **Response expectations:** Tier 1 and Tier 2 are welcome and get a substantive reply when time allows. Tier 3 PRs are
@@ -38,7 +38,7 @@ reviewed when scope and time permit. Real PRs land; no merge-window promise.
 | You want to…                                                    | Where                                                                               |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Propose a new principle, change MUST/SHOULD/MAY tiers, etc.     | [`brettdavies/agentnative`](https://github.com/brettdavies/agentnative) (the spec)  |
-| Report an `anc check` bug, or propose a new checker feature     | [`brettdavies/agentnative-cli`](https://github.com/brettdavies/agentnative-cli)     |
+| Report an `anc audit` bug, or propose a new auditor feature     | [`brettdavies/agentnative-cli`](https://github.com/brettdavies/agentnative-cli)     |
 | Report a site bug (rendering, deployment, anc.dev surface)      | [`brettdavies/agentnative-site`](https://github.com/brettdavies/agentnative-site)   |
 | Improve a starter template, add a language idiom, fix the guide | This repo. Issue + PR. Templates: **Bug report** or **Bundle proposal**.            |
 | Bump the vendored spec to a newer tag                           | This repo. Run `scripts/sync-spec.sh` and PR the diff.                              |

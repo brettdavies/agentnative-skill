@@ -18,7 +18,7 @@ land.
 
 ## Problem
 
-Agents consuming `anc check` output today must infer details that should be self-describing in the binary's contract:
+Agents consuming `anc audit` output today must infer details that should be self-describing in the binary's contract:
 
 - The JSON envelope's schema version is internal documentation, not a field agents can assert against. A bump from 0.5
   to 0.6 with renamed fields breaks consumers silently.
@@ -30,7 +30,7 @@ Agents consuming `anc check` output today must infer details that should be self
   tool (TUI rendering + stdin batch mode + a shell wrapper).
 - Scorecard envelopes contain timestamp / run-id metadata mixed in with the gating payload, so CI gates that diff the
   whole envelope see false churn.
-- `anc check`'s exit-code semantics aren't part of the documented contract, so agents can't `&&`-chain it reliably.
+- `anc audit`'s exit-code semantics aren't part of the documented contract, so agents can't `&&`-chain it reliably.
 
 Each of these is fixable in the skill via prose, but the durable fix is for `anc` to make the contract self-describing.
 
@@ -54,7 +54,7 @@ priorities.
 
 ### A1. Self-describing schema version in the envelope (highest priority)
 
-**What.** Surface the schema version on every `anc check --output json` envelope at a stable, top-level path — proposed
+**What.** Surface the schema version on every `anc audit --output json` envelope at a stable, top-level path — proposed
 `anc.schema_version` (sits alongside `anc.version`) or `run.schema_version`. String, semver-shaped (`"0.5"`, `"0.6.0"`).
 
 **Why.** Lets every agent assert `envelope.anc.schema_version == "0.5"` (or whatever they pinned against) before
@@ -63,7 +63,7 @@ other is the implementation.
 
 **Acceptance.**
 
-- Field present in every JSON envelope from `anc check`.
+- Field present in every JSON envelope from `anc audit`.
 - Documented in the README and the `anc` man page (or equivalent).
 - Bumping the schema bumps this field. Adding fields without rename does not.
 
@@ -86,7 +86,7 @@ its root.
 
 ### A3. Stable exit-code policy
 
-**What.** Document and stabilise the exit-code contract for `anc check` and other subcommands. Proposed:
+**What.** Document and stabilise the exit-code contract for `anc audit` and other subcommands. Proposed:
 
 | Exit | Meaning                                                                   |
 | ---- | ------------------------------------------------------------------------- |
@@ -95,7 +95,7 @@ its root.
 | 2    | Invocation error — bad flags, target not found, profile name unknown.     |
 | 3    | Internal error — panic, malformed input, schema version mismatch on read. |
 
-**Why.** Lets agents and CI scripts use `anc check && next-step` reliably, and lets agents distinguish "tool said no"
+**Why.** Lets agents and CI scripts use `anc audit && next-step` reliably, and lets agents distinguish "tool said no"
 from "tool couldn't run." Closes R2's exit-code row in the skill-side doc.
 
 **Acceptance.**
@@ -135,7 +135,7 @@ the workaround; native support eliminates it.
 **Acceptance.**
 
 - Document the stable subtree in the README. OR
-- `anc check --stable .` produces byte-identical output for byte-identical input.
+- `anc audit --stable .` produces byte-identical output for byte-identical input.
 
 ### A6. Profile composition for hybrid tools
 
@@ -151,7 +151,7 @@ suppresses real findings (if the user picks `human-tui`) or surfaces irrelevant 
 - Hybrid tool case has a deterministic incantation.
 - Skill-side R3 ("hybrid project rule") points to this rather than inventing a workaround.
 
-### A7. `anc` self-check / `anc doctor`
+### A7. `anc` self-audit / `anc doctor`
 
 **What.** A subcommand that prints `anc.version`, `anc.schema_version`, the spec version it was built against, the
 registered audit-profile names, and the registered hosts for `anc skill install`. JSON output supported.
