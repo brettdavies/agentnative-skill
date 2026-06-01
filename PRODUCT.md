@@ -2,16 +2,17 @@
 
 Channel-specific design context for the **skill bundle channel** of agentnative. Inherits the shared identity, voice
 anchor, audiences, and universal anti-patterns from [`BRAND.md`](BRAND.md), vendored from
-[`agentnative-spec`](https://github.com/brettdavies/agentnative) via
-[`scripts/sync-prose-tooling.sh`](scripts/sync-prose-tooling.sh). Read that first.
+[`agentnative-spec`](https://github.com/brettdavies/agentnative) via a dev-only vendoring script (kept off `main` by the
+workflow guard). Read `BRAND.md` first.
 
 ## Inheritance
 
 The skill bundle channel sits in a three-tier waterfall. Each tier owns a different concern; nothing duplicates.
 
 1. **Universal layer: [`BRAND.md`](BRAND.md).** Shared identity, voice anchor, audiences, universal anti-patterns.
-   Vendored from `agentnative-spec` via [`scripts/sync-prose-tooling.sh`](scripts/sync-prose-tooling.sh) (parallel to
-   [`scripts/sync-spec.sh`](scripts/sync-spec.sh), which vendors `spec/principles/`). Read that first.
+   Vendored from `agentnative-spec` by a dev-only sync script (kept off `main` by the workflow guard; parallel to
+   [`scripts/sync-spec.sh`](scripts/sync-spec.sh), which vendors `spec/principles/` and does ship to `main`). Read
+   `BRAND.md` first.
 2. **Channel delta: this file (`PRODUCT.md`).** Instructional voice, second-person imperative allowed (the bundle
    teaches agents how to invoke `anc`), terse and agent-loadable. The narrative companion to the shipped bundle content
    at the repo root.

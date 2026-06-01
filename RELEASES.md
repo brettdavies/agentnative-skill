@@ -38,6 +38,22 @@ gh pr create --base dev --title "feat(scope): what changed"
   user-facing release notes; `CHANGELOG.md` entries derive from it directly. See [§ PR body](#pr-body).
 - **PR body prose scrub**: see [§ Prose scrubbing](#prose-scrubbing).
 
+### Dev-direct exception
+
+Two categories of change commit directly to `dev` without going through the feature-branch + PR flow:
+
+- **Engineering docs**: `docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/`. These live on `dev`
+  only; `guard-main-docs.yml` blocks them from reaching `main` so a release branch's cherry-pick from `dev` naturally
+  excludes them.
+- **Prose-tooling vendoring vehicle**: `scripts/sync-prose-tooling.sh`. The script vendors `BRAND.md` from
+  `agentnative-spec` and is a producer-side dev convenience, not part of the shipped bundle. The workflow guard's
+  `extra_paths` list keeps it off `main`; future cherry-picks that try to bring it onto a `release/*` branch will fail
+  the guard. `BRAND.md` itself still ships to `main` (consumers read it), but the script that vendors it does not.
+
+Everything else (consumer-facing markdown like `README`, `AGENTS`, `CONTRIBUTING`, `CHANGELOG`, the skill bundle content
+under `SKILL.md` / `getting-started.md` / `spec/` / `references/` / `templates/`, and any in-repo runbook) goes through
+the standard feature-branch + PR flow.
+
 ## PR body
 
 Every PR (feature, fix, docs, release) uses `.github/pull_request_template.md` verbatim.
