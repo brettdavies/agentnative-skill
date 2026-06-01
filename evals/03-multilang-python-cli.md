@@ -111,6 +111,10 @@ mechanically translating Rust patterns. Three Click-specific behaviors you shoul
   prompt, not to declare yourself exempt.
 - **80% floor or schema 0.5.** Either string in your notes is wrong; check the actual values from
   `scorecard-after.json`.
+- **Counting source-layer rows toward the score.** `anc`'s source-layer coverage is Rust-only; for a Python tool the
+  source layer is essentially absent and the score is computed from behavioral-layer rows only anyway. Do not try to
+  "fix" missing source-layer rows by adding Rust — they are out of scope for `score_pct` even on Rust tools. Read
+  `spec/principles/scoring.md` § "Scope: shipped-binary behavior only" if you need the contract.
 
 ## Escalation rule
 

@@ -103,6 +103,14 @@ first, then SHOULD-tier with small effort, then anything else." If you ranked it
   of the schema added — and conflates probe scope with requirement scope.
 - **80% floor in `NOTES.md`.** Anywhere you write "≥80%" in your notes is wrong; check the actual `badge.convention_url`
   or the bundle's documentation for the current floor.
+- **Counting all layers in `score_pct` math.** `badge.score_pct` is computed from behavioral-layer rows only — source-
+  and project-layer rows do not enter the formula. If you try to reconcile the score by summing all rows in `results[]`,
+  the numbers will not match. Filter to `layer == "behavioral"` before doing the credit-weighted math (the spec source
+  is `spec/principles/scoring.md` § "Scope: shipped-binary behavior only").
+- **Confusing `coverage_summary.must.verified` with "MUSTs satisfied".** `verified` increments on any verdict (including
+  `fail` and `warn`), not just `pass`. The bar for "no MUST violations" is no `results[]` row where `tier == "must"` and
+  `status == "fail"`, not `must.verified == must.total`. If `plan.md` or `NOTES.md` uses the latter as the
+  "satisfaction" check, that's wrong.
 
 ## Escalation rule
 

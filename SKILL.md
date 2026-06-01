@@ -73,13 +73,20 @@ loop:
 
 **1. Audit.** `anc audit --output json . > scorecard.json`. The JSON envelope is schema `0.7` and contains:
 
-- `summary` — counters across the full status set: `total / pass / warn / fail / skip / error / opt_out / n_a`.
-- `coverage_summary` — `must / should / may`, each with `total` + `verified`. `must.verified == must.total` is the bar
-  for "no MUST violations".
+- `summary` — counters across the full status set: `total / pass / warn / fail / skip / error / opt_out / n_a`. Spans
+  all three audit layers (behavioral, source, project).
+- `coverage_summary` — `must / should / may`, each with `total` + `verified`. **`verified` counts any verdict — `pass`,
+  `warn`, `fail`, `skip` all increment it.** "Was this MUST audited at all?" not "was it satisfied." The actual bar for
+  "no MUST violations" is no `results[]` row where `tier == "must" && status == "fail"` (equivalently, every MUST row is
+  `pass` / `warn` / `opt_out` / `skip` / `n_a`).
 - `badge.eligible` (bool), `badge.score_pct` (int), `badge.embed_markdown` (string or `null`), `badge.scorecard_url`,
   `badge.badge_url`, `badge.convention_url`. **70%** is the eligibility floor; below it, `embed_markdown` is `null` and
-  the convention says do not advertise a badge. The score is credit-weighted: `pass = 1.0`, `warn = 0.5`, `fail` and
-  `opt_out` = `0.0` (denominator), while `n_a` and `skip` are excluded.
+  the convention says do not advertise a badge. **The score is computed over behavioral-layer rows only** — source- and
+  project-layer audits do not affect `score_pct` or badge eligibility (`spec/principles/scoring.md` § "Scope:
+  shipped-binary behavior only"). Under the current flat tier weights the formula reduces to a credit-weighted ratio:
+  `pass = 1.0`, `warn = 0.5`, `fail` and `opt_out` = `0.0` (all in the denominator); `n_a`, `skip`, and `error` are
+  excluded. The general form is tier-weighted (`w(must) · w(should) · w(may)`) but currently flat — see
+  `spec/principles/scoring.md` for the formula and the cohort bands above the floor.
 - `results[]` — one entry per requirement-row. Each carries `id` (the spec requirement id, e.g. `p1-must-no-interactive`
   — match this against `spec/principles/p<N>-*.md` frontmatter), `audit_id` (the probe that produced the row, e.g.
   `p1-non-interactive`), `tier` (`must` / `should` / `may`), `status`, `evidence`, `group`, `layer`, `confidence`, and
@@ -98,11 +105,13 @@ The process exit code reflects live verdicts only: `n_a` from an `opt_out` antec
 `requirements[]` frontmatter. Apply the fix using the implementation references below. Re-run with `--principle <N>` to
 focus on one principle while iterating.
 
-**3. Re-audit.** Re-run `anc audit --output json .` until `summary.fail == 0` and `coverage_summary.must.verified ==
-coverage_summary.must.total`. Use `--audit-profile <category>` to suppress audits that don't apply to the tool class —
-`human-tui` (TUIs that legitimately intercept the TTY), `file-traversal` (reserved), `posix-utility` (cat / sed / awk
-style), `diagnostic-only` (read-only tools). Suppressed audits emit `Skip` with structured evidence so readers see what
-was excluded.
+**3. Re-audit.** Re-run `anc audit --output json .` until no MUST row is in `fail` — query the JSON with `jq
+'[.results[] | select(.tier == "must" and .status == "fail")] | length'` and confirm it's `0`. Do not rely on
+`coverage_summary.must.verified == coverage_summary.must.total` as the satisfaction bar — `verified` increments on any
+verdict, so it can equal `total` while MUST fails still exist. Use `--audit-profile <category>` to suppress audits that
+don't apply to the tool class — `human-tui` (TUIs that legitimately intercept the TTY), `file-traversal` (reserved),
+`posix-utility` (cat / sed / awk style), `diagnostic-only` (read-only tools). Suppressed audits emit `Skip` with
+structured evidence so readers see what was excluded.
 
 **4. Claim the badge.** Once `badge.eligible == true` (≥70%), copy `badge.embed_markdown` into the project's README. The
 `text` output appends an embed hint after the summary line whenever the floor is cleared; below the floor, nothing
