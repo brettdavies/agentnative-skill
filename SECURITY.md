@@ -2,8 +2,8 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in this skill bundle — for example, a script in `scripts/` or a template under
-`templates/` that could execute unintended code on a user's machine at install time — please report it via GitHub's
+If you discover a security vulnerability in this skill bundle (for example, a script in `scripts/` or a template under
+`templates/` that could execute unintended code on a user's machine at install time), please report it via GitHub's
 private security advisories rather than filing a public issue:
 
 [Open a private security advisory](https://github.com/brettdavies/agentnative-skill/security/advisories/new)
@@ -26,7 +26,7 @@ Out of scope:
 
 - Vulnerabilities in tools that this skill *describes* but does not ship (e.g., bugs in clap, Rust, or other CLI tools
   referenced by the principles).
-- Best-practice debates about the principles themselves — open a regular issue or PR for those.
+- Best-practice debates about the principles themselves; open a regular issue or PR for those.
 
 ## Supported Versions
 
