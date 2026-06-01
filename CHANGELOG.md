@@ -39,6 +39,13 @@ All notable changes to this project will be documented in this file.
   Python (Click) workflows. by @brettdavies in [#21](https://github.com/brettdavies/agentnative-skill/pull/21)
 - Document `anc skill install --all` and `anc skill update [host|--all]` in the install section.
 - Document `anc emit schema` for extracting the scorecard JSON Schema embedded in the binary.
+- `scripts/generate-changelog.sh`: `--dry-run` flag prints a unified diff of what regeneration would change without
+  modifying `CHANGELOG.md`. Exits 0 when the file is idempotent vs current PR bodies, exits 1 on drift. by @brettdavies
+  in [#25](https://github.com/brettdavies/agentnative-skill/pull/25)
+- `scripts/sync-dev-after-release.sh`: GitHub Release published-state precondition via `gh release view --json isDraft`.
+  Exits 67 when the release is missing or draft.
+- `scripts/sync-dev-after-release.sh`: post-sync regen-idempotency check via `generate-changelog.sh --dry-run`. Warns
+  (does not fail) when PR bodies have drifted from main's `CHANGELOG.md`.
 
 ### Changed
 
@@ -77,6 +84,16 @@ All notable changes to this project will be documented in this file.
 - Track `anc` v0.5.0 scorecard surface: schema 0.7, per-row `id` / `audit_id` / `tier` fields, `opt_out` and `n_a`
   statuses, 70% badge floor.
 - Surface new top-level flags: `--examples`, `--json`, `--raw`, `--color`, `--verbose`.
+- `.github/workflows/guard-main-docs.yml`: pass `extra_paths: 'scripts/sync-prose-tooling.sh'` to the reusable guard
+  workflow. Future PRs to `main` that add or modify the script fail the check. by @brettdavies in
+  [#24](https://github.com/brettdavies/agentnative-skill/pull/24)
+- `RELEASES.md`: add a `### Dev-direct exception` subsection under `## Daily development` that names engineering docs
+  and the prose-tooling vendoring vehicle as the two categories that commit directly to `dev` without the feature-branch
+  + PR flow.
+- `PRODUCT.md`: reframe the `BRAND.md` inheritance text to name a "dev-only sync script" rather than linking the in-tree
+  path twice.
+- `AGENTS.md`: align the Voice-and-prose-rules section with the same framing.
+- `README.md`: annotate the repo-layout entry for the script as `(dev-only; guarded off main)`.
 
 ### Fixed
 
@@ -87,6 +104,9 @@ All notable changes to this project will be documented in this file.
   [#21](https://github.com/brettdavies/agentnative-skill/pull/21)
 - Clarify that `badge.score_pct` is computed from behavioral-layer rows only. Source- and project-layer audits do not
   affect the score.
+- `scripts/generate-changelog.sh` no longer prepends a duplicate section when `CHANGELOG.md` already has one for the
+  current tag. Mirrors `agentnative-cli` PR #68. by @brettdavies in
+  [#25](https://github.com/brettdavies/agentnative-skill/pull/25)
 
 ### Documentation
 
