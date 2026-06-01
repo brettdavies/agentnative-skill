@@ -27,7 +27,10 @@ agentnative-skill/
 ├── scripts/
 │   ├── sync-spec.sh                vendor the latest agentnative-spec v* tag into spec/
 │   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD
-│   └── generate-changelog.sh       release-time CHANGELOG generator (git-cliff + PR-body extraction)
+│   ├── sync-dev-after-release.sh   post-release backport: replay release/* artifacts onto dev
+│   ├── generate-changelog.sh       release-time CHANGELOG generator (git-cliff + PR-body extraction)
+│   └── hooks/pre-push              local CI mirror (markdownlint + shellcheck), installed via core.hooksPath
+├── evals/                  self-contained eval prompts for fresh-agent dispatch (producer-side; not loaded by hosts)
 ├── docs/plans/             engineering plans (dev-only — guarded out of main)
 ├── .github/                workflows, rulesets, issue templates, PR template
 ├── AGENTS.md               project-level agent instructions FOR THIS REPO (producer-side)
@@ -45,9 +48,9 @@ agentnative-skill/
 ```
 
 Consumer-facing files (`SKILL.md`, `getting-started.md`, `bin/`, `spec/`, `references/`, `templates/`, `VERSION`,
-`LICENSE-*`) are read by the agent at runtime. Producer-side files (`scripts/`, `docs/`, `.github/`, `AGENTS.md`,
-`CONTRIBUTING.md`, `RELEASES.md`, `cliff.toml`) ship to consumers via `git clone` but are inert at runtime. The host
-discovers `SKILL.md` and ignores everything else.
+`LICENSE-*`) are read by the agent at runtime. Producer-side files (`scripts/`, `evals/`, `docs/`, `.github/`,
+`AGENTS.md`, `BRAND.md`, `PRODUCT.md`, `CONTRIBUTING.md`, `RELEASES.md`, `RELEASES-RATIONALE.md`, `cliff.toml`) ship to
+consumers via `git clone` but are inert at runtime. The host discovers `SKILL.md` and ignores everything else.
 
 ## Install
 
