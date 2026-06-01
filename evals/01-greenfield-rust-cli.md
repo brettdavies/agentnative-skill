@@ -78,11 +78,15 @@ These are regression markers from prior eval runs. If your transcript shows any 
 - **"Deliberate non-adoption" on `p8-must-bundle-install` without an experiment.** This eval requires
   `widgetctl/AGENTS.md` (required artifact #2), which makes `p8-bundle-exists` pass and triggers
   `p8-must-bundle-install` on the binary. The probe expects the binary to advertise an install path for the bundle
-  (candidate shapes named in the probe's evidence string, e.g. `skill install`, `init --skill`). Before classifying the
-  row as `opt_out` / "deliberate non-adoption" / "this is a fixture, not a real bundle," you **must** either (a) add a
-  working stub install subcommand to `widgetctl` and verify the row's status changes, or (b) re-run with
-  `--audit-profile <category>` if a matching profile actually suppresses this audit. Framing your way out without
-  running either experiment fails this criterion.
+  (candidate shapes named in the probe's evidence string, e.g. `skill install`, `init --skill`). The probe is
+  permissive: it greps `--help` / `<verb> --help` for the expected token shapes and does **not** semantically validate
+  that the install does anything — a ~30-line stub subcommand that takes a destination and writes `AGENTS.md` to it
+  satisfies the row. So the rationalization "I shouldn't add a fake feature just to pass an audit" is factually wrong on
+  this probe: the audit asks for the discoverable surface, not the feature. Before classifying the row as `opt_out` /
+  "deliberate non-adoption" / "this is a fixture, not a real bundle," you **must** either (a) add a working stub install
+  subcommand to `widgetctl` and verify the row's status changes, or (b) re-run with `--audit-profile <category>` if a
+  matching profile actually suppresses this audit. Framing your way out without running either experiment fails this
+  criterion.
 - **Confusing `coverage_summary.must.verified` with "MUSTs satisfied".** `verified` increments on any verdict (including
   `fail` and `warn`), not just `pass`. The bar for "no MUST violations" is no `results[]` row where `tier == "must"` and
   `status == "fail"`, not `must.verified == must.total`.
