@@ -6,24 +6,25 @@ description: >-
   [`agentnative-spec`](https://github.com/brettdavies/agentnative) (the canonical principle text, vendored at
   `spec/`). Provides starter templates, language-specific implementation idioms (Rust/clap, Python Click & argparse,
   Go Cobra, JS Commander/yargs/oclif, Ruby Thor), and a getting-started guide that points agents at
-  `anc audit --output json` and `anc skill install <host>`. Use when designing a new CLI tool, building a Rust/clap
-  binary intended for agents, reviewing one for agent-readiness, claiming the agent-native badge, or remediating
-  findings from `anc`. Triggers on agentic CLI, agent-native, CLI design, CLI standard, agent-first, CLI for agents,
-  agent-friendly CLI, CLI compliance, agent-readiness, anc, anc audit, anc skill install, agent-native badge,
-  scorecard, audit-profile, Rust CLI, clap derive. SKIP when the user is building a TUI app meant for humans (use
-  `--audit-profile human-tui` rather than this skill), writing a non-CLI library, or asking unrelated Rust questions
-  not specifically about agent-readiness of a CLI.
+  `anc audit --output json` (scorecard schema 0.7) and `anc skill install <host>` / `anc skill update --all`. Use
+  when designing a new CLI tool, building a Rust/clap binary intended for agents, reviewing one for agent-readiness,
+  claiming the agent-native badge (≥70% credit-weighted score), or remediating findings from `anc`. Triggers on
+  agentic CLI, agent-native, CLI design, CLI standard, agent-first, CLI for agents, agent-friendly CLI, CLI
+  compliance, agent-readiness, anc, anc audit, anc emit schema, anc skill install, anc skill update, agent-native
+  badge, scorecard, audit_id, audit-profile, opt_out, n_a, Rust CLI, clap derive. SKIP when the user is building a
+  TUI app meant for humans (use `--audit-profile human-tui` rather than this skill), writing a non-CLI library, or
+  asking unrelated Rust questions not specifically about agent-readiness of a CLI.
 ---
 
 # Agent-Native CLI
 
 The standard for CLI tools designed to be operated by AI agents. Three artifacts work together:
 
-| Artifact                                                         | Role                                                                                                                                                                               |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`agentnative-spec`](https://github.com/brettdavies/agentnative) | Canonical text of the eight principles. Frontmatter `requirements[]` is the machine-readable contract. Vendored into [`spec/`](./spec/) — snapshot refreshed each release.         |
-| [`anc`](https://github.com/brettdavies/agentnative-cli)          | The compliance auditor. Reads target source/binary, emits a JSON scorecard whose entries cite spec `requirement_id`s. The runtime authority.                                       |
-| **This skill** (`agent-native-cli`)                              | The agent-facing guide. Tells the agent how to invoke `anc`, how to navigate the spec when remediating findings, and where the implementation patterns and starter templates live. |
+| Artifact                                                         | Role                                                                                                                                                                                                     |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`agentnative-spec`](https://github.com/brettdavies/agentnative) | Canonical text of the eight principles. Frontmatter `requirements[]` is the machine-readable contract. Vendored into [`spec/`](./spec/) — snapshot refreshed each release.                               |
+| [`anc`](https://github.com/brettdavies/agentnative-cli)          | The compliance auditor. Reads target source/binary, emits a JSON scorecard whose entries cite the spec requirement `id` (e.g. `p1-must-no-interactive`) and the probe `audit_id`. The runtime authority. |
+| **This skill** (`agent-native-cli`)                              | The agent-facing guide. Tells the agent how to invoke `anc`, how to navigate the spec when remediating findings, and where the implementation patterns and starter templates live.                       |
 
 The skill does **not** implement principles auditing. `anc` does. The skill teaches agents to use `anc` and supplies the
 surrounding context (spec, idioms, templates) that `anc`'s findings reference.
@@ -48,7 +49,7 @@ map.
 
 ## The eight principles
 
-Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` — currently `v0.4.0`; see
+Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` — currently `v0.5.0`; see
 [`spec/README.md`](./spec/README.md) for resync instructions). One file per principle, each with machine-readable
 `requirements[]` frontmatter:
 
@@ -70,37 +71,81 @@ Do not paraphrase the principles inside this skill — read the spec files direc
 Once `anc` is installed (one-line install in [`getting-started.md`](./getting-started.md)), the work is a four-step
 loop:
 
-**1. Audit.** `anc audit --output json . > scorecard.json`. The JSON envelope is schema `0.5` and contains:
+**1. Audit.** `anc audit --output json . > scorecard.json`. The JSON envelope is schema `0.7` and contains:
 
-- `summary` — `total / pass / warn / fail / skip / error` count.
-- `coverage_summary` — `must / should / may`, each with `total` + `verified`. `must.verified == must.total` is the bar
-  for "no MUST violations".
+- `summary` — counters across the full status set: `total / pass / warn / fail / skip / error / opt_out / n_a`. Spans
+  all three audit layers (behavioral, source, project).
+- `coverage_summary` — `must / should / may`, each with `total` + `verified`. **`verified` counts any verdict — `pass`,
+  `warn`, `fail`, `skip` all increment it.** "Was this MUST audited at all?" not "was it satisfied." The actual bar for
+  "no MUST violations" is no `results[]` row where `tier == "must" && status == "fail"` (equivalently, every MUST row is
+  `pass` / `warn` / `opt_out` / `skip` / `n_a`).
 - `badge.eligible` (bool), `badge.score_pct` (int), `badge.embed_markdown` (string or `null`), `badge.scorecard_url`,
-  `badge.badge_url`, `badge.convention_url`. **80%** is the eligibility floor; below it, `embed_markdown` is `null` and
-  the convention says do not advertise a badge.
-- `results[]` — per-audit entries citing `requirement_id`, `status`, and `evidence`.
+  `badge.badge_url`, `badge.convention_url`. **70%** is the eligibility floor; below it, `embed_markdown` is `null` and
+  the convention says do not advertise a badge. **The score is computed over behavioral-layer rows only** — source- and
+  project-layer audits do not affect `score_pct` or badge eligibility (`spec/principles/scoring.md` § "Scope:
+  shipped-binary behavior only"). Under the current flat tier weights the formula reduces to a credit-weighted ratio:
+  `pass = 1.0`, `warn = 0.5`, `fail` and `opt_out` = `0.0` (all in the denominator); `n_a`, `skip`, and `error` are
+  excluded. The general form is tier-weighted (`w(must) · w(should) · w(may)`) but currently flat — see
+  `spec/principles/scoring.md` for the formula and the cohort bands above the floor.
+- `results[]` — one entry per requirement-row. Each carries `id` (the spec requirement id, e.g. `p1-must-no-interactive`
+  — match this against `spec/principles/p<N>-*.md` frontmatter), `audit_id` (the probe that produced the row, e.g.
+  `p1-non-interactive`), `tier` (`must` / `should` / `may`), `status`, `evidence`, `group`, `layer`, `confidence`, and
+  `label`. A single probe like `p3-version` emits two rows — one tier-stamped `must`, one `should` — so you can
+  attribute the verdict to a specific RFC 2119 level without joining the coverage matrix.
 - `audit_profile` — the exemption category in effect (or `null`).
 - `tool / anc / run / target` metadata — identifies the scored tool, the `anc` build, the invocation, and the resolved
   target.
 
-**2. Fix.** For each `fail`, look up the cited `requirement_id` (e.g. `p1-must-no-interactive`) in
-`spec/principles/p<N>-*.md`'s `requirements[]` frontmatter. Apply the fix using the implementation references below.
-Re-run with `--principle <N>` to focus on one principle while iterating.
+**Status set.** `pass` / `warn` / `fail` / `skip` / `error` are the live verdicts. `opt_out` marks a deliberate
+non-adoption (e.g. no `--output` flag → P2 schema-discovery rows collapse). `n_a` propagates from a conditional whose
+antecedent is `opt_out` or `n_a` — the `evidence` field names the antecedent so the chain is legible from JSON alone.
+The process exit code reflects live verdicts only: `n_a` from an `opt_out` antecedent does not force a non-zero exit.
 
-**3. Re-audit.** Re-run `anc audit --output json .` until `summary.fail == 0` and `coverage_summary.must.verified ==
-coverage_summary.must.total`. Use `--audit-profile <category>` to suppress audits that don't apply to the tool class —
-`human-tui` (TUIs that legitimately intercept the TTY), `file-traversal` (reserved), `posix-utility` (cat / sed / awk
-style), `diagnostic-only` (read-only tools). Suppressed audits emit `Skip` with structured evidence so readers see what
-was excluded.
+**2. Fix.** For each `fail`, look up the cited `id` (e.g. `p1-must-no-interactive`) in `spec/principles/p<N>-*.md`'s
+`requirements[]` frontmatter. Apply the fix using the implementation references below. Re-run with `--principle <N>` to
+focus on one principle while iterating.
 
-**4. Claim the badge.** Once `badge.eligible == true` (≥80%), copy `badge.embed_markdown` into the project's README. The
+**3. Re-audit.** Re-run `anc audit --output json .` until no MUST row is in `fail` — query the JSON with `jq
+'[.results[] | select(.tier == "must" and .status == "fail")] | length'` and confirm it's `0`. Do not rely on
+`coverage_summary.must.verified == coverage_summary.must.total` as the satisfaction bar — `verified` increments on any
+verdict, so it can equal `total` while MUST fails still exist. Use `--audit-profile <category>` to suppress audits that
+don't apply to the tool class — `human-tui` (TUIs that legitimately intercept the TTY), `file-traversal` (reserved),
+`posix-utility` (cat / sed / awk style), `diagnostic-only` (read-only tools). Suppressed audits emit `Skip` with
+structured evidence so readers see what was excluded.
+
+**4. Claim the badge.** Once `badge.eligible == true` (≥70%), copy `badge.embed_markdown` into the project's README. The
 `text` output appends an embed hint after the summary line whenever the floor is cleared; below the floor, nothing
 badge-related is printed (the convention's "do not nag" rule).
 
+### Useful flags
+
+- `--principle <N>` — filter the audit to one principle while iterating.
+- `--binary` / `--source` — scope to one layer (skip the other).
+- `--audit-profile <category>` — suppress audits that don't apply (`human-tui`, `posix-utility`, `diagnostic-only`,
+  `file-traversal`).
+- `--examples` — print a curated invocation block and exit (pair with `--output json` or `--json` for structured).
+- `--json` — short alias for `--output json` (the `p2-should-json-aliases` convention).
+- `--raw` — strip headers and summary, emit one `id<TAB>status` line per audit. Pipe-friendly for `grep` / `awk`.
+- `--color <auto|always|never>` (env `AGENTNATIVE_COLOR`) — control ANSI styling; honors `NO_COLOR` in `auto` mode.
+- `-v` / `--verbose` (env `AGENTNATIVE_VERBOSE`) — escalate diagnostic detail when debugging unexpected results.
+
+### Get the scorecard JSON Schema
+
+The canonical JSON Schema for the scorecard envelope ships embedded in the binary. Extract it without a network round
+trip:
+
+```bash
+anc emit schema                # print to stdout
+anc emit schema | jq '.title'  # inspect a field
+```
+
+The schema `$id` is `https://anc.dev/scorecard-v0.7.schema.json`. Pre-0.6 consumers treated `opt_out` / `n_a` as unknown
+— feature-detect the status enum rather than pinning to an exact list.
+
 ## Implementation guidance (when fixing findings)
 
-Once `anc audit` reports a failure, the agent has the cited `requirement_id` and the spec text. The next question is
-"how do I write code that satisfies this requirement?" — answered by:
+Once `anc audit` reports a failure, the agent has the cited `id` (requirement-row id) and the spec text. The next
+question is "how do I write code that satisfies this requirement?" — answered by:
 
 | Need                                                    | File                                                                                                 |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -133,7 +178,10 @@ To install **this skill bundle** into a host's canonical skills directory, use `
 
 ```bash
 anc skill install claude_code              # also: codex, cursor, factory, kiro, opencode
+anc skill install --all                    # install into every known host in one invocation
 anc skill install --dry-run claude_code    # print resolved git command without spawning
+anc skill update claude_code               # refresh an existing install (guards on SKILL.md marker)
+anc skill update --all                     # refresh every known host
 ```
 
 Recommended `anc audit` invocations and the full agent loop are in [`getting-started.md`](./getting-started.md). Do not
