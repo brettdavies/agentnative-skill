@@ -14,8 +14,6 @@ The repo ships to consumers via plain `git clone`. After install, the host (Clau
 auto-discovers `SKILL.md` at the install root and ignores everything else. Producer-side files (`scripts/`, `docs/`,
 `.github/`, `cliff.toml`, etc.) clone alongside the skill content but are inert at runtime.
 
-<!-- unslop: off -->
-
 | Path                                                                                     | Read at runtime by host? | Purpose                                                                                                                            |
 | ---------------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `SKILL.md`                                                                               | ✓                        | Skill metadata + entry-point pointer to `getting-started.md`. The host's first read.                                               |
@@ -25,16 +23,24 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
 | `references/`                                                                            | ✓                        | Implementation guidance: framework idioms (Rust + others), project structure, Rust/clap patterns.                                  |
 | `templates/`                                                                             | ✓                        | Drop-in starter files for greenfield Rust CLIs (`clap-main.rs`, `error-types.rs`, `output-format.rs`, `agents-md-template.md`).    |
 | `VERSION`                                                                                | ✓                        | Single-line current version. `bin/check-update` reads this for the upgrade comparison.                                             |
-| `scripts/sync-spec.sh`                                                                   | —                        | Vendor the latest `agentnative-spec` v\* tag into `spec/`. Mirror of the agentnative-cli script.                                   |
-| `scripts/generate-changelog.sh`                                                          | —                        | Release-time CHANGELOG generator (git-cliff + PR-body extraction).                                                                 |
-| `AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `README.md`, `SECURITY.md`                | —                        | Producer-repo docs.                                                                                                                |
-| `.github/rulesets/`                                                                      | —                        | Version-controlled GitHub repository rulesets.                                                                                     |
-| `.github/workflows/`                                                                     | —                        | CI: markdownlint, shellcheck. Plus `guard-main-docs.yml` to keep engineering docs off `main`.                                      |
-| `.github/ISSUE_TEMPLATE/`                                                                | —                        | Bug report + bundle-proposal templates.                                                                                            |
-| `docs/plans/`                                                                            | —                        | Engineering plans (`dev`-only — guarded out of `main`).                                                                            |
-| `.markdownlint-cli2.yaml`, `.shellcheckrc`, `.gitattributes`, `.gitignore`, `cliff.toml` | —                        | Local lint configs, git-cliff config, and repo metadata.                                                                           |
+| `scripts/sync-spec.sh`                                                                   | ✗                        | Vendor the latest `agentnative-spec` v\* tag into `spec/`. Mirror of the agentnative-cli script.                                   |
+| `scripts/generate-changelog.sh`                                                          | ✗                        | Release-time CHANGELOG generator (git-cliff + PR-body extraction).                                                                 |
+| `AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `README.md`, `SECURITY.md`                | ✗                        | Producer-repo docs.                                                                                                                |
+| `.github/rulesets/`                                                                      | ✗                        | Version-controlled GitHub repository rulesets.                                                                                     |
+| `.github/workflows/`                                                                     | ✗                        | CI: markdownlint, shellcheck. Plus `guard-main-docs.yml` to keep engineering docs off `main`.                                      |
+| `.github/ISSUE_TEMPLATE/`                                                                | ✗                        | Bug report + bundle-proposal templates.                                                                                            |
+| `docs/plans/`                                                                            | ✗                        | Engineering plans (`dev`-only — guarded out of `main`).                                                                            |
+| `.markdownlint-cli2.yaml`, `.shellcheckrc`, `.gitattributes`, `.gitignore`, `cliff.toml` | ✗                        | Local lint configs, git-cliff config, and repo metadata.                                                                           |
 
-<!-- unslop: on -->
+## Documented Solutions
+
+`docs/solutions/` is a symlink to `~/dev/solutions-docs/`, a shared private repo of cross-repo solutions and best
+practices, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Search with `qmd query
+"<topic>" --collection solutions`. Relevant when researching artifact-sync, calver, frontmatter, or skill-bundle
+patterns before building from scratch.
+
+The consuming repo's `git status` shows nothing for `docs/solutions/` because the symlink target is gitignored. If the
+symlink is missing, recreate it: `ln -s ~/dev/solutions-docs docs/solutions`.
 
 ## Lint & Format
 
