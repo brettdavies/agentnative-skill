@@ -110,6 +110,3 @@ table.
 - [`SECURITY.md`](./SECURITY.md) — vulnerability disclosure
 - [`RELEASES.md`](./RELEASES.md) — release procedure
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) — how to propose changes
-</content>
-
-</invoke>
