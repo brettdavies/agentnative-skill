@@ -113,5 +113,3 @@ tooling without re-licensing friction.
 Vendored spec content under `spec/` is CC BY 4.0 (upstream from
 [`brettdavies/agentnative`](https://github.com/brettdavies/agentnative)); attribution is in
 [`spec/README.md`](./spec/README.md).
-</content>
-</invoke>

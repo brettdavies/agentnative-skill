@@ -131,5 +131,3 @@ The full visitor-facing menu lives at [`anc.dev/contribute`](https://anc.dev/con
 - [Linter](https://github.com/brettdavies/agentnative-cli): `anc`, the scoring engine, the registry
 - [Site](https://github.com/brettdavies/agentnative-site): anc.dev source, leaderboard renderer, live-scoring
 - This repo: the agent-facing skill bundle, install paths, host-runtime detection
-</content>
-</invoke>
