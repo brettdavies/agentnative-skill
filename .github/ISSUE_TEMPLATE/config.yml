@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Spec questions, principle edits, or grading findings"
+    url: "https://github.com/brettdavies/agentnative/issues/new/choose"
+    about: "For anything about the standard itself — propose changes, submit a grading finding, ask questions — file on the spec repo."
+  - name: "Auditor bugs, features, or tool-registry submissions"
+    url: "https://github.com/brettdavies/agentnative-cli/issues/new/choose"
+    about: "For bugs in the `anc` auditor, feature requests, or proposing a tool for the leaderboard, file on the linter repo."
+  - name: "Site bugs (rendering, performance, deployment)"
+    url: "https://github.com/brettdavies/agentnative-site/issues/new/choose"
+    about: "For bugs on anc.dev, file on the site repo."

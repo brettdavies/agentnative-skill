@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Local CI mirror — runs the same checks as the GitHub Actions CI pipeline.
+# Use as a pre-push hook or run manually before pushing.
+#
+# Activation: `git config core.hooksPath scripts/hooks` (run once after clone).
+#
+# Mirrors .github/workflows/ci.yml:
+#   - markdownlint:  markdownlint-cli2 over **/*.md
+#   - shellcheck:    shellcheck over ./scripts/ at --severity=style
+#
+# Tools install (one-time):
+#   brew install shellcheck markdownlint-cli2
+#   # apt: shellcheck via `apt install shellcheck`; markdownlint-cli2 via `bun add -g markdownlint-cli2`
+#
+# Tools that aren't installed are skipped with a one-line note rather than
+# failing — CI is the authoritative backstop. Install them locally to close
+# the gap and catch issues before the push hits GitHub.
+#
+# Exit codes: 0 = all pass, 1 = failure
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+pass() { echo -e "  ${GREEN}✓${RESET} $1"; }
+fail() { echo -e "  ${RED}✗${RESET} $1"; exit 1; }
+
+echo -e "${BOLD}Running local CI checks...${RESET}"
+
+# 1. markdownlint — mirrors the `markdownlint` job in ci.yml. The CI workflow
+# uses DavidAnson/markdownlint-cli2-action with `globs: **/*.md` and the
+# committed .markdownlint-cli2.yaml config. The local CLI honors the same
+# config file, so passing the same glob reproduces CI behavior. Skip silently
+# if markdownlint-cli2 isn't installed — install via Homebrew
+# (`brew install markdownlint-cli2`) or Bun (`bun add -g markdownlint-cli2`).
+if command -v markdownlint-cli2 &>/dev/null; then
+    markdownlint-cli2 '**/*.md' '#node_modules' 2>&1 || fail "markdownlint-cli2"
+    pass "markdownlint"
+else
+    echo "  - markdownlint (skipped: install via \`brew install markdownlint-cli2\` or \`bun add -g markdownlint-cli2\`)"
+fi
+
+# 2. Shellcheck — mirrors the `shellcheck` job in ci.yml, which runs
+# ludeeus/action-shellcheck against `./scripts/` with SHELLCHECK_OPTS set to
+# `--severity=style`. CI uses style severity to surface all suggestions and
+# still fails on error+warning by default. The bundle is markdown-only;
+# only producer-ops scripts under ./scripts/ are subject to shellcheck.
+# Include scripts/hooks/* so this hook lints itself. Skip silently when
+# the linter isn't installed.
+if command -v shellcheck &>/dev/null; then
+    mapfile -t shell_files < <({
+        git ls-files 'scripts/*' 2>/dev/null
+    } | sort -u)
+    # Filter to actual shell scripts (by extension or shebang). action-shellcheck
+    # auto-detects via shebang; mirror that locally so bin/ stays out and
+    # non-shell files in scripts/ don't trip the linter.
+    shell_targets=()
+    for f in "${shell_files[@]}"; do
+        [ -f "$f" ] || continue
+        if [[ "$f" == *.sh ]]; then
+            shell_targets+=("$f")
+        elif head -c 80 "$f" 2>/dev/null | grep -qE '^#!.*\b(bash|sh)\b'; then
+            shell_targets+=("$f")
+        fi
+    done
+    if [ ${#shell_targets[@]} -gt 0 ]; then
+        shellcheck --severity=style "${shell_targets[@]}" || fail "shellcheck --severity=style"
+    fi
+    pass "shellcheck"
+else
+    echo "  - shellcheck (skipped: install via \`brew install shellcheck\` or \`apt install shellcheck\`)"
+fi
+
+echo -e "${BOLD}${GREEN}All checks passed.${RESET}"

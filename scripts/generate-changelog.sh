@@ -4,10 +4,14 @@
 # Usage:
 #   generate-changelog.sh [--tag vX.Y.Z] [repo-path]
 #   generate-changelog.sh --check [repo-path]
+#   generate-changelog.sh --dry-run [--tag vX.Y.Z] [repo-path]
 #
 # Options:
 #   --tag vX.Y.Z   Override version tag (default: extracted from branch name)
 #   --check        Verify CHANGELOG.md has a versioned section (exit 1 if only [Unreleased])
+#   --dry-run      Print what would change to stdout; do not modify CHANGELOG.md.
+#                  Exit 0 if no changes (idempotent), exit 1 if regeneration would
+#                  produce different content (drift between PR bodies and the file).
 #
 # The version tag is extracted from the branch name by matching the pattern
 # release/vN.N.N (with optional suffix like release/v1.0.5:ci-migration).
@@ -25,6 +29,7 @@
 set -euo pipefail
 
 CHECK_MODE=false
+DRY_RUN=false
 REPO_PATH="."
 TAG=""
 
@@ -32,6 +37,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --check)
       CHECK_MODE=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
       shift
       ;;
     --tag)
@@ -99,14 +108,39 @@ if [[ -z "${GITHUB_TOKEN:-}" ]]; then
   fi
 fi
 
-# Step 1: Run git-cliff to prepend entries tagged with the release version
-CLIFF_ARGS=(--unreleased --tag "$TAG")
-if [[ -f CHANGELOG.md ]]; then
-  CLIFF_ARGS+=(--prepend CHANGELOG.md)
-else
-  CLIFF_ARGS+=(-o CHANGELOG.md)
+# Dry-run mode: stash CHANGELOG.md, restore on exit, diff at the end.
+if $DRY_RUN; then
+  if [[ ! -f CHANGELOG.md ]]; then
+    echo "error: --dry-run requires an existing CHANGELOG.md to compare against" >&2
+    exit 1
+  fi
+  ORIG_CHANGELOG="$(mktemp -t changelog-orig.XXXXXX)"
+  cp CHANGELOG.md "$ORIG_CHANGELOG"
+  trap 'mv "$ORIG_CHANGELOG" CHANGELOG.md' EXIT
 fi
-git cliff "${CLIFF_ARGS[@]}"
+
+# Duplicate-section guard: skip prepend if CHANGELOG.md already has a section
+# for this tag. Re-running with an already-published tag previously emitted a
+# second copy of the same section.
+DUPLICATE_SECTION=false
+if [[ -f CHANGELOG.md ]] && grep -qE "^## \[${TAG#v}\]" CHANGELOG.md; then
+  DUPLICATE_SECTION=true
+  if ! $DRY_RUN; then
+    echo "CHANGELOG.md already has a [${TAG#v}] section; skipping prepend"
+    exit 0
+  fi
+fi
+
+# Step 1: Run git-cliff to prepend entries tagged with the release version
+if ! $DUPLICATE_SECTION; then
+  CLIFF_ARGS=(--unreleased --tag "$TAG")
+  if [[ -f CHANGELOG.md ]]; then
+    CLIFF_ARGS+=(--prepend CHANGELOG.md)
+  else
+    CLIFF_ARGS+=(-o CHANGELOG.md)
+  fi
+  git cliff "${CLIFF_ARGS[@]}"
+fi
 
 # Step 2: Expand squash commit entries using PR body changelog sections
 OWNER=$(awk -F'"' '/^\[remote\.github\]/{found=1} found && /^owner/{print $2; exit}' cliff.toml)
@@ -115,13 +149,27 @@ REPO=$(awk -F'"' '/^\[remote\.github\]/{found=1} found && /^repo/{print $2; exit
 # Strip leading v for version matching in the changelog
 VERSION="${TAG#v}"
 
-if [[ -z "$OWNER" || -z "$REPO" ]] || ! command -v gh &>/dev/null; then
-  echo "Updated CHANGELOG.md (skipping PR expansion — missing [remote.github] or gh CLI)"
+summarize_and_exit() {
+  local msg="$1"
+  if $DRY_RUN; then
+    if cmp -s "$ORIG_CHANGELOG" CHANGELOG.md; then
+      echo "DRY RUN: CHANGELOG.md is current (no regen drift)"
+      exit 0
+    fi
+    echo "DRY RUN: CHANGELOG.md would change (regen drift detected)" >&2
+    diff -u "$ORIG_CHANGELOG" CHANGELOG.md || true
+    exit 1
+  fi
+  echo "$msg"
   echo ""
   echo "Next steps:"
   echo "  git add CHANGELOG.md"
   echo "  git commit -m 'docs: update CHANGELOG.md'"
   exit 0
+}
+
+if [[ -z "$OWNER" || -z "$REPO" ]] || ! command -v gh &>/dev/null; then
+  summarize_and_exit "Updated CHANGELOG.md (skipping PR expansion — missing [remote.github] or gh CLI)"
 fi
 
 # Extract PR numbers from the new version section only
@@ -135,12 +183,7 @@ VERSION_SECTION=$(awk -v ver="$VERSION" '
 PR_NUMBERS=$(echo "$VERSION_SECTION" | grep -oP '\(#\K\d+' | sort -un)
 
 if [[ -z "$PR_NUMBERS" ]]; then
-  echo "Updated CHANGELOG.md"
-  echo ""
-  echo "Next steps:"
-  echo "  git add CHANGELOG.md"
-  echo "  git commit -m 'docs: update CHANGELOG.md'"
-  exit 0
+  summarize_and_exit "Updated CHANGELOG.md"
 fi
 
 # Pass PR numbers as comma-separated arg to python
@@ -311,8 +354,4 @@ with open(changelog_path, 'w') as f:
     f.write(new_content)
 PYEOF
 
-echo "Updated CHANGELOG.md"
-echo ""
-echo "Next steps:"
-echo "  git add CHANGELOG.md"
-echo "  git commit -m 'docs: update CHANGELOG.md'"
+summarize_and_exit "Updated CHANGELOG.md"

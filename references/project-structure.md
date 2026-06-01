@@ -54,7 +54,7 @@ variants as needed (e.g., RateLimit, NotFound, Timeout) with appropriate exit co
 
 Use `thiserror` for the error enum derive. The `#[error("...")]` attribute defines Display, and `#[source]` chains cause
 errors. For projects that prefer minimal dependencies, implement `std::fmt::Display` and `std::error::Error` manually
-instead. The compliance checker accepts either approach.
+instead. The compliance auditor accepts either approach.
 
 Implement a format-aware `print()` method on the error enum that accepts `&OutputConfig` and writes to stderr. When the
 output format is Json or Jsonl, serialize the error as a JSON object with error, kind, message, and exit_code fields.

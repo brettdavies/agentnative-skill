@@ -1,0 +1,108 @@
+name: "Bundle proposal"
+description: "Propose a new template, reference doc, getting-started flow, or other change to the skill bundle."
+title: "proposal: <short description>"
+labels: ["proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Route check before filing:**
+
+        - New principle, MUST/SHOULD/MAY tier change, or any substantive change to the standard itself → file on
+          the [spec repo](https://github.com/brettdavies/agentnative/issues/new/choose). This skill bundle vendors
+          the spec; principle changes happen there first, then arrive here via `scripts/sync-spec.sh`.
+        - New compliance audit, change to scorecard semantics, or anything `anc audit` does → file on the
+          [linter repo](https://github.com/brettdavies/agentnative-cli/issues/new/choose).
+        - New starter template, reference doc, getting-started flow, idiom for a new language/framework, or any
+          change to how this bundle teaches the existing principles → keep filing here.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: |
+        What is the problem this proposal addresses? Be specific about which agent's workflow it would improve.
+        Cite real tools, real PRs, or real `anc` findings where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: |
+        One paragraph: what should the bundle do that it does not do today? Frame as a concrete change to one or
+        more of: `SKILL.md`, `getting-started.md`, `references/<file>`, `templates/<file>`.
+    validations:
+      required: true
+  - type: checkboxes
+    id: change-type
+    attributes:
+      label: Type of change
+      options:
+        - label: "New starter template under `templates/`"
+        - label: "New reference doc under `references/`"
+        - label: "Update to `SKILL.md` (entry-point structure or routing)"
+        - label: "Update to `getting-started.md` (new flow, new invocation)"
+        - label: "Idioms for a new language/framework in `references/framework-idioms-other-languages.md`"
+        - label: "Other (describe in the Proposal section)"
+  - type: textarea
+    id: prior-art
+    attributes:
+      label: Prior art
+      description: "Existing tools, docs, or articles that demonstrate the problem or the proposed solution. Two or three is fine."
+    validations:
+      required: false
+  - type: textarea
+    id: draft
+    attributes:
+      label: Draft of the change
+      description: |
+        Sketch what the relevant bundle file(s) would look like after the change. A diff against the current state
+        is ideal; an outline is acceptable for early-stage proposals.
+      placeholder: |
+        ```diff
+        <!-- <file> -->
+        ```
+    validations:
+      required: false
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibility
+      options:
+        - label: "Additive — no existing bundle content needs to change"
+        - label: "Replaces existing content (list what gets removed/superseded in the Open questions section)"
+        - label: "Coordinated with a spec or anc change (link the upstream issue/PR in the Open questions section)"
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open questions
+      description: "Anything you're unsure about. Decisions to make in the issue thread before any PR."
+    validations:
+      required: false
+  - type: textarea
+    id: ai-disclosure
+    attributes:
+      label: AI disclosure
+      description: "One sentence: what part of this proposal was AI-written, what was human-written?"
+      placeholder: "Problem statement drafted by hand; example diff sketch was AI-assisted."
+    validations:
+      required: true
+  - type: textarea
+    id: agent-instructions
+    attributes:
+      label: For agents
+      description: "Agents: expand this section before filing."
+      value: |
+        <details>
+        <summary>Agent filing instructions</summary>
+
+        1. **Search first.** Run `gh search issues --repo brettdavies/agentnative-skill "<keywords>"` to check for
+           duplicates.
+        2. **Route check.** Verify this is a bundle proposal, not a spec change (file in agentnative) or an
+           `anc` feature request (file in agentnative-cli).
+        3. **AI disclosure is required.** Fill the field above honestly.
+        4. See [CONTRIBUTING.md](https://github.com/brettdavies/agentnative-skill/blob/main/CONTRIBUTING.md) for full
+           guidelines.
+        </details>
+    validations:
+      required: false
