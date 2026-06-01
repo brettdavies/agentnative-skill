@@ -36,6 +36,16 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
 
 <!-- unslop: on -->
 
+## Documented Solutions
+
+`docs/solutions/` is a symlink to `~/dev/solutions-docs/`, a shared private repo of cross-repo solutions and best
+practices, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Search with `qmd query
+"<topic>" --collection solutions`. Relevant when researching artifact-sync, calver, frontmatter, or skill-bundle
+patterns before building from scratch.
+
+The consuming repo's `git status` shows nothing for `docs/solutions/` because the symlink target is gitignored. If the
+symlink is missing, recreate it: `ln -s ~/dev/solutions-docs docs/solutions`.
+
 ## Lint & Format
 
 ```bash
