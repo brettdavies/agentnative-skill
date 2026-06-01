@@ -87,6 +87,12 @@ ignores:
   # bullets per PR; line-length wrapping would conflict with the generator.
   # CHANGELOG.md is regenerated, never hand-edited.
   - "CHANGELOG.md"
+  # Symlinked to ~/dev/solutions-docs (a separate private repo). Content
+  # is governed by its own lint config; consuming repos do not enforce
+  # this repo's rules on it. The symlink is gitignored globally
+  # (~/.config/git/ignore), so this exclusion only affects local lint
+  # walks that follow the symlink.
+  - "docs/solutions/**"
 
 # Fix automatically when --fix is used
 fix: true
