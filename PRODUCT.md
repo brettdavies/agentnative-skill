@@ -9,18 +9,18 @@ anchor, audiences, and universal anti-patterns from [`BRAND.md`](BRAND.md), vend
 
 The skill bundle channel sits in a three-tier waterfall. Each tier owns a different concern; nothing duplicates.
 
-1. **Universal — [`BRAND.md`](BRAND.md).** Shared identity, voice anchor, audiences, universal anti-patterns. Vendored
-   from `agentnative-spec` via [`scripts/sync-prose-tooling.sh`](scripts/sync-prose-tooling.sh) (parallel to
+1. **Universal layer: [`BRAND.md`](BRAND.md).** Shared identity, voice anchor, audiences, universal anti-patterns.
+   Vendored from `agentnative-spec` via [`scripts/sync-prose-tooling.sh`](scripts/sync-prose-tooling.sh) (parallel to
    [`scripts/sync-spec.sh`](scripts/sync-spec.sh), which vendors `spec/principles/`). Read that first.
-2. **Channel delta — this file (`PRODUCT.md`).** Instructional voice, second-person imperative allowed (the bundle
+2. **Channel delta: this file (`PRODUCT.md`).** Instructional voice, second-person imperative allowed (the bundle
    teaches agents how to invoke `anc`), terse and agent-loadable. The narrative companion to the shipped bundle content
    at the repo root.
-3. **Bundle — repo root.** The shipped skill: [`SKILL.md`](SKILL.md), [`getting-started.md`](getting-started.md),
+3. **Bundle layer: repo root.** The shipped skill: [`SKILL.md`](SKILL.md), [`getting-started.md`](getting-started.md),
    [`references/`](references/), [`templates/`](templates/), [`bin/`](bin/), and the vendored [`spec/`](spec/). What an
    agent loads into runtime via `~/.claude/skills/agent-native-cli/`, `~/.cursor/skills/agent-native-cli/`, and
    equivalent paths under Codex / OpenCode / Factory / Kiro. Built from the same commit as `PRODUCT.md`.
 
-## Channel — skill bundle
+## Channel: skill bundle
 
 The skill bundle teaches agents how to use `anc` and the spec. The spec describes the contract; the linter verifies it;
 the skill bundle teaches the workflow that connects the two.
