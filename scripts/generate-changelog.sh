@@ -180,7 +180,7 @@ VERSION_SECTION=$(awk -v ver="$VERSION" '
   }
   found{print}
 ' CHANGELOG.md)
-PR_NUMBERS=$(echo "$VERSION_SECTION" | grep -oP '\(#\K\d+' | sort -un)
+PR_NUMBERS=$(echo "$VERSION_SECTION" | grep -oP '[\(\[]#\K\d+' | sort -un || true)
 
 if [[ -z "$PR_NUMBERS" ]]; then
   summarize_and_exit "Updated CHANGELOG.md"
