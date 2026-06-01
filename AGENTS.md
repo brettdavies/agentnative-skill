@@ -49,8 +49,8 @@ tooling agree.
 
 ## Voice and prose rules
 
-Channel-specific design context lives in [`PRODUCT.md`](PRODUCT.md). It inherits from [`BRAND.md`](BRAND.md) (vendored
-from `agentnative-spec` via [`scripts/sync-prose-tooling.sh`](scripts/sync-prose-tooling.sh)). Read both before
+Channel-specific design context lives in [`PRODUCT.md`](PRODUCT.md). It inherits from [`BRAND.md`](BRAND.md), which is
+vendored from `agentnative-spec` by a dev-only sync script (kept off `main` by the workflow guard). Read both before
 authoring skill-bundle prose (`SKILL.md`, `getting-started.md`, `references/`, `templates/`).
 
 ## Spec sync

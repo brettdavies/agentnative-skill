@@ -26,7 +26,7 @@ agentnative-skill/
 ├── VERSION                 single-line current version (read by bin/check-update)
 ├── scripts/
 │   ├── sync-spec.sh                vendor the latest agentnative-spec v* tag into spec/
-│   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD
+│   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD (dev-only; guarded off main)
 │   ├── sync-dev-after-release.sh   post-release backport: replay release/* artifacts onto dev
 │   ├── generate-changelog.sh       release-time CHANGELOG generator (git-cliff + PR-body extraction)
 │   └── hooks/pre-push              local CI mirror (markdownlint + shellcheck), installed via core.hooksPath
