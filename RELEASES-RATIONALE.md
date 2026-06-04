@@ -152,13 +152,14 @@ baseline — confusing during review, and load-bearing in two places: (a) `bin/c
 `UPGRADE_AVAILABLE` on a current main; (b) the `chore(spec)` re-vendor commit message references the current bundle
 version.
 
-The backport lands directly on `dev` (one signed commit, no PR). This is a deliberate exception to the PR-only norm on
-`dev` documented in [`RELEASES.md`](./RELEASES.md) — the change is mechanical (no design content) and the script's
-idempotency makes it safe to re-run. The exception holds only for this script's output; everything else still lands on
-`dev` via PR.
+The backport opens a PR against `dev` (`chore/sync-dev-after-vX.Y.Z`); it does **not** commit directly to `dev`. The
+PR-only norm on `dev` documented in [`RELEASES.md`](./RELEASES.md) applies here as it applies to everything else. The
+diff is mechanical (just `VERSION` + `CHANGELOG.md` copied from main), so reviewers can spot-check and squash-merge as
+usual; the script's idempotency also makes the work safe to re-run if a maintainer pulls before merging the sync PR.
 
-The script is idempotent: it exits 0 with no commit when `VERSION` and `CHANGELOG.md` already match `main`. Safe to
-re-run, safe to invoke from automation that doesn't track whether the last release was already backported.
+The script is idempotent: it exits 0 without creating a branch or PR when `VERSION` and `CHANGELOG.md` already match
+`main`. Safe to re-run, safe to invoke from automation that doesn't track whether the last release was already
+backported.
 
 Mirror of `~/dev/agentnative-cli/scripts/sync-dev-after-release.sh`. The cli variant additionally regenerates
 `Cargo.lock` via `cargo build --release` after surgically updating `Cargo.toml`'s `[package].version`; the skill bundle
