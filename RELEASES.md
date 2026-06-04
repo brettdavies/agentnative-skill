@@ -291,6 +291,7 @@ gh api repos/brettdavies/agentnative-skill/commits/<sha>/check-runs --jq '.check
 
 ## Related docs
 
+- [`RELEASES-PREFLIGHT.md`](./RELEASES-PREFLIGHT.md) (pre-flight checklist; gates the cut of `release/v<version>`)
 - [`RELEASES-RATIONALE.md`](./RELEASES-RATIONALE.md) (release flow rationale, CHANGELOG pipeline, branch-protection
   pitfalls)
 - [`AGENTS.md`](./AGENTS.md) (repo layout, lint commands, what agents must not do)
