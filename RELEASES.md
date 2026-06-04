@@ -162,11 +162,12 @@ Once the release tag is published, backport the release-bookkeeping files from `
 git push origin dev
 ```
 
-The script overwrites `VERSION` with the released number and copies `CHANGELOG.md` verbatim from `origin/main`, then
-commits the result directly to `dev` as one signed commit (no PR). Without this step `dev`'s `VERSION` and
+The script overwrites `VERSION` with the released number, copies `CHANGELOG.md` verbatim from `origin/main`, cuts a
+`chore/sync-dev-after-vX.Y.Z` branch off `dev`, and opens a PR (the PR-only convention on `dev` applies here too — see
+`RELEASES-RATIONALE.md` § Why backport main → dev after publish for why). Without this step `dev`'s `VERSION` and
 `CHANGELOG.md` stay frozen at the pre-release state, and future feature branches inherit the wrong baseline.
 
-The backport is idempotent: re-running on a `dev` already in sync exits 0 with no commit.
+The backport is idempotent: re-running on a `dev` already in sync exits 0 without creating a branch or PR.
 
 → Rationale:
 [`RELEASES-RATIONALE.md` § Why backport `main` → `dev` after publish](./RELEASES-RATIONALE.md#why-backport-main--dev-after-publish).
