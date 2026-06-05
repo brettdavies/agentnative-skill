@@ -122,18 +122,18 @@ Brings dev's release-bookkeeping current with the $VERSION release on
 main: VERSION bumped to ${VERSION_NO_V} and CHANGELOG.md copied verbatim
 from origin/main."
 
-# Post-sync sanity check: re-running generate-changelog.sh against the current
+# Post-sync sanity check: re-running generate-changelog.py against the current
 # PR bodies should produce an identical CHANGELOG.md. Drift here means upstream
 # PR bodies were edited after main's CHANGELOG.md was generated -- the
 # backport brought the stale CHANGELOG over, and a future release-branch
 # regen will surface unexpected diffs. Warn, do not fail; the backport is
 # still correct against what main currently has.
-if [[ -x scripts/generate-changelog.sh ]] && command -v git-cliff >/dev/null 2>&1; then
-    if scripts/generate-changelog.sh --dry-run --tag "$VERSION" >/dev/null 2>&1; then
+if [[ -x scripts/generate-changelog.py ]] && command -v git-cliff >/dev/null 2>&1; then
+    if scripts/generate-changelog.py --dry-run --tag "$VERSION" >/dev/null 2>&1; then
         echo "regen check: CHANGELOG.md matches what PR bodies would produce"
     else
         echo "warning: PR bodies have drifted from main's CHANGELOG.md for $VERSION" >&2
-        echo "  re-run 'scripts/generate-changelog.sh --dry-run --tag $VERSION' to see the diff" >&2
+        echo "  re-run 'scripts/generate-changelog.py --dry-run --tag $VERSION' to see the diff" >&2
         echo "  fix by regenerating CHANGELOG.md on a follow-up release branch" >&2
     fi
 fi
@@ -179,7 +179,7 @@ extract.
 - [x] Manual testing completed
 
 The script's preflight verified: the release tag exists, \`origin/main\` is at or past it, and the GitHub Release
-is not still a draft. \`generate-changelog.sh --dry-run\` was also invoked post-sync to check for PR-body drift
+is not still a draft. \`generate-changelog.py --dry-run\` was also invoked post-sync to check for PR-body drift
 against the backported CHANGELOG; see this PR's stderr for any drift warnings.
 
 ## Files Modified
