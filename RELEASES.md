@@ -109,7 +109,7 @@ scripts/sync-spec.sh
 git add spec/ && git commit -m "chore(spec): re-vendor spec to <version>" || true
 
 # 7. Generate CHANGELOG entries from PR bodies.
-scripts/generate-changelog.sh
+scripts/generate-changelog.py
 # (the script extracts <X.Y.Z> from the branch name release/v<X.Y.Z>)
 
 # 8. Scrub CHANGELOG.md via Vale + LanguageTool + unslop. See § Prose scrubbing.
@@ -221,7 +221,7 @@ lt_check /tmp/body.md
 
 # 6. Apply the cleaned version.
 gh pr edit <num> --body-file /tmp/body.md     # for PR body edits
-# scripts/generate-changelog.sh                # for CHANGELOG.md (re-runs the PR-body fetch from GitHub)
+# scripts/generate-changelog.py                # for CHANGELOG.md (re-runs the PR-body fetch from GitHub)
 ```
 
 For a `CHANGELOG.md` finding, fix the upstream PR body and regenerate. Hand-editing `CHANGELOG.md` directly produces

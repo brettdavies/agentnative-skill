@@ -82,7 +82,7 @@ prior squash, it's a false positive (no action). Otherwise cherry-pick the commi
 
 ### Generated, never hand-written
 
-`scripts/generate-changelog.sh` (with `cliff.toml`) is the only sanctioned way to update `CHANGELOG.md`. The script:
+`scripts/generate-changelog.py` (with `cliff.toml`) is the only sanctioned way to update `CHANGELOG.md`. The script:
 
 - Runs `git-cliff` to prepend a versioned entry for commits since the last tag.
 - Walks each squash-merged PR's body, extracts the `## Changelog → ### Added / Changed / Fixed / Documentation`
@@ -93,7 +93,7 @@ If a PR's `## Changelog` section is empty, that PR's entry is omitted from the c
 change). To fix a wrong CHANGELOG entry, fix the input: edit the squash-merged PR body, then re-run the script. Do
 **not** edit `CHANGELOG.md` directly.
 
-`scripts/generate-changelog.sh --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`):
+`scripts/generate-changelog.py --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`):
 wire this into the release-branch CI if/when one is added.
 
 ### Why `cliff.toml` skips chore/style/test/ci/build
@@ -185,7 +185,7 @@ Scrub-before-submit (author in `/tmp/`, scrub there, submit via `--body-file`) a
 edit, scrub again". Every fix lands locally and the public PR sees only clean text. The auto-format hook skips `/tmp/`
 paths so the body keeps its authored shape and no soft-wrapping is injected.
 
-For a `CHANGELOG.md` finding, fix the upstream PR body (which `generate-changelog.sh` re-fetches every run) and
+For a `CHANGELOG.md` finding, fix the upstream PR body (which `generate-changelog.py` re-fetches every run) and
 regenerate. Hand-editing `CHANGELOG.md` directly produces drift the next regeneration overwrites.
 
 ## Branch protection

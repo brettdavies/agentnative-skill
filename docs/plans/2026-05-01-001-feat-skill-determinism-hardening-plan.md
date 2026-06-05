@@ -1725,7 +1725,7 @@ carries entries 7 (sync-spec runbook) and 8 (re-run-the-dogfood-audit); `CONTRIB
 ## Documentation / Operational Notes
 
 - **CHANGELOG.** Each PR's `## Changelog` section in the body is the source of truth (per repo convention;
-  `scripts/generate-changelog.sh` extracts it). PR 1's changelog is user-facing-large: "SKILL.md restructure with anc
+  `scripts/generate-changelog.py` extracts it). PR 1's changelog is user-facing-large: "SKILL.md restructure with anc
   contract, scorecard samples, audit-profile selection, loop termination rule, install precondition, spec-skew fallback,
   and runbook." PR 2–6 changelogs scoped per-PR. PR 7's changelog calls out two user-facing additions and one minor
   breaking change: (1) `bin/check-update` and `scripts/sync-spec.sh` gain `--output json|text`, `--quiet`,

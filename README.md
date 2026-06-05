@@ -28,7 +28,7 @@ agentnative-skill/
 │   ├── sync-spec.sh                vendor the latest agentnative-spec v* tag into spec/
 │   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD (dev-only; guarded off main)
 │   ├── sync-dev-after-release.sh   post-release backport: replay release/* artifacts onto dev
-│   ├── generate-changelog.sh       release-time CHANGELOG generator (git-cliff + PR-body extraction)
+│   ├── generate-changelog.py       release-time CHANGELOG generator (git-cliff + PR-body extraction)
 │   └── hooks/pre-push              local CI mirror (markdownlint + shellcheck), installed via core.hooksPath
 ├── evals/                  self-contained eval prompts for fresh-agent dispatch (producer-side; not loaded by hosts)
 ├── docs/plans/             engineering plans (dev-only — guarded out of main)
