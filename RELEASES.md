@@ -167,6 +167,30 @@ The script overwrites `VERSION` with the released number, copies `CHANGELOG.md` 
 `RELEASES-RATIONALE.md` § Why backport main → dev after publish for why). Without this step `dev`'s `VERSION` and
 `CHANGELOG.md` stay frozen at the pre-release state, and future feature branches inherit the wrong baseline.
 
+### After publish — bump consumer submodule pins
+
+This skill is consumed as a git submodule by `brettdavies/agent-skills` (and any future skill aggregator). Consumers
+only see the new release when the parent repo bumps its submodule pin. Without an explicit reminder this step lapses —
+the pin drifted three minor versions (v0.2 → v0.5) before someone noticed during an unrelated audit.
+
+For each consumer repo that vendors this skill as a submodule:
+
+```bash
+cd <consumer-repo>
+git submodule update --remote agentnative
+git add agentnative
+git commit -m "chore(agentnative): bump submodule to v<X.Y.Z>"
+git push
+```
+
+Known consumers:
+
+- `brettdavies/agent-skills` (the personal skill bundle that powers `~/.claude/skills/`).
+
+The pin bump is a single-commit edit; no PR required when the consumer repo's branch policy allows single-commit edits
+direct to its integration branch. Verify with `git submodule status agentnative` in the consumer — the SHA should match
+this skill's `v<X.Y.Z>` tag.
+
 The backport is idempotent: re-running on a `dev` already in sync exits 0 without creating a branch or PR.
 
 → Rationale:
