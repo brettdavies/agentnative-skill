@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Pre-commit hook: fast, staged-file-scoped lint mirroring the CI markdownlint
+# and shellcheck jobs. Heavier full-repo checks stay in scripts/hooks/pre-push
+# and .github/workflows/ci.yml.
+#
+# Activation: `git config core.hooksPath scripts/hooks` (run once after clone).
+#
+# Tools that aren't installed are skipped with a one-line note rather than
+# failing — CI is the authoritative backstop.
+#
+# Exit codes: 0 = all pass, 1 = failure
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+pass() { echo -e "  ${GREEN}✓${RESET} $1"; }
+fail() { echo -e "  ${RED}✗${RESET} $1"; exit 1; }
+
+echo -e "${BOLD}Running pre-commit checks (staged files only)...${RESET}"
+
+mapfile -t staged_files < <(git diff --cached --name-only --diff-filter=ACM)
+
+# 1. markdownlint — mirrors the `markdownlint` job in ci.yml, scoped to
+# staged *.md files so the hook stays fast.
+staged_md=()
+for f in "${staged_files[@]}"; do
+    [[ "$f" == *.md ]] && [ -f "$f" ] && staged_md+=("$f")
+done
+if [ ${#staged_md[@]} -gt 0 ]; then
+    if command -v markdownlint-cli2 &>/dev/null; then
+        markdownlint-cli2 "${staged_md[@]}" || fail "markdownlint-cli2"
+        pass "markdownlint (${#staged_md[@]} staged file(s))"
+    else
+        echo "  - markdownlint (skipped: install via \`brew install markdownlint-cli2\` or \`bun add -g markdownlint-cli2\`)"
+    fi
+else
+    pass "markdownlint (no staged .md files)"
+fi
+
+# 2. shellcheck — mirrors the `shellcheck` job in ci.yml, scoped to staged
+# shell scripts under scripts/ so the hook stays fast. Matches by extension
+# or shebang, same detection action-shellcheck uses.
+staged_shell=()
+for f in "${staged_files[@]}"; do
+    [[ "$f" == scripts/* ]] || continue
+    [ -f "$f" ] || continue
+    if [[ "$f" == *.sh ]]; then
+        staged_shell+=("$f")
+    elif head -c 80 "$f" 2>/dev/null | grep -qE '^#!.*\b(bash|sh)\b'; then
+        staged_shell+=("$f")
+    fi
+done
+if [ ${#staged_shell[@]} -gt 0 ]; then
+    if command -v shellcheck &>/dev/null; then
+        shellcheck --severity=style "${staged_shell[@]}" || fail "shellcheck --severity=style"
+        pass "shellcheck (${#staged_shell[@]} staged file(s))"
+    else
+        echo "  - shellcheck (skipped: install via \`brew install shellcheck\` or \`apt install shellcheck\`)"
+    fi
+else
+    pass "shellcheck (no staged scripts/ shell files)"
+fi
+
+echo -e "${BOLD}${GREEN}All checks passed.${RESET}"
