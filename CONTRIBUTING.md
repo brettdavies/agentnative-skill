@@ -73,6 +73,11 @@ procedure in [`RELEASES.md`](./RELEASES.md).
   actionlint .github/workflows/*.yml
   ```
 
+  Or activate the local git hooks (`git config core.hooksPath scripts/hooks`) to run these automatically:
+  `scripts/hooks/pre-commit` lints staged Markdown and `scripts/` shell files on every commit;
+  `scripts/hooks/pre-push` runs the full `markdownlint` + `shellcheck` mirror of the CI jobs before every push. Both
+  no-op with a notice for any tool that isn't installed locally — CI remains the authoritative backstop.
+
 ## Repo layout
 
 The repo ships to consumers as a flat `git clone`. After install, the host (Claude Code, Codex, Cursor, OpenCode)
