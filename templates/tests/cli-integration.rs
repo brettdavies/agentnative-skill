@@ -1,6 +1,6 @@
 // Black-box test skeleton for an agent-native CLI, distilled from
 // agentnative-cli tests/integration.rs
-// @ 013a527b241ad2ed318963cec1ebf838f16f60fa.
+// @ eba21454ccbc5fae9c09613b982104676c7956a7.
 // The live file at that repo's HEAD is the authoritative robust version;
 // this is a starting skeleton to adapt.
 //
@@ -18,6 +18,11 @@ const READ_VERB: &str = "YOUR_READ_VERB";
 const VERB_WITH_REQUIRED_INPUT: &str = "YOUR_MUTATING_VERB";
 // The exit code your tool documents for usage errors (commonly 2).
 const USAGE_EXIT: i32 = 2;
+// The exit code your tool documents for a nonexistent target (path, id,
+// host). The spec's exit table separates general command errors (1) from
+// usage errors (2); the anchor tool documents 2 for this arm. Assert
+// your documented arm, not a source's choice.
+const YOUR_NONEXISTENT_TARGET_EXIT: i32 = 1;
 // Top-level keys your JSON output guarantees. The key-set test is
 // bidirectional: it fails on missing AND on unexpected keys.
 const EXPECTED_KEYS: &[&str] = &["YOUR_KEY_A", "YOUR_KEY_B"];
@@ -171,7 +176,7 @@ fn p4_nonexistent_target_exits_documented_code() {
     cmd()
         .args([READ_VERB, "/nonexistent/path/that/does/not/exist"])
         .assert()
-        .code(USAGE_EXIT)
+        .code(YOUR_NONEXISTENT_TARGET_EXIT)
         .stderr(predicate::str::contains("error"));
 }
 

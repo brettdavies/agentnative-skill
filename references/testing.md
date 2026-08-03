@@ -23,6 +23,15 @@ cargo test --test cli        # or: bun test, pytest, go test ./..., rspec
 anc audit --output json . | jq '[.results[] | select(.tier == "must" and .status == "fail")] | length'
 ```
 
+Three version numbers sit near each other in this ecosystem and none is interchangeable with another. Source each from
+the artifact its tool emits, never from memory or from a neighboring number.
+
+| Number  | Identifies               | Source of truth                                               |
+| ------- | ------------------------ | ------------------------------------------------------------- |
+| `0.5.0` | The spec, principle text | `spec/VERSION`                                                |
+| `0.5.0` | The `anc` release        | `anc --version`                                               |
+| `0.7`   | The scorecard schema     | `schema_version` in the scorecard; `$id` of `anc emit schema` |
+
 The spec file cited in each section is the source of truth for the principle; these items do not restate it.
 
 ## P1: Non-interactive by default
@@ -35,7 +44,8 @@ Spec: [`p1-non-interactive-by-default.md`](../spec/principles/p1-non-interactive
 - Bare invocation (no arguments): a deliberate, safe behavior (help text or a usage error), never an implicit action
   with side effects. Assert whichever behavior your tool documents.
 
-Proven in: `test_bare_invocation_prints_help` (`tests/integration.rs`, table below).
+Proven in: `test_bare_invocation_prints_help` (`tests/integration.rs`, table below). Read past its name: the body
+asserts the usage-error arm (exit code 2 with usage text on stderr), not help on stdout with exit 0.
 
 ## P2: Structured, parseable output
 
@@ -80,6 +90,10 @@ Proven in: `test_audit_nonexistent_path`, `test_audit_bogus_flag`, `test_command
 
 Spec: [`p5-safe-retries-mutation-boundaries.md`](../spec/principles/p5-safe-retries-mutation-boundaries.md).
 
+- First establish whether the tool has real write operations (an observable mutation of a file, row, or remote object).
+  Every P5 requirement is conditional: the spec gates `p5-must-dry-run` on "CLI has write operations" and
+  `p5-must-force-yes` on "CLI has destructive operations". A tool with none records the items below as non-adoption
+  (`n_a` / `skip`), not violations, and skips the rest of this section.
 - `--dry-run` on a mutating verb exits 0, prints the plan, and leaves state untouched; assert the actual state (file,
   row, remote object) after the run, not just the output text.
 - A mutating verb in a non-TTY without its confirmation flag either refuses with the documented exit code or falls back
@@ -147,9 +161,10 @@ below asserts, end-to-end against a stubbed environment (no live server):
 | JS/TS (Node, Bun) | `execa` with `node:test` or `vitest`; `bun:test` on Bun                      |
 | Ruby              | `Open3` + `minitest` or `rspec`                                              |
 
-If your language has no CLI-shaped example in this bundle, map the structure of the Rust anchor onto your harness row:
-every test spawns the real binary and asserts observables. Read the TS/bun anchor as the web-surface pattern, not a CLI
-pattern.
+The Rust and Python rows have in-bundle skeletons under [`templates/tests/`](../templates/tests/README.md). If your
+language has no CLI-shaped skeleton in this bundle (Go, Ruby), map the structure of the Rust anchor onto your harness
+row: every test spawns the real binary and asserts observables. Read the TS/bun anchor as the web-surface pattern, not a
+CLI pattern.
 
 ## Adapt these
 
@@ -158,10 +173,12 @@ keep the assertion structure.
 
 | File                                                                                                                                                                          | Proves                                                                                                                                                                                                                                                                                                                                                                                      | Adapt by                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| [`agentnative-cli/tests/integration.rs`](https://github.com/brettdavies/agentnative-cli/blob/013a527b241ad2ed318963cec1ebf838f16f60fa/tests/integration.rs)                   | P1 (`test_bare_invocation_prints_help`), P2 (`test_audit_json_output`, `test_scorecard_json_has_stable_top_level_keys`, `test_no_color_env`, `test_bad_invocation_emits_json_error_envelope`), P3 (`test_help`, `test_version`), P4 (`test_audit_nonexistent_path`, `test_audit_bogus_flag`), P6 (`test_double_dash_separator_with_path`, `test_completions_bash`), P7 (`test_audit_quiet`) | Replace `anc` in `cmd()` with your binary; swap expected tokens, key sets, and exit codes for your documented contract |
-| [`agentnative-cli/tests/dogfood.rs`](https://github.com/brettdavies/agentnative-cli/blob/013a527b241ad2ed318963cec1ebf838f16f60fa/tests/dogfood.rs)                           | P2 and P5 CI wiring (`dogfood_no_p2_fail_after_skill_subcommand`, `dogfood_no_p5_fail_after_skill_subcommand`): run the standard's auditor against yourself in CI                                                                                                                                                                                                                           | Point the spawn at your repo; assert no `fail` on the principle prefixes you claim                                     |
-| [`agentnative-site/tests/worker.test.ts`](https://github.com/brettdavies/agentnative-site/blob/78fea0df3ee00579f84abfde6e249eeea8ad3ffe/tests/worker.test.ts)                 | The web-surface analog of P2 and P3: `detectPreference` negotiation and allowlist matrices, `applyHeaders` branch policies, `worker.fetch` end-to-end rewrites against a stubbed environment                                                                                                                                                                                                | Swap routes, User-Agent tokens, and header expectations for your surface; keep the table-driven matrix shape           |
-| [`agentnative-site/tests/score-contract.test.ts`](https://github.com/brettdavies/agentnative-site/blob/78fea0df3ee00579f84abfde6e249eeea8ad3ffe/tests/score-contract.test.ts) | P2 structured-output contract for committed artifacts: the `score-contract` describe block joins three JSON/YAML artifacts and fails CI on drift                                                                                                                                                                                                                                            | Replace the three artifacts with your own generated-plus-committed set; keep the join-and-assert structure             |
+| [`agentnative-cli/tests/integration.rs`](https://github.com/brettdavies/agentnative-cli/blob/eba21454ccbc5fae9c09613b982104676c7956a7/tests/integration.rs)                   | P1 (`test_bare_invocation_prints_help`), P2 (`test_audit_json_output`, `test_scorecard_json_has_stable_top_level_keys`, `test_no_color_env`, `test_bad_invocation_emits_json_error_envelope`), P3 (`test_help`, `test_version`), P4 (`test_audit_nonexistent_path`, `test_audit_bogus_flag`), P6 (`test_double_dash_separator_with_path`, `test_completions_bash`), P7 (`test_audit_quiet`) | Replace `anc` in `cmd()` with your binary; swap expected tokens, key sets, and exit codes for your documented contract |
+| [`agentnative-cli/tests/dogfood.rs`](https://github.com/brettdavies/agentnative-cli/blob/eba21454ccbc5fae9c09613b982104676c7956a7/tests/dogfood.rs)                           | P2 and P5 CI wiring (`dogfood_no_p2_fail_after_skill_subcommand`, `dogfood_no_p5_fail_after_skill_subcommand`): run the standard's auditor against yourself in CI                                                                                                                                                                                                                           | Point the spawn at your repo; assert no `fail` on the principle prefixes you claim                                     |
+| [`agentnative-site/tests/worker.test.ts`](https://github.com/brettdavies/agentnative-site/blob/6c120df73e3b63659c586b537e3e3c90dad0907e/tests/worker.test.ts)                 | The web-surface analog of P2 and P3: `detectPreference` negotiation and allowlist matrices, `applyHeaders` branch policies, `worker.fetch` end-to-end rewrites against a stubbed environment                                                                                                                                                                                                | Swap routes, User-Agent tokens, and header expectations for your surface; keep the table-driven matrix shape           |
+| [`agentnative-site/tests/score-contract.test.ts`](https://github.com/brettdavies/agentnative-site/blob/6c120df73e3b63659c586b537e3e3c90dad0907e/tests/score-contract.test.ts) | P2 structured-output contract for committed artifacts: the `score-contract` describe block joins three JSON/YAML artifacts and fails CI on drift                                                                                                                                                                                                                                            | Replace the three artifacts with your own generated-plus-committed set; keep the join-and-assert structure             |
 
-The SHAs above are authoring-time snapshots and this repo's CI does not check links: re-verify each link when you adapt,
-and treat the live file at the source repo's HEAD as the authoritative robust version.
+The SHAs above are pinned snapshots and this repo's CI does not check links: re-verify each link when you adapt, and
+treat the newest revision of each file (the pin or the source repo's HEAD, whichever is newer) as the authoritative
+robust version. A pin can sit ahead of the source repo's default branch when it snapshots that repo's integration
+branch.

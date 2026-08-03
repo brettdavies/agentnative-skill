@@ -1,6 +1,6 @@
 // Black-box test skeleton for an agent-facing web surface, distilled from
 // agentnative-site tests/worker.test.ts
-// @ 78fea0df3ee00579f84abfde6e249eeea8ad3ffe.
+// @ 6c120df73e3b63659c586b537e3e3c90dad0907e.
 // The live file at that repo's HEAD is the authoritative robust version;
 // this is a starting skeleton to adapt.
 //

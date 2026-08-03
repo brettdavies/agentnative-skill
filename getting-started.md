@@ -18,8 +18,10 @@ anc audit --output json . > scorecard.json
 #      references/rust-clap-patterns.md                (Rust/clap)
 #      references/framework-idioms.md                  (Rust idioms)
 #      references/framework-idioms-other-languages.md  (Click, argparse, Cobra, Commander, yargs, oclif, Thor)
-#    Re-run `anc audit` until `summary.fail == 0` and
-#    `coverage_summary.must.verified == coverage_summary.must.total`.
+#    Re-run `anc audit` until no MUST row is `fail`:
+#      jq '[.results[] | select(.tier == "must" and .status == "fail")] | length'   # bar: 0
+#    Do not use `coverage_summary.must.verified == coverage_summary.must.total`
+#    as the bar; `verified` counts every verdict, `fail` included.
 #    `opt_out` and `n_a` are non-failure terminals (deliberate non-adoption or
 #    a conditional whose antecedent collapsed); don't chase them as bugs.
 
@@ -61,7 +63,8 @@ anc audit --output json    # run continuously as you build
 compiled binary on `PATH`. Read `spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic requirements, and
 `references/framework-idioms-other-languages.md` for per-framework idioms. To prove the contract in your own suite,
 `references/testing.md` holds the per-principle checklist plus a language-to-harness table (`subprocess`+`pytest`,
-`os/exec`+`testing`, `execa`, `Open3`); map the Rust skeleton's structure onto your harness row.
+`os/exec`+`testing`, `execa`, `Open3`); start from `templates/tests/cli_integration_test.py` for Python, or map the Rust
+skeleton's structure onto your harness row.
 
 ## Installing anc and this skill bundle
 
