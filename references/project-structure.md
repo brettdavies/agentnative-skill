@@ -86,7 +86,9 @@ and diagnostic messages throughout the codebase.
 
 ## Testing Patterns
 
-Both bird and xurl-rs use the same testing architecture. Follow these patterns for hermetic, reproducible tests.
+The behavioral contract (what to assert per principle, the language-to-harness table, and the adaptable OSS test files)
+lives in [`testing.md`](./testing.md). This section covers only the Rust-specific hermetic-test architecture, which both
+bird and xurl-rs share.
 
 **Wiremock for API mocking.** Use the `wiremock` crate to create mock HTTP servers in tests. Register request matchers
 and response templates, then point the tool at the mock server's URL instead of the real API. This makes tests hermetic:
@@ -103,11 +105,6 @@ developer has valid credentials, then fail in CI where no credentials exist.
 prepare input), execute (run the command or function under test), assert (verify output, exit code, side effects), and
 cleanup (handled automatically by Drop on TestEnv and MockServer). This structure makes tests scannable and ensures
 cleanup happens even when assertions fail.
-
-**Robust output parsing.** When testing CLI output, parse the JSON output rather than regex-matching human-readable
-text. Run the command with `--output json`, deserialize the output with serde_json, and assert on specific fields. This
-makes tests resilient to formatting changes (column widths, color codes, wording) that do not affect the data. Reserve
-text-format assertions for verifying specific human-facing messages only when the exact wording is part of the contract.
 
 **Pre-flight auth gate in integration tests.** Integration tests that hit real APIs (as opposed to wiremock) need a
 pre-flight check that valid credentials exist. If credentials are missing, skip the test with a clear message rather
