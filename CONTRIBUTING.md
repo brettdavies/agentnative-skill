@@ -105,19 +105,6 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
   `agentnative-cli`'s reference patterns to avoid drift; the cross-repo alignment story is documented in the spec repo's
   `AGENTS.md`.
 
-### Testing references and skeletons
-
-The skeletons under `templates/tests/` and the commit-pinned links in `references/testing.md` are point-in-time
-snapshots of CI-green test files in `agentnative-cli` and `agentnative-site`. Maintenance contract:
-
-- When a source test file changes materially, re-derive the corresponding skeleton and re-pin the SHA in both the
-  skeleton header and `references/testing.md` (and the SHA table in `templates/tests/README.md`).
-- CI here runs no link-checker, so verify each pinned link resolves (and still contains the cited block names) manually
-  whenever you touch them.
-- Cross-feature trigger: `agentnative-site` `tests/worker.test.ts` is the test artifact of the site's
-  content-negotiation surface, which sibling site work extends. When that behavior changes, re-pin its SHA and re-derive
-  `templates/tests/worker.test.ts`.
-
 ## AI disclosure
 
 Inherits from the spec's AI disclosure policy. See

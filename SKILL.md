@@ -153,10 +153,6 @@ question is "how do I write code that satisfies this requirement?" The reference
 | General Rust idioms (output, errors, dependency gating) | [`references/framework-idioms.md`](./references/framework-idioms.md)                                 |
 | Idioms in Python, Go, JS, Ruby                          | [`references/framework-idioms-other-languages.md`](./references/framework-idioms-other-languages.md) |
 | Required project structure (modules, tests, AGENTS.md)  | [`references/project-structure.md`](./references/project-structure.md)                               |
-| Black-box tests that prove each principle               | [`references/testing.md`](./references/testing.md)                                                   |
-
-After a fix lands, prove it stays fixed: [`references/testing.md`](./references/testing.md) maps each principle to
-black-box assertions and to CI-green OSS test files to adapt into your own suite.
 
 ## Starter code
 
