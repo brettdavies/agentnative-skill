@@ -44,7 +44,7 @@ Spec: [`p2-structured-parseable-output.md`](../spec/principles/p2-structured-par
 - `--output json` stdout parses with a real JSON parser; never regex-match styled text to "check" JSON.
 - The parsed object carries a stable top-level key set; assert both directions (every expected key present, no
   unexpected keys), so accidental renames and accidental additions both fail.
-- The `--json` alias produces the same shape as `--output json`.
+- The `--json` alias (when shipped; the alias is a spec-level SHOULD) produces the same shape as `--output json`.
 - A bad invocation under JSON mode emits a typed error envelope (keys such as `error`, `kind`, `message`, `exit_code`)
   on the documented stream, so a JSON-pinned consumer never needs a second parser for failures.
 - With `NO_COLOR=1` (and when piped), output contains no ANSI escape bytes (`\x1b[`) and still parses.
@@ -82,7 +82,8 @@ Spec: [`p5-safe-retries-mutation-boundaries.md`](../spec/principles/p5-safe-retr
 
 - `--dry-run` on a mutating verb exits 0, prints the plan, and leaves state untouched; assert the actual state (file,
   row, remote object) after the run, not just the output text.
-- A mutating verb in a non-TTY without its confirmation flag refuses with the documented exit code.
+- A mutating verb in a non-TTY without its confirmation flag either refuses with the documented exit code or falls back
+  to dry-run; assert whichever behavior the tool documents.
 - Re-running an idempotent verb produces the same result with no duplicate side effects.
 - Wire the standard's own auditor into CI: spawn `anc audit --output json` against your repo and assert no `fail` status
   on the principle rows you claim (the `tests/dogfood.rs` pattern in the table below).
