@@ -25,10 +25,6 @@ anc audit --output json . > scorecard.json
 
 # 4. Claim the badge once `badge.eligible == true` (≥70%).
 #    Copy `badge.embed_markdown` from the JSON scorecard into the project's README.
-
-# 5. Prove the contract in your own CI: adapt the per-principle checklist in
-#    references/testing.md into your test suite (skeletons: templates/tests/),
-#    so the fixed behavior stays fixed between audits.
 ```
 
 Useful flags: `--principle N` to focus on one principle, `--audit-profile <category>` to suppress audits that don't
@@ -49,9 +45,6 @@ cp <skill-root>/templates/agents-md-template.md AGENTS.md   # fill placeholders
 # Add to Cargo.toml: clap (derive, env), serde, serde_json, thiserror,
 # libc (SIGPIPE), clap_complete. See references/project-structure.md.
 
-# Prove the contract as you build (per-principle checklist: references/testing.md).
-cp <skill-root>/templates/tests/cli-integration.rs tests/cli-integration.rs   # swap YOUR_* placeholders
-
 anc audit --output json    # run continuously as you build
 ```
 
@@ -59,9 +52,7 @@ anc audit --output json    # run continuously as you build
 
 `anc`'s source-analysis layer is Rust-only; its behavioral layer (`anc audit --command <name>`) runs against any
 compiled binary on `PATH`. Read `spec/principles/p1-*.md` through `p7-*.md` for the language-agnostic requirements, and
-`references/framework-idioms-other-languages.md` for per-framework idioms. To prove the contract in your own suite,
-`references/testing.md` holds the per-principle checklist plus a language-to-harness table (`subprocess`+`pytest`,
-`os/exec`+`testing`, `execa`, `Open3`); map the Rust skeleton's structure onto your harness row.
+`references/framework-idioms-other-languages.md` for per-framework idioms.
 
 ## Installing anc and this skill bundle
 
@@ -96,7 +87,6 @@ clone --depth 1 https://github.com/brettdavies/agentnative-skill.git <dest>`.
 | What spec version does this bundle ship?        | `spec/VERSION`                                                |
 | How do I implement `<pattern>` in Rust/clap?    | `references/rust-clap-patterns.md`                            |
 | How do I implement `<pattern>` in Python/Go/JS? | `references/framework-idioms-other-languages.md`              |
-| How do I test my CLI against the principles?    | `references/testing.md` + `templates/tests/`                  |
 | How does the badge eligibility threshold work?  | `SKILL.md` § "The anc loop" (70% credit-weighted floor)       |
 | What does the scorecard JSON look like?         | `anc emit schema` (schema 0.7) or `SKILL.md` § "The anc loop" |
 | File a spec question or proposal                | <https://github.com/brettdavies/agentnative>                  |

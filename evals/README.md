@@ -16,12 +16,11 @@ the eval as written.
 
 ## Evals in this bundle
 
-| File                                                                       | What it exercises                                                                                                                                                                                      |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`01-greenfield-rust-cli.md`](./01-greenfield-rust-cli.md)                 | Discovery + the new-Rust-CLI loop: scaffolding from templates, `anc audit`, badge claim once eligible.                                                                                                 |
-| [`02-remediate-existing-rust-cli.md`](./02-remediate-existing-rust-cli.md) | JSON-shape interpretation (`id`, `audit_id`, `tier`, `opt_out`, `n_a`), spec lookup, fix application, re-audit.                                                                                        |
-| [`03-multilang-python-cli.md`](./03-multilang-python-cli.md)               | Cross-language guidance: agent reaches `framework-idioms-other-languages.md` instead of forcing Rust patterns.                                                                                         |
-| [`04-prove-the-contract.md`](./04-prove-the-contract.md)                   | Testing layer: agent discovers the per-principle test checklist, adapts a named OSS test block red-first, and keeps fixes out of the prove-it layer (tests handed over, never implementation recipes). |
+| File                                                                       | What it exercises                                                                                               |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [`01-greenfield-rust-cli.md`](./01-greenfield-rust-cli.md)                 | Discovery + the new-Rust-CLI loop: scaffolding from templates, `anc audit`, badge claim once eligible.          |
+| [`02-remediate-existing-rust-cli.md`](./02-remediate-existing-rust-cli.md) | JSON-shape interpretation (`id`, `audit_id`, `tier`, `opt_out`, `n_a`), spec lookup, fix application, re-audit. |
+| [`03-multilang-python-cli.md`](./03-multilang-python-cli.md)               | Cross-language guidance: agent reaches `framework-idioms-other-languages.md` instead of forcing Rust patterns.  |
 
 ## Conventions each eval follows
 
