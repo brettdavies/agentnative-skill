@@ -374,7 +374,8 @@ drift the next regeneration overwrites.
 Three rulesets are committed under `.github/rulesets/` and applied to the repo via the GitHub API:
 
 - **`protect-main.json`**: required signatures, linear history, squash-only merges via PR with CODEOWNERS review,
-  required status checks (`markdownlint`, `shellcheck`, `guard-docs / check-forbidden-docs`), creation/deletion blocked,
+  required status checks (`markdownlint`, `shellcheck`, `guard-docs / check-forbidden-docs`,
+  `guard-provenance / check-provenance`, `guard-release / check-release-branch-name`), creation/deletion blocked,
   non-fast-forward blocked.
 - **`protect-dev.json`**: required signatures, deletion blocked, non-fast-forward blocked. PR-only norm is enforced by
   convention plus `guard-release-branch` on the `main` side.
@@ -418,10 +419,10 @@ gh api -X PUT repos/brettdavies/agentnative-skill/rulesets/<id> --input .github/
 | `markdownlint`           | inline job, `name: markdownlint`                     | `markdownlint`                              | yes                             |
 | `shellcheck`             | inline job, `name: shellcheck`                       | `shellcheck`                                | yes                             |
 | `guard-docs / ...`       | reusable workflow caller, job key `guard-docs`       | `guard-docs / check-forbidden-docs`         | yes                             |
-| `guard-release / ...`    | reusable workflow caller, job key `guard-release`    | `guard-release / check-release-branch-name` | no                              |
-| `guard-provenance / ...` | reusable workflow caller, job key `guard-provenance` | `guard-provenance / check-provenance`       | no                              |
+| `guard-release / ...`    | reusable workflow caller, job key `guard-release`    | `guard-release / check-release-branch-name` | yes                             |
+| `guard-provenance / ...` | reusable workflow caller, job key `guard-provenance` | `guard-provenance / check-provenance`       | yes                             |
 
-The first three contexts are verified against a live run. Confirm all five post-CI with:
+Confirm all five contexts appear on a PR to `main` with:
 
 ```bash
 gh api repos/brettdavies/agentnative-skill/commits/<sha>/check-runs --jq '.check_runs[].name'
