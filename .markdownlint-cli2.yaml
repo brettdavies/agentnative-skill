@@ -1,5 +1,5 @@
 # Global markdownlint-cli2 configuration
-# Canonical version: 2026.04.15
+# Canonical version: 2026.06.09
 # Symlinked to ~/.markdownlint-cli2.yaml via stow
 #
 # Per-repo copies should preserve the `Canonical version` line above and bump it on resync;
@@ -80,19 +80,13 @@ ignores:
   - "target/**"  # Rust build artifacts; harmless for non-Rust projects
   - ".git/**"
   - "*.min.md"
-  # Vendored agentnative-spec content. Edited upstream; we do not enforce
-  # this repo's lint rules on it. Resync via scripts/sync-spec.sh.
+  - "docs/solutions/**"  # Symlink to the shared solutions-docs repo; lint upstream, not here
+  # Vendored agentnative-spec content, edited upstream and resynced via
+  # scripts/sync-spec.sh; this repo's rules are not enforced on it.
   - "spec/CHANGELOG.md"
-  # Generated artifact. scripts/generate-changelog.sh writes single-line
-  # bullets per PR; line-length wrapping would conflict with the generator.
-  # CHANGELOG.md is regenerated, never hand-edited.
+  # Generated artifact. scripts/generate-changelog.py writes one line per
+  # bullet; line-length wrapping would conflict with the generator.
   - "CHANGELOG.md"
-  # Symlinked to ~/dev/solutions-docs (a separate private repo). Content
-  # is governed by its own lint config; consuming repos do not enforce
-  # this repo's rules on it. The symlink is gitignored globally
-  # (~/.config/git/ignore), so this exclusion only affects local lint
-  # walks that follow the symlink.
-  - "docs/solutions/**"
 
 # Fix automatically when --fix is used
 fix: true
