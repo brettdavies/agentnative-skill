@@ -12,10 +12,6 @@ on:
 permissions:
   pull-requests: read
 
-concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   guard-docs:
     uses: brettdavies/.github/.github/workflows/guard-main-docs.yml@main

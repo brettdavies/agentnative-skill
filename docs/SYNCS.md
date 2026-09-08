@@ -9,9 +9,9 @@ repo to its three sibling repos (`agentnative` spec, `agentnative-site`, `agentn
 
 ## Upstream — data flowing INTO this repo
 
-| Source                                                                                       | Mechanism                       | What's synced                                               | Trigger / cadence                                                                                                                                                                                                           | Drift check                                                                                                                                                                                                                                                                                 |
-| -------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `brettdavies/agentnative` (spec); default latest `v*` tag, or any branch/tag/SHA via `--ref` | `scripts/sync-spec.sh` (manual) | `principles/p*-*.md` + `VERSION` + `CHANGELOG.md` → `spec/` | Re-run on the `release/v<X.Y.Z>` branch as part of every release (see `RELEASES.md` §"Spec re-vendoring"). Cross-repo coordination: rerun with `--ref dev` (or a SHA) to consume in-flight spec work before a release cuts. | None automated — relies on the release-branch checklist. The script itself is idempotent; `git status` after a re-run surfaces orphan files from spec renames. The script prints the resolved short SHA on every run regardless of ref type so the release branch can record the exact pin. |
+| Source                                                                                       | Mechanism                       | What's synced                                               | Trigger / cadence                                                                                                                                                                                                                      | Drift check                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `brettdavies/agentnative` (spec); default latest `v*` tag, or any branch/tag/SHA via `--ref` | `scripts/sync-spec.sh` (manual) | `principles/p*-*.md` + `VERSION` + `CHANGELOG.md` → `spec/` | Re-run on the `release/v<X.Y.Z>` branch as part of every release (see `RELEASES.md` § Releasing dev to main, step 4). Cross-repo coordination: rerun with `--ref dev` (or a SHA) to consume in-flight spec work before a release cuts. | None automated — relies on the release-branch checklist. The script itself is idempotent; `git status` after a re-run surfaces orphan files from spec renames. The script prints the resolved short SHA on every run regardless of ref type so the release branch can record the exact pin. |
 
 **Mechanism notes:**
 
@@ -95,15 +95,16 @@ ownership lives across the boundary in `agentnative-site/src/data/skill.json`.
 ## Release / dispatch chain
 
 There is **no automated `repository_dispatch` chain** between these three repos. The producer-side workflows are CI-only
-(`ci.yml`: markdownlint + shellcheck; `guard-main-docs.yml`: blocks engineering docs from `main`). Cross-repo
+(`ci.yml`: markdownlint + shellcheck; `guard-main-docs.yml`, `guard-release-branch.yml`, `guard-main-provenance.yml`:
+gate PRs to `main`). Cross-repo
 propagation is **manual + checklist-driven**.
 
 A skill release flows like this:
 
 1. **`agentnative-spec`** ships a new `v*` tag (independent cadence).
-2. **`agentnative-skill`** (this repo) opens a `release/v<X.Y.Z>` branch from `main`, cherry-picks non-docs commits from
-   `dev`, runs `scripts/sync-spec.sh` to re-vendor `spec/`, bumps `VERSION`, generates CHANGELOG, merges to `main`, tags
-   `v<X.Y.Z>`, creates a GitHub Release. Consumers see the new version on next `bin/check-update`.
+2. **`agentnative-skill`** (this repo) cuts `release/v<X.Y.Z>` from `main`, overlays `dev`'s tree and strips the
+   guarded set, runs `scripts/sync-spec.sh` to re-vendor `spec/`, bumps `VERSION`, generates CHANGELOG, merges to
+   `main`, tags `v<X.Y.Z>`, creates a GitHub Release. Consumers see the new version on next `bin/check-update`.
 3. **`agentnative-site`** updates `src/data/skill.json` (`version` and `source.commit`) to point at the new
    `agentnative-skill` SHA, deploys. `/skill.json` now serves the new manifest. The daily `skill-availability` probe
    continues to verify the producer repo is reachable.
