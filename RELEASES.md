@@ -138,9 +138,11 @@ git diff --cached --diff-filter=A --name-only origin/main | grep -E '(^docs/|\.m
 
 # 6. Scrub CHANGELOG.md via Vale + LanguageTool + unslop (see § Prose scrubbing). Fix
 #    findings on upstream PR bodies and re-run step 4's generator, never by hand-editing
-#    CHANGELOG.md. Then commit the overlay as one commit sitting directly on top of main
-#    and walk the "Release mechanics sanity" items in RELEASES-PREFLIGHT.md against it.
-git commit -m "chore(release): v<version>"
+#    CHANGELOG.md. Then commit the overlay as one commit sitting directly on top of main,
+#    re-run the drift gate (main may have moved while the branch was built), and walk
+#    the "Release mechanics sanity" items in RELEASES-PREFLIGHT.md against it.
+git commit
+scripts/release/drift.sh
 
 # 7. Push and open the PR. Scrub body in /tmp/ first.
 git push -u origin release/v<version>
@@ -398,8 +400,6 @@ Verify installed rulesets:
 gh api repos/brettdavies/agentnative-skill/rulesets --jq '.[] | "\(.id)\t\(.name)\t\(.target)"'
 ```
 
-See [`.github/rulesets/README.md`](.github/rulesets/README.md) for verification + negative tests.
-
 ### Updating a ruleset
 
 Edit the JSON locally, then sync to the remote (replacement, not patch):
@@ -454,5 +454,4 @@ gh api repos/brettdavies/agentnative-skill/commits/<sha>/check-runs --jq '.check
 - [`AGENTS.md`](./AGENTS.md) (repo layout, lint commands, what agents must not do)
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) (how to propose changes)
 - [`.github/pull_request_template.md`](.github/pull_request_template.md) (PR body structure with changelog sections)
-- [`.github/rulesets/README.md`](.github/rulesets/README.md) (ruleset apply + verify procedure)
 - [`CHANGELOG.md`](./CHANGELOG.md) (released versions and their notes)

@@ -286,5 +286,4 @@ Committing the JSON alongside code means ruleset changes land via the same revie
 - [`AGENTS.md`](./AGENTS.md) (repo layout, lint commands, what agents must not do)
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) (how to propose changes)
 - [`.github/pull_request_template.md`](.github/pull_request_template.md) (PR body structure with changelog sections)
-- [`.github/rulesets/README.md`](.github/rulesets/README.md) (ruleset apply + verify procedure)
 - [`CHANGELOG.md`](./CHANGELOG.md) (released versions and their notes)

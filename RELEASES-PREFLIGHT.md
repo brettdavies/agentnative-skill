@@ -60,13 +60,15 @@ Security PRs, hotfixes, and config edits land on `main` first. The release branc
 `dev`'s tree, so anything `main` holds that `dev` never received is reverted by the release or collides with it, and
 Dependabot raises the same fix again.
 
+- [ ] The previous release's bookkeeping (`VERSION`, `CHANGELOG.md`) is on `dev`. Gate 0 fails when it never reached
+      `dev`; run `scripts/sync-dev-after-release.sh v<version>`, merge its PR, and rerun.
 - [ ] Every commit on `main` since the last release has its changes on `dev` (gate 1 lists the ones that do not, as
       `differs` or `missing`). Backport them by PR into `dev` first, merge, and rerun.
 - [ ] `.github/` is identical on both branches (gate 2). A difference either way is a config change that only reached
       one branch. Rows where `dev` is ahead are the config this release ships; rows where `main` is ahead need a
       backport first.
-- [ ] Gate 3 (lockfiles) reports SKIP. The bundle carries no `package-lock.json` or `Cargo.lock`; anything else here
-      means a manifest landed that this checklist does not know about.
+- [ ] Gate 3 (lockfiles) reports SKIP. The bundle carries no `package-lock.json`, `bun.lock`, or `Cargo.lock`; anything
+      else here means a manifest landed that this checklist does not know about.
 
 ### Cross-repo blast radius
 
