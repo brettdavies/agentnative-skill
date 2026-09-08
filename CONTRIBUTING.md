@@ -48,7 +48,7 @@ reviewed when scope and time permit. Real PRs land; no merge-window promise.
 
 ```text
 feat/* → PR to dev (squash merge)
-       → cherry-pick non-docs commits to release/<version>
+       → release/v<version> cut from main, dev's tree overlaid
        → PR release/* to main (squash merge)
        → tag v<X.Y.Z> + GitHub Release
 ```
@@ -69,7 +69,7 @@ procedure in [`RELEASES.md`](./RELEASES.md).
 
   ```bash
   markdownlint-cli2 '**/*.md' '!node_modules/**'
-  shellcheck --severity=style scripts/*.sh bin/*
+  shellcheck --severity=style scripts/*.sh scripts/release/*.sh bin/*
   actionlint .github/workflows/*.yml
   ```
 

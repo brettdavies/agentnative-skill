@@ -27,8 +27,12 @@ agentnative-skill/
 ├── scripts/
 │   ├── sync-spec.sh                vendor the latest agentnative-spec v* tag into spec/
 │   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD (dev-only; guarded off main)
-│   ├── sync-dev-after-release.sh   post-release backport: replay release/* artifacts onto dev
-│   ├── generate-changelog.py       release-time CHANGELOG generator (git-cliff + PR-body extraction)
+│   ├── sync-dev-after-release.sh   post-release backport: PR that lands VERSION + CHANGELOG.md on dev (vendored)
+│   ├── generate-changelog.py       release-time CHANGELOG generator (git-cliff + PR-body extraction; vendored)
+│   ├── release/                    release gates, vendored from the github-repo-setup skill
+│   │   ├── drift.sh                    anything on main that dev never received (run before a cut)
+│   │   ├── guarded-paths.sh            the path set guard-main-docs rejects, read from the workflow
+│   │   └── _lib.sh                     shared helpers sourced by drift.sh
 │   └── hooks/                      local CI mirror (markdownlint + shellcheck), installed via core.hooksPath
 │       ├── pre-commit              staged-file-scoped fast lint
 │       └── pre-push                full markdownlint + shellcheck mirror of ci.yml
@@ -39,7 +43,9 @@ agentnative-skill/
 ├── BRAND.md                universal voice and identity (vendored from agentnative-spec)
 ├── PRODUCT.md              skill-bundle channel design context (inherits from BRAND.md)
 ├── CONTRIBUTING.md         how to propose changes
-├── RELEASES.md             release procedure (cherry-pick from dev → release/* → main)
+├── RELEASES.md             release procedure (dev → release/* cut from main → main)
+├── RELEASES-PREFLIGHT.md   go/no-go checklist gating the release-branch cut
+├── RELEASES-POSTFLIGHT.md  verification after the tag and GitHub Release publish
 ├── RELEASES-RATIONALE.md   rationale companion to RELEASES.md (the WHY)
 ├── SECURITY.md             vulnerability disclosure
 ├── CHANGELOG.md            released versions (generated, never hand-edited)

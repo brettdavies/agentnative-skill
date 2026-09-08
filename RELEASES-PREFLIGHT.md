@@ -8,13 +8,28 @@ release.
 CI (markdownlint, shellcheck, `guard-docs / check-forbidden-docs`) catches mechanical regressions inside this repo. This
 checklist covers what CI structurally can't:
 
+- Changes on `main` that `dev` never received, which the release would silently revert.
 - Breaking changes to the bundle's contract (`SKILL.md` frontmatter fields, directory layout, vendored `spec/` shape)
   that downstream consumers must adapt to.
 - Real-world behavior against external systems CI only mocks (`git clone --depth 1` to a live host destination).
 - Distribution paths that only exercise on real artifacts (the bundle is markdown-only, so the "artifact" is the
-  contents of `main` at the tag — but the install path still needs a probe).
+  contents of `main` at the tag, but the install path still needs a probe).
 - Cross-repo sequencing where releasing here before `agentnative-spec` is re-vendored or before `agentnative-site`
   recognizes the new bundle content breaks downstreams.
+
+Post-tag verification lives in [`RELEASES-POSTFLIGHT.md`](./RELEASES-POSTFLIGHT.md). The tag push happens AFTER the
+release-branch cut and the PR-to-main merge, so verification of what the tag publishes is post-flight, not pre-flight.
+
+## Quick start: the automated gate
+
+The bundle has no build, test, or deploy surface, so this repo does not vendor the skill's `preflight.sh` orchestrator;
+the items below run by hand. One gate is scripted:
+
+```bash
+scripts/release/drift.sh          # exits 1 while main holds anything dev never received
+```
+
+Run it first. Nothing else matters while `main` holds changes `dev` never received.
 
 ## Establish the surface
 
@@ -25,12 +40,33 @@ LAST_TAG=$(git tag --sort=-version:refname | head -n 1)
 git log "$LAST_TAG..dev" --oneline                              # commits going out
 git diff "$LAST_TAG..dev" --stat                                # file-level scope
 git diff "$LAST_TAG..dev" -- SKILL.md spec/ references/ templates/   # bundle-contract surface
-git log "$LAST_TAG..dev" --grep '^[a-z]\+!:' --oneline          # Conventional-Commits breaking markers
+git log "$LAST_TAG..dev" --grep '^[a-z]\+\(([^)]*)\)\?!:' --oneline   # Conventional-Commits breaking markers, scoped or not
 ```
+
+Because every release squash-merges into `main`, no tag is an ancestor of `dev`; `$LAST_TAG..dev` therefore lists
+`dev`'s whole lineage since the merge-base rather than only the commits since the last release. Read the surface as
+`origin/main..origin/dev` when that list is too long to be useful, and skip the tag-based counts on a repo with no
+tags yet.
 
 Every `!:` commit drives the major-version decision and gets a row in the release's `### Breaking changes` section.
 
 ## Checklist
+
+### Branch drift (main ahead of dev)
+
+Driven by `scripts/release/drift.sh`.
+
+Security PRs, hotfixes, and config edits land on `main` first. The release branch is cut from `main` and then takes
+`dev`'s tree, so anything `main` holds that `dev` never received is reverted by the release or collides with it, and
+Dependabot raises the same fix again.
+
+- [ ] Every commit on `main` since the last release has its changes on `dev` (gate 1 lists the ones that do not, as
+      `differs` or `missing`). Backport them by PR into `dev` first, merge, and rerun.
+- [ ] `.github/` is identical on both branches (gate 2). A difference either way is a config change that only reached
+      one branch. Rows where `dev` is ahead are the config this release ships; rows where `main` is ahead need a
+      backport first.
+- [ ] Gate 3 (lockfiles) reports SKIP. The bundle carries no `package-lock.json` or `Cargo.lock`; anything else here
+      means a manifest landed that this checklist does not know about.
 
 ### Cross-repo blast radius
 
@@ -39,8 +75,8 @@ Every `!:` commit drives the major-version decision and gets a row in the releas
   Every field renamed / added / removed / shape-changed becomes a row in the release's `### Breaking changes` (consumers
   feature-detect from this list).
 - [ ] **Spec vendor in lockstep.** `agentnative-spec`'s latest tag matches what `scripts/sync-spec.sh` last vendored
-  under `spec/`. If a new spec tag has shipped upstream since the last re-vendor, the release branch's step 6
-  (`scripts/sync-spec.sh`) will catch it — but confirm here that you intend to ship the re-vendor in this release. See
+  under `spec/`. If a new spec tag has shipped upstream since the last re-vendor, the release branch's step 4
+  (`scripts/sync-spec.sh`) will catch it; confirm here that you intend to ship the re-vendor in this release. See
   [`RELEASES-RATIONALE.md` § Spec-vendor pipeline](./RELEASES-RATIONALE.md#spec-vendor-pipeline).
 - [ ] **Vendored `spec/VERSION` matches the source tag.** `cat spec/VERSION` against the latest `agentnative-spec` tag;
   mismatched values mean the bundle ships stale spec content while consumers see the new version via `bin/check-update`
@@ -49,7 +85,7 @@ Every `!:` commit drives the major-version decision and gets a row in the releas
   has changed. If the site is not ready, hold the tag.
 - [ ] **Install-path destination exists.** The `git clone --depth 1` install URL
   (`https://github.com/brettdavies/agentnative-skill`) resolves and `main` is the default branch (this is what
-  `bin/check-update` reads — see
+  `bin/check-update` reads; see
   [`RELEASES-RATIONALE.md` § `bin/check-update` semantics](./RELEASES-RATIONALE.md#bincheck-update-semantics)).
 
 ### Real-world smoke
@@ -67,7 +103,7 @@ CI exercises one shape; manual probes cover the rest. Pick fresh targets each re
 
 ### Distribution and install paths
 
-The bundle is markdown-only — no compiled artifact, no package-manager publication. The "distribution" surface is `main`
+The bundle is markdown-only: no compiled artifact, no package-manager publication. The "distribution" surface is `main`
 at the tag plus the install command that lands it.
 
 - [ ] **Bundle install probe.** `git clone --depth 1 https://github.com/brettdavies/agentnative-skill <tmp>` from a
@@ -75,18 +111,20 @@ at the tag plus the install command that lands it.
   `bin/check-update`, `VERSION`) at the expected paths and that the on-disk `VERSION` matches the new tag.
 - [ ] **`bin/check-update` against the new `main`.** From a clone whose `VERSION` matches the prior release, run
   `bin/check-update` and confirm it prints `UPGRADE_AVAILABLE <old> <new>`. The remote URL is hard-coded to
-  `raw.githubusercontent.com/.../main/VERSION` — confirm that URL serves the new value (GitHub Raw can lag the push by
+  `raw.githubusercontent.com/.../main/VERSION`; confirm that URL serves the new value (GitHub Raw can lag the push by
   ~minutes for first-time renders).
 
 ### Release mechanics sanity
 
-These items duplicate steps in `RELEASES.md` deliberately: easy to skip, expensive to recover from. Confirm explicitly.
+These items duplicate steps in `RELEASES.md` deliberately: easy to skip, expensive to recover from. Confirm explicitly
+against the release branch after step 5 of the overlay recipe.
 
 - [ ] **`VERSION` bumped** on the release branch to the new tag value (plain-text `X.Y.Z`, no leading `v`). This is what
-  `bin/check-update` reports on consumer machines — a mis-bump silently breaks update detection. See
+  `bin/check-update` reports on consumer machines; a mis-bump silently breaks update detection. See
   [`RELEASES-RATIONALE.md` § `bin/check-update` semantics](./RELEASES-RATIONALE.md#bincheck-update-semantics).
-- [ ] **Every merged PR since `$LAST_TAG` has a non-empty `## Changelog` section.** Empty sections silently drop from
-  the generated `CHANGELOG.md`. Spot-check via:
+- [ ] **Every merged PR since `$LAST_TAG` has a non-empty `## Changelog` section.** A PR without one falls back to its
+  title as a `Changed` bullet, or drops out entirely when its title is typed `chore`/`ci`/`build`/`style`/`test`.
+  Spot-check via:
 
   ```bash
   gh pr list --base dev --state merged \
@@ -95,40 +133,41 @@ These items duplicate steps in `RELEASES.md` deliberately: easy to skip, expensi
   gh pr view <num> --json body
   ```
 
-  See [`RELEASES-RATIONALE.md` § CHANGELOG generation](./RELEASES-RATIONALE.md#changelog-generation) for why
-  `chore`/`style`/`test`/`ci`/`build`-typed commits silently drop their changelog bullets.
+  See [`RELEASES-RATIONALE.md` § CHANGELOG generation](./RELEASES-RATIONALE.md#changelog-generation).
 
-- [ ] **Leak check.** Engineering-doc paths and `.context/` aren't reaching the release branch:
+- [ ] **`CHANGELOG.md` versioned section** has no `[Unreleased]` placeholder and matches the bumped version
+  (`scripts/generate-changelog.py --check`).
+- [ ] **Leak check.** No guarded path may surface in the diff vs `origin/main`. The set resolves from
+  `.github/workflows/guard-main-docs.yml` via `scripts/release/guarded-paths.sh`; never restate the pattern inline.
 
   ```bash
-  git diff origin/main..HEAD --name-only \
-    | grep -E '^(docs/plans|docs/brainstorms|docs/ideation|docs/reviews|docs/solutions|\.context)'
+  GUARDED="$(scripts/release/guarded-paths.sh)"
+  git diff origin/main..HEAD --name-only | grep -E "$GUARDED" && echo "LEAKED: reset and redo" || echo "(clean)"
   ```
 
-  Returns nothing. `guard-main-docs.yml` enforces this on the release PR, but catching it here avoids a wasted CI
-  cycle.
+  `guard-main-docs.yml` enforces this on the release PR, but catching it here avoids a wasted CI cycle.
 
+- [ ] **Every doc this release adds to `main` is meant to ship.** The leak check is blind to a category nobody
+  registered. `git diff origin/main..HEAD --diff-filter=A --name-only | grep -E '(^docs/|\.md$)' | grep -Ev "$GUARDED"`
+  lists the unguarded additions; each one needs a reason to ship, or it gets registered in the workflow's
+  `extra_paths` and removed from the branch.
+- [ ] **Diff-B is quiet.** `git diff HEAD..origin/dev --name-only | grep -Ev "$GUARDED"` prints only `VERSION`,
+  `CHANGELOG.md`, and any `spec/` rows from a re-vendor. Filter by the guarded set, not all of `docs/`: `docs/SYNCS.md`
+  ships to `main`, and a blanket `docs/` filter would hide a missed change there.
 - [ ] **Prose scrub.** `CHANGELOG.md` and the release-PR body pass Vale + LanguageTool + `unslop`. See
   [`RELEASES.md` § Prose scrubbing](./RELEASES.md#prose-scrubbing).
+- [ ] **Local hooks ran.** `scripts/hooks/pre-push` mirrors CI (markdownlint + shellcheck); run it explicitly before
+  pushing the release branch.
 
 ### Post-tag verification
 
-Run immediately after the tag push.
-
-- [ ] **`release.yml` green end-to-end** (if/when a release workflow exists in this repo). `gh run watch <id>
-  --exit-status` then verify with `gh run view <id> --json conclusion`. The watcher exit code alone is not authoritative
-  — re-check explicitly.
-- [ ] **`finalize-release.yml` ran** (if/when one exists in this repo) and flipped the GitHub Release `make_latest:
-  true`. Until that workflow exists, set `make_latest` manually on `gh release create`.
-- [ ] **Live `bin/check-update` sanity probe.** From a clone at the prior release's `VERSION`, run `bin/check-update`
-  against the live remote URL. Must print `UPGRADE_AVAILABLE <old> <new>`. First-time renders on
-  `raw.githubusercontent.com` can lag the push.
-- [ ] **Backport.** `./scripts/sync-dev-after-release.sh v<version>` opens the `chore/sync-dev-after-v<version>` PR
-  against `dev` per
-  [`RELEASES.md` § After publish — sync `dev` with the release](./RELEASES.md#after-publish--sync-dev-with-the-release).
+Moved to [`RELEASES-POSTFLIGHT.md`](./RELEASES-POSTFLIGHT.md) because tagging happens **after** the release-branch cut
+and PR-to-main merge, so verification of the published tag (GitHub Release, live `bin/check-update`, backport, consumer
+submodule pins) is post-flight, not pre-flight.
 
 ## Related docs
 
+- [`RELEASES-POSTFLIGHT.md`](./RELEASES-POSTFLIGHT.md): runs AFTER the tag push to verify what it published.
 - [`RELEASES.md`](./RELEASES.md): operational runbook this checklist gates.
 - [`RELEASES-RATIONALE.md`](./RELEASES-RATIONALE.md): release-flow rationale (branching model, CHANGELOG pipeline,
   spec-vendor pipeline, `bin/check-update` semantics, branch-protection pitfalls).
