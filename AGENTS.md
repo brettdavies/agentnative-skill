@@ -33,7 +33,7 @@ auto-discovers `SKILL.md` at the install root and ignores everything else. Produ
 | `.github/dependabot.yml`                                                                 | ✗                        | Weekly github-actions updates against `dev`; security updates grouped on `main`.                                                     |
 | `.github/ISSUE_TEMPLATE/`                                                                | ✗                        | Bug report + bundle-proposal templates.                                                                                              |
 | `docs/plans/`                                                                            | ✗                        | Engineering plans (`dev`-only — guarded out of `main`).                                                                              |
-| `.markdownlint-cli2.yaml`, `.shellcheckrc`, `.gitattributes`, `.gitignore`, `cliff.toml` | ✗                        | Local lint configs, git-cliff config, and repo metadata.                                                                             |
+| `.markdownlint-cli2.yaml`, `.gitattributes`, `.gitignore`, `cliff.toml`                  | ✗                        | Local lint configs, git-cliff config, and repo metadata.                                                                             |
 
 ## Documented Solutions
 
@@ -53,8 +53,7 @@ shellcheck --severity=style scripts/*.sh scripts/release/*.sh bin/*
 actionlint .github/workflows/*.yml
 ```
 
-The repo ships a local `.markdownlint-cli2.yaml` (canonical 120-char line length) and `.shellcheckrc` so CI and local
-tooling agree.
+The repo ships a local `.markdownlint-cli2.yaml` (canonical 120-char line length) so CI and local tooling agree.
 
 ## Voice and prose rules
 
