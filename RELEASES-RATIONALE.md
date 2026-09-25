@@ -135,9 +135,10 @@ Breaking changes / Added / Changed / Fixed / Documentation` subsections (with au
 cherry-picked branch it runs `git-cliff` first to prepend a versioned entry from the branch's commits, then expands the
 same way.
 
-If a PR's body carries no changelog content, its title becomes a `Changed` bullet, except for `chore`, `ci`, `build`,
-`style`, and `test` PRs, which stay out unless they carry a `## Changelog` of their own. To fix a wrong CHANGELOG entry,
-fix the input: edit the squash-merged PR body, then re-run the script. Do **not** edit `CHANGELOG.md` directly.
+If a PR's body has no `## Changelog` section, its title becomes a `Changed` bullet, except for `chore`, `ci`, `build`,
+`style`, and `test` PRs, which stay out unless they carry a `## Changelog` of their own. A PR that keeps the
+`## Changelog` heading but leaves it empty adds no bullet, whatever its type. To fix a wrong CHANGELOG entry, fix the
+input: edit the squash-merged PR body, then re-run the script. Do **not** edit `CHANGELOG.md` directly.
 
 `scripts/generate-changelog.py --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`):
 wire this into the release-branch CI if/when one is added.
@@ -204,8 +205,13 @@ released version into every version carrier it finds (`VERSION` here), copies `C
 PR; the merged PR is the durable signal that the backport ran. The diff is mechanical, so reviewers can spot-check and
 squash-merge as usual.
 
-The script is idempotent: it exits 0 without creating a branch or PR when `VERSION` and `CHANGELOG.md` already match
-`main`. Safe to re-run, safe to invoke from automation that doesn't track whether the last release was already
+The script also carries back edits made on the release branch itself. Those land on `main` and never reach `dev`
+otherwise, so the next release's overlay of `dev`'s tree would quietly revert them. The previous release tag, the last
+point the branches agreed, bounds the discovery: the script adopts a path `dev` has not touched since that tag, and
+reports and withholds a path both branches moved, because adopting `main`'s copy would revert unreleased work on `dev`.
+
+The script is idempotent: it exits 0 without creating a branch or PR when `dev` already matches `main` on every path it
+would sync. Safe to re-run, safe to invoke from automation that doesn't track whether the last release was already
 backported.
 
 ## Rollback

@@ -43,8 +43,11 @@ Run immediately after `gh release create`.
   to `release/*` to `main` flow, never a deleted or moved tag. Confirm `protect-tags.json` still reports as installed
   (`gh api repos/brettdavies/agentnative-skill/rulesets --jq '.[] | select(.target == "tag") | .name'`).
 - [ ] **Backport `main` → `dev`** via a **merged PR to `dev` with the version in its title.**
-  `scripts/sync-dev-after-release.sh v<version>` writes `VERSION` and copies `CHANGELOG.md` from `main`, cuts
-  `chore/sync-dev-after-v<version>`, and opens the PR; merge it once CI is green. Verify with
+  `scripts/sync-dev-after-release.sh v<version>` writes `VERSION`, copies `CHANGELOG.md` from `main`, adopts every other
+  path the release changed that `dev` has not touched since the previous tag, cuts `chore/sync-dev-after-v<version>`,
+  and opens the PR; merge it once CI is green. The script lists paths both branches moved as contested and withholds
+  them; to take some, re-run with `--only PATH` for each discovered path you want, release-prep ones included
+  ([`RELEASES.md` § After publish](./RELEASES.md#after-publish-sync-dev-with-the-release)). Verify with
   `gh pr list --base dev --state merged --search "v<version> in:title"`. Never merge `main` into `dev` or push to `dev`
   directly. Keeps the next release's diff-B quiet so a real missed change stands out instead of hiding in expected
   divergence noise.

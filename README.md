@@ -27,12 +27,12 @@ agentnative-skill/
 ├── scripts/
 │   ├── sync-spec.sh                vendor the latest agentnative-spec v* tag into spec/
 │   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD (dev-only; guarded off main)
-│   ├── sync-dev-after-release.sh   post-release backport: PR that lands VERSION + CHANGELOG.md on dev (vendored)
+│   ├── sync-dev-after-release.sh   post-release backport PR to dev: VERSION, CHANGELOG.md, release-branch edits (vendored)
 │   ├── generate-changelog.py       release-time CHANGELOG generator (git-cliff + PR-body extraction; vendored)
 │   ├── release/                    release gates, vendored from the github-repo-setup skill
 │   │   ├── drift.sh                    anything on main that dev never received (run before a cut)
 │   │   ├── guarded-paths.sh            the path set guard-main-docs rejects, read from the workflow
-│   │   └── _lib.sh                     shared helpers sourced by drift.sh
+│   │   └── _lib.sh                     shared helpers sourced by drift.sh and sync-dev-after-release.sh
 │   └── hooks/                      local CI mirror (markdownlint + shellcheck), installed via core.hooksPath
 │       ├── pre-commit              staged-file-scoped fast lint
 │       └── pre-push                full markdownlint + shellcheck mirror of ci.yml

@@ -253,10 +253,11 @@ Consumers detect the new release on their next `bin/check-update` run; nothing e
 
 ### After publish: sync `dev` with the release
 
-Once the GitHub Release is published, bring the release bookkeeping (`VERSION`, `CHANGELOG.md`) back to `dev` so the
-integration branch starts from the released baseline:
+Once the GitHub Release is published, bring the release bookkeeping (`VERSION`, `CHANGELOG.md`) and any other edits
+made on the release branch back to `dev` so the integration branch starts from the released baseline:
 
 ```bash
+scripts/sync-dev-after-release.sh v<version> --dry-run   # list what would sync; no branch, dev's tree left clean
 scripts/sync-dev-after-release.sh v<version>
 ```
 
@@ -266,6 +267,21 @@ The script writes the released version into `VERSION`, copies `CHANGELOG.md` ver
 conflicts on every file both sides touched, and a direct push bypasses `dev`'s required checks. Without this step
 `dev`'s `VERSION` and `CHANGELOG.md` stay frozen at the pre-release state, and future feature branches inherit the
 wrong baseline.
+
+Besides `VERSION` and `CHANGELOG.md`, the script discovers every other path `main` and `dev` disagree about, minus the
+guarded set `scripts/release/guarded-paths.sh` resolves. A release branch gets edited for reasons no fixed list
+predicts, and those edits never reach `dev` on their own, so the next release's overlay would revert them. The script
+classifies each path against the previous release tag, the last point the branches agreed:
+
+- **release-prep**: `dev`'s copy matches the previous tag's, so `dev` never touched it. Adopted.
+- **contested**: both branches moved it since the previous tag. Listed and withheld, since adopting `main`'s copy would
+  revert unreleased work on `dev`. `--only PATH` (repeatable) narrows the discovered paths to the ones you name,
+  release-prep or contested; `--include-contested` takes every contested path.
+
+When the sync carries `CHANGELOG.md` and `git-cliff` is on `PATH`, the script re-runs
+`scripts/generate-changelog.py --dry-run` after the local commit and, if the result differs, warns with the
+generator's own reason line, which names a wrap-only difference as wrapping rather than PR-body drift. The warning does
+not stop the PR.
 
 The backport is idempotent: re-running on a `dev` already in sync exits 0 without creating a branch or PR.
 
@@ -439,10 +455,11 @@ gh api repos/brettdavies/agentnative-skill/commits/<sha>/check-runs --jq '.check
   `main`) and the `brettdavies/agent-skills` submodule pin. No package registry, no binaries, no `release.yml`.
 - **Spec re-vendor**: `scripts/sync-spec.sh` on the release branch (step 4) when `agentnative-spec` has shipped a new
   `v*` tag since the last release. The vendored version lives in `spec/VERSION`.
-- **Release tooling**: `scripts/release/drift.sh`, `scripts/release/guarded-paths.sh`, `scripts/generate-changelog.py`
-  (with `cliff.toml`), and `scripts/sync-dev-after-release.sh` are verbatim copies from the `github-repo-setup` skill;
-  refresh by copy, never edit in place. The skill's preflight and postflight orchestrators are not vendored: the bundle
-  has no build, smoke, or pipeline surface for them to drive, so the checklists run by hand.
+- **Release tooling**: `scripts/release/drift.sh`, `scripts/release/guarded-paths.sh`, `scripts/release/_lib.sh`,
+  `scripts/generate-changelog.py` (with `cliff.toml`), and `scripts/sync-dev-after-release.sh` are verbatim copies from
+  the `github-repo-setup` skill; refresh by copy, never edit in place. `sync-dev-after-release.sh` sources `_lib.sh`
+  and calls its helpers, so refresh the two together. The skill's preflight and postflight orchestrators are not
+  vendored: the bundle has no build, smoke, or pipeline surface for them to drive, so the checklists run by hand.
 - **Required secrets**: none. `gh` auth is enough for the changelog generator and the backport script.
 
 ## Related docs
