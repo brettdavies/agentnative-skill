@@ -135,9 +135,10 @@ Breaking changes / Added / Changed / Fixed / Documentation` subsections (with au
 cherry-picked branch it runs `git-cliff` first to prepend a versioned entry from the branch's commits, then expands the
 same way.
 
-If a PR's body carries no changelog content, its title becomes a `Changed` bullet, except for `chore`, `ci`, `build`,
-`style`, and `test` PRs, which stay out unless they carry a `## Changelog` of their own. To fix a wrong CHANGELOG entry,
-fix the input: edit the squash-merged PR body, then re-run the script. Do **not** edit `CHANGELOG.md` directly.
+If a PR's body has no `## Changelog` section, its title becomes a `Changed` bullet, except for `chore`, `ci`, `build`,
+`style`, and `test` PRs, which stay out unless they carry a `## Changelog` of their own. A PR that keeps the
+`## Changelog` heading but leaves it empty adds no bullet, whatever its type. To fix a wrong CHANGELOG entry, fix the
+input: edit the squash-merged PR body, then re-run the script. Do **not** edit `CHANGELOG.md` directly.
 
 `scripts/generate-changelog.py --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`):
 wire this into the release-branch CI if/when one is added.
