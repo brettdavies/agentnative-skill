@@ -204,8 +204,13 @@ released version into every version carrier it finds (`VERSION` here), copies `C
 PR; the merged PR is the durable signal that the backport ran. The diff is mechanical, so reviewers can spot-check and
 squash-merge as usual.
 
-The script is idempotent: it exits 0 without creating a branch or PR when `VERSION` and `CHANGELOG.md` already match
-`main`. Safe to re-run, safe to invoke from automation that doesn't track whether the last release was already
+The script also carries back edits made on the release branch itself. Those land on `main` and never reach `dev`
+otherwise, so the next release's overlay of `dev`'s tree would quietly revert them. The previous release tag, the last
+point the branches agreed, bounds the discovery: the script adopts a path `dev` has not touched since that tag, and
+reports and withholds a path both branches moved, because adopting `main`'s copy would revert unreleased work on `dev`.
+
+The script is idempotent: it exits 0 without creating a branch or PR when `dev` already matches `main` on every path it
+would sync. Safe to re-run, safe to invoke from automation that doesn't track whether the last release was already
 backported.
 
 ## Rollback
