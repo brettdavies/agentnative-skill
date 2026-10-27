@@ -27,6 +27,36 @@ RESET='\033[0m'
 pass() { echo -e "  ${GREEN}✓${RESET} $1"; }
 fail() { echo -e "  ${RED}✗${RESET} $1"; exit 1; }
 
+# git writes one line per pushed ref on stdin,
+# `<local ref> <local sha> <remote ref> <remote sha>`, then closes it. A
+# deleted ref carries an all-zero local sha (matched as a pattern so SHA-256
+# repos qualify), and a push made only of deletes delivers nothing for the
+# checks below to read. The read is bounded so a stdin nobody closes cannot
+# park the hook. A terminal (a hand run), no ref lines, or a timeout all run
+# the checks.
+PRE_PUSH_STDIN_TIMEOUT="${PRE_PUSH_STDIN_TIMEOUT:-5}"
+
+push_only_deletes() {
+    [ -t 0 ] && return 1
+    local _local_ref local_sha _remote_ref _remote_sha status saw_ref=false
+    while true; do
+        status=0
+        read -r -t "$PRE_PUSH_STDIN_TIMEOUT" _local_ref local_sha _remote_ref _remote_sha || status=$?
+        [ "$status" -gt 128 ] && return 1
+        if [ -n "$local_sha" ]; then
+            [[ "$local_sha" =~ ^0+$ ]] || return 1
+            saw_ref=true
+        fi
+        [ "$status" -eq 0 ] || break
+    done
+    [ "$saw_ref" = true ]
+}
+
+if push_only_deletes; then
+    echo "Nothing to check: the push only deletes."
+    exit 0
+fi
+
 echo -e "${BOLD}Running local CI checks...${RESET}"
 
 # 1. markdownlint — mirrors the `markdownlint` job in ci.yml. The CI workflow
