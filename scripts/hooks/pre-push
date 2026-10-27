@@ -27,34 +27,42 @@ RESET='\033[0m'
 pass() { echo -e "  ${GREEN}✓${RESET} $1"; }
 fail() { echo -e "  ${RED}✗${RESET} $1"; exit 1; }
 
-# git writes one line per pushed ref on stdin,
-# `<local ref> <local sha> <remote ref> <remote sha>`, then closes it. A
-# deleted ref carries an all-zero local sha (matched as a pattern so SHA-256
-# repos qualify), and a push made only of deletes delivers nothing for the
-# checks below to read. The read is bounded so a stdin nobody closes cannot
-# park the hook. A terminal (a hand run), no ref lines, or a timeout all run
-# the checks.
-PRE_PUSH_STDIN_TIMEOUT="${PRE_PUSH_STDIN_TIMEOUT:-5}"
-
+# push_only_deletes: true when every ref line git hands pre-push on stdin,
+# `<local ref> <local sha> <remote ref> <remote sha>`, deletes a remote ref.
+# A delete carries an all-zero local sha (40 zeros, or 64 in a SHA-256
+# repository) and delivers no commit for any check to read.
+#
+# False, so the checks run, when stdin is a terminal (the hook run by hand),
+# when it carries no ref lines, and when it stays open for
+# HOOK_STDIN_WAIT_SECONDS (default 5) with no next line. Git writes its lines
+# and closes stdin at once, so a real push never waits.
+#
+# The same function github-repo-setup's hooks library ships, inline because
+# this hook sources no library.
 push_only_deletes() {
-    [ -t 0 ] && return 1
-    local _local_ref local_sha _remote_ref _remote_sha status saw_ref=false
-    while true; do
-        status=0
-        read -r -t "$PRE_PUSH_STDIN_TIMEOUT" _local_ref local_sha _remote_ref _remote_sha || status=$?
-        [ "$status" -gt 128 ] && return 1
-        if [ -n "$local_sha" ]; then
-            [[ "$local_sha" =~ ^0+$ ]] || return 1
-            saw_ref=true
-        fi
-        [ "$status" -eq 0 ] || break
-    done
-    [ "$saw_ref" = true ]
+  local wait_s="${HOOK_STDIN_WAIT_SECONDS:-5}" line local_ref local_sha rc deletes=0 others=0
+  HOOK_PUSH_REFS=''
+  [ -t 0 ] && return 1
+  while :; do
+    rc=0
+    IFS= read -r -t "$wait_s" line || rc=$?
+    [ "$rc" -eq 0 ] || break
+    HOOK_PUSH_REFS+="$line"$'\n'
+    read -r local_ref local_sha _ <<<"$line"
+    [ -n "$local_ref" ] || continue
+    if [[ "$local_sha" =~ ^0+$ ]]; then
+      deletes=$((deletes + 1))
+    else
+      others=$((others + 1))
+    fi
+  done
+  # read returns above 128 on a timeout and 1 at end of input.
+  [ "$rc" -le 128 ] && [ "$deletes" -gt 0 ] && [ "$others" -eq 0 ]
 }
 
 if push_only_deletes; then
-    echo "Nothing to check: the push only deletes."
-    exit 0
+  echo "Nothing to check: the push only deletes."
+  exit 0
 fi
 
 echo -e "${BOLD}Running local CI checks...${RESET}"
