@@ -2,10 +2,11 @@
 # Vendor agentnative-spec into spec/.
 #
 # Default behavior: resolves the latest v* tag of agentnative-spec via the
-# GitHub API and pulls VERSION, CHANGELOG.md, principles/p*-*.md, and
-# principles/scoring.md at that tag. The vendored tree ships as part of
-# the skill bundle so consuming agents carry the canonical principle text
-# alongside the skill metadata.
+# GitHub API and pulls VERSION, CHANGELOG.md, principles/p*-*.md,
+# principles/scoring.md, and the README's "Reading the spec" section at
+# that tag. The vendored tree ships as part of the skill bundle so
+# consuming agents carry the canonical principle text alongside the skill
+# metadata.
 #
 # Override behavior (--ref / SPEC_REF): vendors an explicit branch HEAD,
 # tag, or commit SHA instead of the latest v* tag. Use for cross-repo
@@ -81,7 +82,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            sed -n '2,55p' "$0" | sed 's/^# \{0,1\}//'
+            sed -n '2,56p' "$0" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -95,6 +96,8 @@ done
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST_DIR="$REPO_ROOT/spec"
 DEST_PRINCIPLES="$DEST_DIR/principles"
+READING_HEADING="## Reading the spec"
+READING_FILE="reading-the-spec.md"
 
 # Parse `<owner>/<repo>` out of SPEC_REMOTE_URL for `gh api` calls.
 # Handles both URL shapes:
@@ -188,17 +191,20 @@ fi
 echo "vendoring $resolved_ref ($resolved_sha) from $source_label"
 
 # === Extract =============================================================
-# Fetcher: API path uses `gh api` with raw accept header; local path uses
-# `git show`. Both write a single file to $2 from path $1.
-fetch_file() {
+# Reader: API path uses `gh api` with raw accept header; local path uses
+# `git show`. Both write the file at path $1 to stdout.
+show_file() {
     local path="$1"
-    local dest="$2"
     if $api_ok; then
         gh api -H "Accept: application/vnd.github.raw" \
-            "repos/$spec_repo/contents/$path?ref=$resolved_ref" >"$dest"
+            "repos/$spec_repo/contents/$path?ref=$resolved_ref"
     else
-        git -C "$SPEC_ROOT" show "$resolved_ref:$path" >"$dest"
+        git -C "$SPEC_ROOT" show "$resolved_ref:$path"
     fi
+}
+
+fetch_file() {
+    show_file "$1" >"$2"
 }
 
 # Lister: returns names (not paths) of files in a directory at the ref.
@@ -242,7 +248,27 @@ fi
 # p*-*.md principle, so it's fetched explicitly rather than via the glob.
 fetch_file "principles/scoring.md" "$DEST_PRINCIPLES/scoring.md"
 
+# The rules for reading requirement text (the requirements[] fields, and
+# how a flag name applies to single-dash help) live in the README's
+# "Reading the spec" section, not in a principle file. Vendor that section
+# alone, from its heading to the next level-2 heading. awk reads all of its
+# input rather than exiting at the section end, so the upstream reader never
+# takes a SIGPIPE that pipefail would turn into a failure. Relative links
+# name spec files this script does not vendor, so they point at the spec
+# repo at the same ref.
+reading_section="$(show_file "README.md" | awk -v heading="$READING_HEADING" '
+    /^## / { inside = ($0 == heading) }
+    inside { print }
+')"
+if [[ -z "$reading_section" ]]; then
+    echo "error: README.md at ref \`$resolved_ref\` has no \`$READING_HEADING\` section" >&2
+    exit 1
+fi
+printf '%s\n' "$reading_section" \
+    | sed -E "s|[]][(]([^):#][^):]*)[)]|](https://github.com/$spec_repo/blob/$resolved_ref/\1)|g" \
+    >"$DEST_DIR/$READING_FILE"
+
 echo "wrote $copied principle file(s) + scoring.md to $DEST_PRINCIPLES"
-echo "wrote VERSION + CHANGELOG.md to $DEST_DIR"
+echo "wrote VERSION, CHANGELOG.md, and $READING_FILE to $DEST_DIR"
 echo
 echo "next: review \`git diff\` for unexpected changes, then commit."

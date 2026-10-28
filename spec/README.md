@@ -17,19 +17,21 @@ Run from the repo root:
 scripts/sync-spec.sh    # queries the remote for the latest v* tag; falls back to local on network failure
 ```
 
-The script queries `https://github.com/brettdavies/agentnative.git` for the latest `v*` tag and shallow-clones that tag
-into a temp directory for extraction. If the remote is unreachable, it falls back to a local checkout
-(`$HOME/dev/agentnative-spec` by default; override with `SPEC_ROOT`). Override `SPEC_REMOTE_URL` to query a different
-remote. The script extracts files via `git show`, so neither source's working tree is perturbed.
+The script resolves the latest `v*` tag of `brettdavies/agentnative` through `gh api` and fetches each vendored file at
+that tag from the GitHub contents API, with no clone. `--ref <branch|tag|sha>` (or `SPEC_REF`) vendors another ref. If
+the API is unreachable, the script falls back to a local checkout (`$HOME/dev/agentnative-spec` by default; override
+with `SPEC_ROOT`) and reads files with `git show`, so the checkout's working tree is untouched. Override
+`SPEC_REMOTE_URL` to point at a different repository.
 
 ## Layout
 
-| Path                    | Source in `agentnative-spec` | Purpose                                                       |
-| ----------------------- | ---------------------------- | ------------------------------------------------------------- |
-| `VERSION`               | `VERSION`                    | Spec version string; the skill's vendored `SPEC_VERSION`      |
-| `CHANGELOG.md`          | `CHANGELOG.md`               | Spec change history; informational                            |
-| `principles/p*.md`      | `principles/p*.md`           | Frontmatter `requirements[]` is the machine-readable contract |
-| `principles/scoring.md` | `principles/scoring.md`      | Leaderboard formula, badge eligibility floor, and color bands |
+| Path                    | Source in `agentnative-spec`     | Purpose                                                                                       |
+| ----------------------- | -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `VERSION`               | `VERSION`                        | Spec version string; the skill's vendored `SPEC_VERSION`                                      |
+| `CHANGELOG.md`          | `CHANGELOG.md`                   | Spec change history; informational                                                            |
+| `principles/p*.md`      | `principles/p*.md`               | Frontmatter `requirements[]` is the machine-readable contract                                 |
+| `principles/scoring.md` | `principles/scoring.md`          | Leaderboard formula, badge eligibility floor, and color bands                                 |
+| `reading-the-spec.md`   | `README.md` § "Reading the spec" | `requirements[]` fields and the flag-name reading rule; relative links point at the spec repo |
 
 Each principle file has a YAML frontmatter block with `id`, `title`, `last-revised`, `status`, and `requirements[]`.
 Each `requirements[]` entry carries a stable `id` (e.g. `p1-must-no-interactive`), a `level` (`must`/`should`/`may`), an

@@ -66,13 +66,9 @@ principle, each with machine-readable `requirements[]` frontmatter:
 
 Do not paraphrase the principles inside this skill. Read the spec files directly; they are the source of truth.
 
-One reading rule lives in the spec README's [Reading the
-spec](https://github.com/brettdavies/agentnative#reading-the-spec) section rather than in `spec/principles/`.
-Requirement text names a flag by its double-dash spelling (`--force`, `--quiet`, `--output`). A tool whose help declares
-no double-dash name follows the Go `flag` convention and meets the requirement with the single-dash spelling: `-force`
-on `terraform force-unlock` meets `--force`. In a help that declares any double-dash name, a single-dash word is a
-separate name. A single letter meets only a requirement that names that letter, so `-f` meets `--force` only where the
-requirement also names `-f`.
+[`spec/reading-the-spec.md`](./spec/reading-the-spec.md), vendored from the spec README, defines the `requirements[]`
+fields and how a flag name in requirement text applies to single-dash and single-letter flags. Read it before judging
+whether a tool's flag meets a requirement.
 
 ## The anc loop: audit → fix → re-audit → claim badge
 
