@@ -8,7 +8,7 @@ pick the one that matches your starting point. The canonical auditor is
 ## You have an existing CLI
 
 ```bash
-# 1. Run the auditor. Schema is 0.7; results[] carries `id`, `audit_id`, `tier`, `status`, `evidence`.
+# 1. Run the auditor. Schema is 0.9; results[] carries `id`, `audit_id`, `tier`, `status`, `evidence`.
 anc audit --output json . > scorecard.json
 
 # 2. For each FAIL, look up the cited `id` (e.g. `p1-must-no-interactive`)
@@ -84,7 +84,7 @@ anc skill update claude_code                         # refresh an existing insta
 anc skill update --all                               # refresh every known host
 
 # 3. (Optional) Pin against the scorecard JSON Schema embedded in the binary.
-anc emit schema > scorecard-v0.7.schema.json         # validate downstream parsers against this
+anc emit schema > scorecard-v0.9.schema.json         # validate downstream parsers against this
 ```
 
 Binary name: `anc`. Prebuilt releases at <https://github.com/brettdavies/agentnative-cli/releases>. If your host is not
@@ -101,7 +101,7 @@ clone --depth 1 https://github.com/brettdavies/agentnative-skill.git <dest>`.
 | How do I implement `<pattern>` in Python/Go/JS? | `references/framework-idioms-other-languages.md`              |
 | How do I test my CLI against the principles?    | `references/testing.md` + `templates/tests/`                  |
 | How does the badge eligibility threshold work?  | `SKILL.md` § "The anc loop" (70% credit-weighted floor)       |
-| What does the scorecard JSON look like?         | `anc emit schema` (schema 0.7) or `SKILL.md` § "The anc loop" |
+| What does the scorecard JSON look like?         | `anc emit schema` (schema 0.9) or `SKILL.md` § "The anc loop" |
 | File a spec question or proposal                | <https://github.com/brettdavies/agentnative>                  |
 | File an `anc` bug                               | <https://github.com/brettdavies/agentnative-cli>              |
 | File a skill-bundle issue                       | <https://github.com/brettdavies/agentnative-skill>            |
