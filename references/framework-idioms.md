@@ -49,8 +49,9 @@ reliably. Emitting ANSI color codes unconditionally without checking TTY status 
 **Must implement.** Use `after_help` (not `about` or `long_about`) to add usage examples — `after_help` content appears
 after the flags section, which is where agents look for invocation patterns. Use `long_about` for an extended
 description that appears with `--help` but not in subcommand listings. Make environment variables visible by using the
-`env` attribute on args so they appear in help text automatically. Ensure each subcommand's `after_help` includes at
-least one concrete invocation example showing required flags and typical values.
+`env` attribute on args so they appear in help text automatically. Ensure the `after_help` of each subcommand that takes
+its own arguments or options includes at least one concrete invocation example showing required flags and typical
+values.
 
 **Anti-patterns.** Relying only on doc comments, which populate `about` but not `after_help` — this produces help text
 with no examples. Adding examples to `long_about` instead of `after_help`, which places them before the flags section
@@ -80,9 +81,9 @@ gates.
 
 **Must implement.** Add a `--dry-run` flag to every subcommand that performs write operations. Wire it into the handler
 so it executes all validation and preparation steps but stops before the actual mutation, printing what it would do. Add
-`--force` or `--yes` flags for destructive operations (delete, overwrite) to bypass confirmation prompts in automation.
-Implement "already exists" detection for create operations — return success with a note rather than failing on duplicate
-creates.
+a confirmation flag for destructive operations (delete, overwrite) to bypass confirmation prompts in automation; `--yes`
+and `--force` are the recommended names. Implement "already exists" detection for create operations — return success
+with a note rather than failing on duplicate creates.
 
 **Anti-patterns.** Write commands that execute mutations without any confirmation or preview mechanism. A `--dry-run`
 flag that is defined but not wired up (prints nothing, or still executes the mutation). Destructive operations that

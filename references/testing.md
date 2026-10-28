@@ -28,7 +28,7 @@ the artifact its tool emits, never from memory or from a neighboring number.
 
 | Number  | Identifies               | Source of truth                                               |
 | ------- | ------------------------ | ------------------------------------------------------------- |
-| `0.5.0` | The spec, principle text | `spec/VERSION`                                                |
+| `0.7.0` | The spec, principle text | `spec/VERSION`                                                |
 | `0.5.0` | The `anc` release        | `anc --version`                                               |
 | `0.7`   | The scorecard schema     | `schema_version` in the scorecard; `$id` of `anc emit schema` |
 

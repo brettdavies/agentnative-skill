@@ -125,8 +125,9 @@ Use `cmd.OutOrStdout()` for data and `cmd.ErrOrStderr()` for diagnostics — the
 the command. Use `encoding/json` for JSON serialization. Implement distinct exit codes in the root command's
 `PersistentPostRunE` or by returning typed errors from `RunE` and mapping them in `main()`.
 
-**P3 Progressive help.** Populate the `Example` field on every command struct with concrete invocation patterns. Cobra
-does not auto-generate examples — an empty `Example` field means no examples appear in help.
+**P3 Progressive help.** Populate the `Example` field on every command that takes its own arguments or flags with
+concrete invocation patterns. Cobra does not auto-generate examples — an empty `Example` field means no examples appear
+in help.
 
 **P5 Safe retries.** Add `--dry-run` and `--force`/`--yes` flags manually. Wire them into `RunE` handlers.
 
@@ -217,8 +218,9 @@ provides `.env()` for env var reading, boolean env vars still need careful handl
 `process.stdout.write(JSON.stringify(...))` for data and `process.stderr.write()` for diagnostics. Implement distinct
 exit codes using `process.exitCode`.
 
-**P3 Progressive help.** While `.example()` exists, ensure every subcommand has at least one example — yargs does not
-enforce this. Add examples showing required flags, typical values, and piping patterns.
+**P3 Progressive help.** While `.example()` exists, ensure every subcommand that takes its own arguments or options has
+at least one example — yargs does not enforce this. Add examples showing required flags, typical values, and piping
+patterns.
 
 **P5 Safe retries.** Add `--dry-run` and `--force`/`--yes` options manually. Wire them into command handlers.
 
@@ -267,8 +269,9 @@ interactive prompts behind this flag and TTY detection.
 globally by default. Ensure the command's `run()` method returns the data object that should be serialized. Implement
 stdout/stderr separation for commands that do not use the JSON flag.
 
-**P3 Progressive help.** Populate `static examples` on every command class with concrete invocation patterns including
-flags and typical values. oclif does not auto-generate examples — an empty `examples` array means no examples in help.
+**P3 Progressive help.** Populate `static examples` on every command class that takes its own arguments or flags with
+concrete invocation patterns including flags and typical values. oclif does not auto-generate examples — an empty
+`examples` array means no examples in help.
 
 **P5 Safe retries.** Add `--dry-run` and `--force`/`--yes` flags manually in the flag definitions. Wire them into the
 `run()` method.

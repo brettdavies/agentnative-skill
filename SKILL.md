@@ -49,9 +49,9 @@ map.
 
 ## The eight principles
 
-Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec`, currently `v0.5.0`; see
-[`spec/README.md`](./spec/README.md) for resync instructions). One file per principle, each with machine-readable
-`requirements[]` frontmatter:
+Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` at the version in
+[`spec/VERSION`](./spec/VERSION); see [`spec/README.md`](./spec/README.md) for resync instructions). One file per
+principle, each with machine-readable `requirements[]` frontmatter:
 
 | #   | File                                                                                                                 | Subject                           |
 | --- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
@@ -65,6 +65,14 @@ Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-
 | P8  | [`p8-discoverable-skill-bundle.md`](./spec/principles/p8-discoverable-skill-bundle.md)                               | Discoverable Skill Bundles        |
 
 Do not paraphrase the principles inside this skill. Read the spec files directly; they are the source of truth.
+
+One reading rule lives in the spec README's [Reading the
+spec](https://github.com/brettdavies/agentnative#reading-the-spec) section rather than in `spec/principles/`.
+Requirement text names a flag by its double-dash spelling (`--force`, `--quiet`, `--output`). A tool whose help declares
+no double-dash name follows the Go `flag` convention and meets the requirement with the single-dash spelling: `-force`
+on `terraform force-unlock` meets `--force`. In a help that declares any double-dash name, a single-dash word is a
+separate name. A single letter meets only a requirement that names that letter, so `-f` meets `--force` only where the
+requirement also names `-f`.
 
 ## The anc loop: audit → fix → re-audit → claim badge
 
