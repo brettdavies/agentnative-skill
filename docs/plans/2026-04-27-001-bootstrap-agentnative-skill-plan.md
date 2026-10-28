@@ -1,7 +1,8 @@
 ---
 title: "feat: Bootstrap agentnative-skill producer repo (Unit 1 of skill-distribution master plan)"
 type: feat
-status: complete
+status: done
+completed: 2026-04-29
 date: 2026-04-27
 completed_date: 2026-04-27
 public_flip_completed_date: 2026-04-28

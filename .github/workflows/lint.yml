@@ -17,3 +17,6 @@ jobs:
     with:
       # ci.yml already runs markdownlint as a required check.
       markdownlint: false
+      # docs/plans/ never reaches main (guard-main-docs), and the plans job
+      # fails when its glob matches no file, so it runs on PRs to dev only.
+      plans: ${{ github.base_ref == 'dev' }}

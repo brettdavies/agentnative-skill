@@ -1,7 +1,8 @@
 ---
 title: "feat: SKILL.md determinism + runbook hardening (R1–R12)"
 type: feat
-status: active
+status: dropped
+dropped_reason: "overtaken by anc 0.5.0 to 0.7.0; #21 covers the status set, the MUST-fail gate, and `anc emit schema` in part"
 date: 2026-05-01
 origin: docs/brainstorms/2026-05-01-001-skill-determinism-requirements.md
 sibling_brief: docs/brainstorms/2026-05-01-002-anc-determinism-feature-asks-requirements.md
