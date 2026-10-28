@@ -1,7 +1,8 @@
 ---
 title: "feat: gstack-style update-check mechanism + drop install.json SHA pin"
 type: feat
-status: complete
+status: done
+completed: 2026-05-03
 completed_date: 2026-05-03
 skill_scope_status: complete
 skill_scope_completed_date: 2026-04-29
