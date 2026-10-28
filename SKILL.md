@@ -6,7 +6,7 @@ description: >-
   [`agentnative-spec`](https://github.com/brettdavies/agentnative) (the canonical principle text, vendored at
   `spec/`). Provides starter templates, language-specific implementation idioms (Rust/clap, Python Click & argparse,
   Go Cobra, JS Commander/yargs/oclif, Ruby Thor), and a getting-started guide that points agents at
-  `anc audit --output json` (scorecard schema 0.7) and `anc skill install <host>` / `anc skill update --all`. Use
+  `anc audit --output json` (scorecard schema 0.9) and `anc skill install <host>` / `anc skill update --all`. Use
   when designing a new CLI tool, building a Rust/clap binary intended for agents, reviewing one for agent-readiness,
   claiming the agent-native badge (≥70% credit-weighted score), or remediating findings from `anc`. Triggers on
   agentic CLI, agent-native, CLI design, CLI standard, agent-first, CLI for agents, agent-friendly CLI, CLI
@@ -49,9 +49,9 @@ map.
 
 ## The eight principles
 
-Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec`, currently `v0.5.0`; see
-[`spec/README.md`](./spec/README.md) for resync instructions). One file per principle, each with machine-readable
-`requirements[]` frontmatter:
+Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-spec` at the version in
+[`spec/VERSION`](./spec/VERSION); see [`spec/README.md`](./spec/README.md) for resync instructions). One file per
+principle, each with machine-readable `requirements[]` frontmatter:
 
 | #   | File                                                                                                                 | Subject                           |
 | --- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
@@ -66,12 +66,16 @@ Defined in [`spec/principles/`](./spec/principles/) (vendored from `agentnative-
 
 Do not paraphrase the principles inside this skill. Read the spec files directly; they are the source of truth.
 
+[`spec/reading-the-spec.md`](./spec/reading-the-spec.md), vendored from the spec README, defines the `requirements[]`
+fields and how a flag name in requirement text applies to single-dash and single-letter flags. Read it before judging
+whether a tool's flag meets a requirement.
+
 ## The anc loop: audit → fix → re-audit → claim badge
 
 Once `anc` is installed (one-line install in [`getting-started.md`](./getting-started.md)), the work is a four-step
 loop:
 
-**1. Audit.** `anc audit --output json . > scorecard.json`. The JSON envelope is schema `0.7` and contains:
+**1. Audit.** `anc audit --output json . > scorecard.json`. The JSON envelope is schema `0.9` and contains:
 
 - `summary`: counter object covering the full status set (`total / pass / warn / fail / skip / error / opt_out / n_a`).
   Spans all three audit layers (behavioral, source, project).
@@ -139,7 +143,7 @@ anc emit schema                # print to stdout
 anc emit schema | jq '.title'  # inspect a field
 ```
 
-The schema `$id` is `https://anc.dev/scorecard-v0.7.schema.json`. Pre-0.6 consumers treated `opt_out` / `n_a` as
+The schema `$id` is `https://anc.dev/scorecard-v0.9.schema.json`. Pre-0.6 consumers treated `opt_out` / `n_a` as
 unknown, so feature-detect the status enum rather than pinning to an exact list.
 
 ## Implementation guidance (when fixing findings)

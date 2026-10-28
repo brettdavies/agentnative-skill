@@ -84,6 +84,7 @@ ignores:
   # Vendored agentnative-spec content, edited upstream and resynced via
   # scripts/sync-spec.sh; this repo's rules are not enforced on it.
   - "spec/CHANGELOG.md"
+  - "spec/reading-the-spec.md"
   # Generated artifact. scripts/generate-changelog.py writes one line per
   # bullet; line-length wrapping would conflict with the generator.
   - "CHANGELOG.md"

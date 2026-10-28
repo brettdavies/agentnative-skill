@@ -76,8 +76,10 @@ Env vars appear automatically in `--help` output when the `env` attribute is set
 `[env: TOOL_FLAG_NAME=]` next to each flag, so agents can discover both the flag name and the env var override without
 reading documentation.
 
-For subcommand CLIs, place `after_help` on each subcommand's struct as well as the top-level struct. Agents invoking
-`tool subcommand --help` should see examples specific to that subcommand.
+For subcommand CLIs, place `after_help` on the top-level struct and on each subcommand that takes its own arguments or
+options. Agents invoking `tool subcommand --help` should see examples specific to that subcommand. A subcommand whose
+help shows no positional argument and no option beyond `-h`/`--help` and the global flags (`tool version`) is exempt
+from `p3-must-subcommand-examples`: its usage line is its whole call shape.
 
 ## P4: Fail Fast with Actionable Errors
 
@@ -124,8 +126,10 @@ the previous attempt partially succeeded.
 
 Categorize subcommands as read or write operations. Read commands (list, get, search, show) need no safety flags. Write
 commands (create, update, delete, post) need `--dry-run` at minimum. Destructive write commands (delete, overwrite)
-additionally need `--force` or `--yes`. Use this categorization to set appropriate defaults: read commands are always
-safe to retry; write commands require explicit opt-in for mutation.
+additionally need a confirmation flag: `--yes` or `--force` are the recommended names, and a flag under another name
+meets `p5-must-force-yes` when the command's `--help` documents it as confirming without a prompt. Use this
+categorization to set appropriate defaults: read commands are always safe to retry; write commands require explicit
+opt-in for mutation.
 
 ## P6: Composable and Predictable Structure
 
