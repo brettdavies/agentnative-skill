@@ -1,7 +1,9 @@
 ---
 title: "feat: testing guidance + adaptable OSS test references for the agentnative skill"
 type: feat
-status: active
+status: merged
+prs: ["#36"]
+completed: 2026-08-25
 date: 2026-08-03
 artifact_contract: ce-unified-plan/v1
 artifact_readiness: implementation-ready
@@ -62,7 +64,8 @@ We have excellent, battle-tested, CI-green tests to hand over:
   table-driven black-box testing of agent-facing request/response behavior (Accept negotiation, User-Agent allowlist,
   content-types, CORS, cache policy).
 - `agentnative-site` `tests/score-contract.test.ts` — cross-validates JSON artifacts and fails CI before shape drift
-  ships: a P2 structured-output contract template.
+  ships: a P2 structured-output contract template. The site removed it in its #373; `references/testing.md` links it
+  at the pinned SHA `6c120df`.
 
 The problem this plan closes: give the agent the "what to assert" checklist plus these adaptable files, without ever
 crossing into "here is how to write the feature code."
@@ -240,6 +243,7 @@ authoritative.
 
 ### U1. Author `references/testing.md` — the durable testing guide
 
+- [x] Built in #36.
 **Goal:** Create the single home for the per-principle behavioral-test checklist, the allowed/forbidden guardrail, the
 language to test-harness table, and the commit-pinned "adapt these" table.
 
@@ -301,6 +305,7 @@ the shipped prose (those identifiers stay in this plan only).
 
 ### U2. Ship two adaptable skeletons under `templates/tests/`
 
+- [x] Built in #36, with a third skeleton for Python (`templates/tests/cli_integration_test.py`).
 **Goal:** Provide small, self-contained, principle-organized black-box test skeletons the agent can `cp` and adapt
 offline — the in-bundle "robust tests" artifact.
 
@@ -351,6 +356,7 @@ compiling/parsing base; do not include feature implementation — assertions and
 
 ### U3. Wire the guidance into the discovery path (thin edits)
 
+- [x] Built in #36.
 **Goal:** Make agents actually reach `references/testing.md` and the skeletons, and remove the duplicate testing prose.
 
 **Requirements:** R6, R8.
@@ -381,7 +387,7 @@ compiling/parsing base; do not include feature implementation — assertions and
 
 **Patterns to follow:** existing SKILL.md table rows and getting-started.md loop/`cp` structure.
 
-**Execution note:** SKILL.md is at 195 lines — treat "< 200 lines" as a hard gate on this unit.
+**Execution note:** SKILL.md is at 199 lines — treat "< 200 lines" as a hard gate on this unit.
 
 **Test scenarios:**
 
@@ -394,6 +400,7 @@ compiling/parsing base; do not include feature implementation — assertions and
 
 ### U4. Add an eval that validates the skill change
 
+- [x] Built in #36.
 **Goal:** Prove the guidance is discoverable and that adapting our OSS tests to a fresh CLI works without the bundle
 leaking implementation recipes.
 
@@ -434,6 +441,7 @@ leaking implementation recipes.
 
 ### U5. Record the vendored-snapshot + re-pin policy (maintenance hygiene)
 
+- [x] Built in #36.
 **Goal:** Make the snapshot/link maintenance contract explicit so the skeletons and pins do not silently rot, and note
 the cross-feature re-pin trigger.
 
@@ -500,7 +508,7 @@ additive documentation/template content in the `agentnative-skill` bundle.
 - **Cross-feature re-pin (low, tracked).** `agentnative-site` `tests/worker.test.ts` is the artifact of the site
   content-negotiation feature a sibling plan extends; a change there invalidates the pinned SHA and the TS skeleton.
   Mitigation: pin to the current SHA now, re-pin after the sibling feature lands (U5 note + Open Questions).
-- **SKILL.md 200-line ceiling (low).** SKILL.md is at 195 lines; U3 must stay under 200 (hard gate on that unit).
+- **SKILL.md 200-line ceiling (low).** SKILL.md is at 199 lines; U3 must stay under 200 (hard gate on that unit).
 - **Guardrail slippage (low).** An implementer could drift into implementation prose. Mitigation: the guardrail box, the
   reviewer criteria in every unit, and the eval's anti-patterns all enforce KTD1.
 
