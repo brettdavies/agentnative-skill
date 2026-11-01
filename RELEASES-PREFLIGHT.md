@@ -45,8 +45,8 @@ git log "$LAST_TAG..dev" --grep '^[a-z]\+\(([^)]*)\)\?!:' --oneline   # Conventi
 
 Because every release squash-merges into `main`, no tag is an ancestor of `dev`; `$LAST_TAG..dev` therefore lists
 `dev`'s whole lineage since the merge-base rather than only the commits since the last release. Read the surface as
-`origin/main..origin/dev` when that list is too long to be useful, and skip the tag-based counts on a repo with no
-tags yet.
+`origin/main..origin/dev` when that list is too long to be useful, and skip the tag-based counts on a repo with no tags
+yet.
 
 Every `!:` commit drives the major-version decision and gets a row in the release's `### Breaking changes` section.
 
@@ -61,14 +61,15 @@ Security PRs, hotfixes, and config edits land on `main` first. The release branc
 Dependabot raises the same fix again.
 
 - [ ] The previous release's bookkeeping (`VERSION`, `CHANGELOG.md`) is on `dev`. Gate 0 fails when it never reached
-      `dev`; run `scripts/sync-dev-after-release.sh v<version>`, merge its PR, and rerun.
+  `dev`; run `scripts/sync-dev-after-release.sh v<version>`, merge its PR, and rerun.
 - [ ] Every commit on `main` since the last release has its changes on `dev` (gate 1 lists the ones that do not, as
-      `differs` or `missing`). Backport them by PR into `dev` first, merge, and rerun.
-- [ ] `.github/` is identical on both branches (gate 2). A difference either way is a config change that only reached
-      one branch. Rows where `dev` is ahead are the config this release ships; rows where `main` is ahead need a
-      backport first.
+  `differs` or `missing`). Backport them by PR into `dev` first, merge, and rerun.
+- [ ] Nothing under `.github/` on `main` is missing from `dev` (gate 2). `.github/` reaches `main` through the release,
+  so config that has reached `dev` and not `main` is what this release delivers, and the gate counts it. The gate fails
+  on the other direction, where `main` holds workflow or ruleset config `dev` never received, and names each path as
+  `missing` or `differs`. Backport those by PR into `dev` first, merge, and rerun.
 - [ ] Gate 3 (lockfiles) reports SKIP. The bundle carries no `package-lock.json`, `bun.lock`, or `Cargo.lock`; anything
-      else here means a manifest landed that this checklist does not know about.
+  else here means a manifest landed that this checklist does not know about.
 
 ### Cross-repo blast radius
 
@@ -151,8 +152,8 @@ against the release branch after step 5 of the overlay recipe.
 
 - [ ] **Every doc this release adds to `main` is meant to ship.** The leak check is blind to a category nobody
   registered. `git diff origin/main..HEAD --diff-filter=A --name-only | grep -E '(^docs/|\.md$)' | grep -Ev "$GUARDED"`
-  lists the unguarded additions; each one needs a reason to ship, or it gets registered in the workflow's
-  `extra_paths` and removed from the branch.
+  lists the unguarded additions; each one needs a reason to ship, or it gets registered in the workflow's `extra_paths`
+  and removed from the branch.
 - [ ] **Diff-B is quiet.** `git diff HEAD..origin/dev --name-only | grep -Ev "$GUARDED"` prints only `VERSION`,
   `CHANGELOG.md`, and any `spec/` rows from a re-vendor. Filter by the guarded set, not all of `docs/`: `docs/SYNCS.md`
   ships to `main`, and a blanket `docs/` filter would hide a missed change there.
