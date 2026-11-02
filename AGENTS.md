@@ -93,8 +93,9 @@ table.
 - Edit `scripts/release/*.sh`, `scripts/sync-dev-after-release.sh`, `scripts/check-workflow-concurrency.sh`,
   `scripts/generate-changelog.py`, or `cliff.toml` in place. They are verbatim copies from the `github-repo-setup`
   skill; fix upstream and refresh by copy.
-- Edit anything under `spec/` by hand. It is vendored from `agentnative-spec`. Any required change is a PR against the
-  spec repo, then a `scripts/sync-spec.sh` bump here.
+- Edit anything under `spec/` by hand except `spec/README.md` and `spec/.markdownlint-cli2.yaml`, which are this repo's
+  own. The rest is vendored from `agentnative-spec`. Any required change is a PR against the spec repo, then a
+  `scripts/sync-spec.sh` bump here.
 - Reimplement `anc`. The skill does not contain shell-script duplicates of `anc`'s checks. If you find yourself writing
   `rg`-based grep checks, you're rebuilding what `anc` already does; use `anc audit --output json` instead.
 - Commit anything under `docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, or `docs/reviews/` directly to a
