@@ -1,9 +1,29 @@
-# Mandatory review on producer-ops paths that determine what ships and how.
-# The bundle/ tree is content (markdown + templates) and is reviewed via normal
-# PR rules; bundle/spec/ specifically is vendored and not edited by hand
-# (see scripts/sync-spec.sh and bundle/spec/README.md).
+# Canonical CODEOWNERS for brettdavies/* repos.
+# Pairs with the ruleset's `require_code_owner_review: true` parameter:
+# the ruleset only enforces "a code owner approved" when a touched file
+# matches a path here. Without coverage on a path, the rule is bypassed
+# for that path.
 
+# --- Governance: what ships and how ---
 scripts/**              @brettdavies
 .github/workflows/**    @brettdavies
 .github/rulesets/**     @brettdavies
 .github/CODEOWNERS      @brettdavies
+
+# --- Release integrity: drives every future cut ---
+cliff.toml              @brettdavies
+
+# --- Legal hygiene: never edit without deliberate review ---
+LICENSE-*               @brettdavies
+
+# --- Workflow docs: drift between docs and rulesets is a failure mode ---
+RELEASES.md             @brettdavies
+AGENTS.md               @brettdavies
+
+# --- Optional extensions for repos accepting outside contributions ---
+# Uncomment the lines you want covered.
+#
+# evals/**              @brettdavies
+# tests/**              @brettdavies
+# fixtures/**           @brettdavies
+# .markdownlint-cli2.yaml @brettdavies
