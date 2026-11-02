@@ -102,12 +102,11 @@ step_bg "shellcheck" "shellcheck --severity=style" check_shell_all
 step_bg "actionlint" "actionlint" check_actionlint_all
 step_bg "concurrency namespacing" "scripts/check-workflow-concurrency.sh" check_workflow_concurrency_all
 
-# 3. Markdown over every tracked doc, minus the generated CHANGELOG.md, which
-# the markdownlint config also ignores.
+# 3. Markdown over every tracked doc, the same set CI's markdownlint job reads.
 check_markdown_all() {
   local files
-  mapfile -t files < <(tracked '*.md' ':!:CHANGELOG.md')
-  check_markdown "${files[@]}"
+  mapfile -t files < <(tracked '*.md')
+  check_markdown_copy . "${files[@]}"
 }
 step_bg "markdownlint" "markdownlint-cli2" check_markdown_all
 

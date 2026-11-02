@@ -266,22 +266,44 @@ check_workflow_concurrency_all() {
   check_workflow_concurrency "${files[@]}"
 }
 
-# Markdown syntax. Refuses to run when the repo's markdownlint config sets
-# `fix: true`, because markdownlint-cli2 then rewrites every file it reads, with
-# or without --fix. A gate that mutates the tree mid-commit stages content
-# nobody reviewed, and it corrupts any file whose bytes are load-bearing: a
-# vendored upstream copy, a fixture, anything with a recorded checksum. A repo
-# that wants the edit-time auto-fix ergonomic keeps `fix: true` and loses this
-# check, which is the trade the notice states out loud.
-check_markdown() {
+# Markdown syntax, linted in a scratch tree. The canonical .markdownlint-cli2.yaml
+# sets `fix: true`, under which markdownlint-cli2 rewrites every file it reads,
+# with or without --fix, so linting in place mutates the checkout and passes a
+# file whose findings are all fixable. The scratch tree holds every tracked
+# markdownlint config at its own relative path with `fix` turned off, so the
+# root `ignores` list and the nested config under spec/ apply exactly as they do
+# in CI's markdownlint job, and nothing in the checkout is touched. Findings go
+# to stderr; stdout carries only the run banner, which is dropped so a pass
+# stays as quiet as every other check.
+#
+# check_markdown_copy <from> <file>...: `:` lints the staged blobs, `.` the
+# working-tree files.
+check_markdown_copy() {
+  local from="$1" tree f rc=0
+  shift
   [ "$#" -gt 0 ] || return "$HOOK_SKIPPED"
   have markdownlint-cli2 || skip "markdownlint" "install via \`brew install markdownlint-cli2\`" || return
-  local cfg
-  for cfg in .markdownlint-cli2.yaml .markdownlint-cli2.yml .markdownlint-cli2.jsonc .markdownlint-cli2.json; do
-    [ -f "$cfg" ] || continue
-    if grep -Eq '^[[:space:]]*"?fix"?[[:space:]]*:[[:space:]]*true' "$cfg"; then
-      skip "markdownlint" "$cfg sets fix: true, which would rewrite files mid-commit" || return
-    fi
+  tree="$(mktemp -d)" || return 1
+  while IFS= read -r f; do
+    mkdir -p "$tree/$(dirname "$f")"
+    _hook_read "$from" "$f" | sed -E 's/^([[:space:]]*"?fix"?[[:space:]]*:[[:space:]]*)true/\1false/' >"$tree/$f"
+  done < <(git ls-files -- ':(glob)**/.markdownlint*')
+  for f in "$@"; do
+    mkdir -p "$tree/$(dirname "$f")"
+    _hook_read "$from" "$f" >"$tree/$f" || rc=1
   done
-  markdownlint-cli2 "$@"
+  if [ "$rc" -eq 0 ]; then
+    (cd "$tree" && markdownlint-cli2 "$@" >/dev/null) || rc=$?
+  fi
+  rm -rf "$tree"
+  return "$rc"
+}
+
+# _hook_read <from> <path>: the staged blob for `:`, the working-tree file for `.`.
+_hook_read() {
+  if [ "$1" = ":" ]; then
+    git show ":$2"
+  else
+    cat -- "$2"
+  fi
 }

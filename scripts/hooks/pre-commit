@@ -74,15 +74,12 @@ mapfile -t wf < <(staged '.github/workflows/*.yml' '.github/workflows/*.yaml')
 step_bg "actionlint" "actionlint" check_actionlint "${wf[@]}"
 step_bg "concurrency namespacing" "scripts/check-workflow-concurrency.sh" check_workflow_concurrency "${wf[@]}"
 
-# Markdown: lint the staged docs. check_markdown refuses to run when the repo's
-# markdownlint config sets `fix: true`, which would rewrite files mid-commit.
-#
-# CHANGELOG.md is excluded because generate-changelog.py writes it with one
-# logical line per bullet, so MD013 reports hundreds of characters no author
-# typed. The release flow stages it on the one commit that carries a release,
-# which is the worst place to leave `--no-verify` as the only way through.
-mapfile -t md < <(staged '*.md' ':!:CHANGELOG.md')
-step_bg "markdownlint" "markdownlint-cli2" check_markdown "${md[@]}"
+# Markdown: lint what is being committed. check_markdown_copy reads the staged
+# blobs, so `commit -a` and `commit <paths>` are linted from the temporary index
+# GIT_INDEX_FILE names, and the root config's `ignores` keeps the generated
+# CHANGELOG.md out as it does in CI.
+mapfile -t md < <(staged '*.md')
+step_bg "markdownlint" "markdownlint-cli2" check_markdown_copy : "${md[@]}"
 
 step_wait || fail=1
 

@@ -73,12 +73,12 @@ procedure in [`RELEASES.md`](./RELEASES.md).
   actionlint .github/workflows/*.yml
   ```
 
-  Or activate the local git hooks (`git config core.hooksPath scripts/hooks`) to run most of these automatically:
-  `scripts/hooks/pre-commit` checks the staged shell scripts and workflows on every commit, and `scripts/hooks/pre-push`
-  checks every tracked one before every push (`shellcheck`, `actionlint`, and `scripts/check-workflow-concurrency.sh`).
-  Both hooks skip markdownlint with a notice: `.markdownlint-cli2.yaml` sets `fix: true`, and a hook that rewrites files
-  mid-commit stages content nobody reviewed, so run the `markdownlint-cli2` command above yourself. A tool that isn't
-  installed is skipped with a notice too; CI remains the authoritative backstop.
+  Or activate the local git hooks (`git config core.hooksPath scripts/hooks`) to run these automatically:
+  `scripts/hooks/pre-commit` checks the staged Markdown, shell scripts, and workflows on every commit, and
+  `scripts/hooks/pre-push` checks every tracked one before every push (`markdownlint`, `shellcheck`, `actionlint`, and
+  `scripts/check-workflow-concurrency.sh`). The hooks lint Markdown in a scratch copy, because `.markdownlint-cli2.yaml`
+  sets `fix: true` and a run in the checkout would rewrite files. A tool that isn't installed is skipped with a notice;
+  CI remains the authoritative backstop.
 
 ## Repo layout
 

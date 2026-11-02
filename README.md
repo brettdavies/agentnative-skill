@@ -34,7 +34,7 @@ agentnative-skill/
 │   │   ├── guarded-paths.sh            the path set guard-main-docs rejects, read from the workflow
 │   │   └── _lib.sh                     shared helpers sourced by drift.sh and sync-dev-after-release.sh
 │   ├── check-workflow-concurrency.sh  concurrency-group namespacing check both hooks run (vendored)
-│   └── hooks/                      local CI mirror (shellcheck, actionlint, concurrency), installed via core.hooksPath
+│   └── hooks/                      local CI mirror (markdownlint, shellcheck, actionlint), installed via core.hooksPath
 │       ├── _lib.sh                 checks both hooks source (vendored skeleton, trimmed to this repo's checks)
 │       ├── pre-commit              staged-file-scoped fast lint
 │       └── pre-push                whole-repo lint mirror of ci.yml and lint.yml
