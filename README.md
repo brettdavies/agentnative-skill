@@ -33,9 +33,11 @@ agentnative-skill/
 │   │   ├── drift.sh                    anything on main that dev never received (run before a cut)
 │   │   ├── guarded-paths.sh            the path set guard-main-docs rejects, read from the workflow
 │   │   └── _lib.sh                     shared helpers sourced by drift.sh and sync-dev-after-release.sh
-│   └── hooks/                      local CI mirror (markdownlint + shellcheck), installed via core.hooksPath
+│   ├── check-workflow-concurrency.sh  concurrency-group namespacing check both hooks run (vendored)
+│   └── hooks/                      local CI mirror (shellcheck, actionlint, concurrency), installed via core.hooksPath
+│       ├── _lib.sh                 checks both hooks source (vendored skeleton, trimmed to this repo's checks)
 │       ├── pre-commit              staged-file-scoped fast lint
-│       └── pre-push                full markdownlint + shellcheck mirror of ci.yml
+│       └── pre-push                whole-repo lint mirror of ci.yml and lint.yml
 ├── evals/                  self-contained eval prompts for fresh-agent dispatch (producer-side; not loaded by hosts)
 ├── docs/plans/             engineering plans (dev-only — guarded out of main)
 ├── .github/                workflows, rulesets, issue templates, PR template

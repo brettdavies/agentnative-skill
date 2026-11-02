@@ -1,116 +1,121 @@
 #!/usr/bin/env bash
-# Local CI mirror — runs the same checks as the GitHub Actions CI pipeline.
-# Use as a pre-push hook or run manually before pushing.
+# Canonical version: 2026.11.02 (generic)
 #
-# Activation: `git config core.hooksPath scripts/hooks` (run once after clone).
+# Local CI mirror: the whole-repo pre-push gate. Runs the same checks as the
+# GitHub Actions CI pipeline, so a push that survives the hook passes CI and a
+# push that fails the hook would have failed CI anyway, just slower. This is
+# the compensating control for CI trigger topology thinned to one run per
+# change (pull_request-only): it reproduces CI's verdict before the network
+# round-trip, and it is the only remote-equivalent check for any code that
+# never opens a PR. Its fast, staged-file-scoped companion is
+# scripts/hooks/pre-commit.
 #
-# Mirrors .github/workflows/ci.yml:
-#   - markdownlint:  markdownlint-cli2 over **/*.md
-#   - shellcheck:    shellcheck over ./scripts/ at --severity=style
+# Every check comes from scripts/hooks/_lib.sh, which both hooks source. The
+# two hooks differ in scope, not in what a check means: pre-push passes the
+# tracked set, pre-commit passes the staged set.
 #
-# Tools install (one-time):
-#   brew install shellcheck markdownlint-cli2
-#   # apt: shellcheck via `apt install shellcheck`; markdownlint-cli2 via `bun add -g markdownlint-cli2`
+# Activate per clone via: git config core.hooksPath scripts/hooks
+# core.hooksPath is machine-local git config: it does NOT travel with the
+# clone and is not enforced by cloning. An unset core.hooksPath is the single
+# most common reason a tracked hook never fires (a fleet audit found it unset
+# in 9 of 11 checkouts). Run the command above once per fresh clone, and state
+# it as a setup step in README/CONTRIBUTING next to the clone instructions.
 #
-# Tools that aren't installed are skipped with a one-line note rather than
-# failing — CI is the authoritative backstop. Install them locally to close
-# the gap and catch issues before the push hits GitHub.
+# Defensive no-ops, but never silent: each optional step guards on its tool
+# being present and skips cleanly when absent, so the hook never blocks a push
+# on a machine without the full toolchain. The library announces every such
+# skip, and a skipped check never prints a pass line: a silent skip is
+# indistinguishable from a passing check. Never gate a step on `ls file1 file2`
+# (fails closed when any one file is absent, silently disabling the step); test
+# each file with `[ -f "$f" ]` or enumerate with `git ls-files`, which is what
+# the library's `tracked` helper does.
+#
+# Failures aggregate. One run reports every failing step rather than stopping
+# at the first, so a push is fixed in one pass instead of one step at a time.
+#
+# Heavy suites (browser e2e, full package builds) stay CI-only by design; when
+# one is omitted here, say so in a comment rather than leaving the gap for a
+# reader to infer.
 #
 # Exit codes: 0 = all pass, 1 = failure
-set -euo pipefail
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BOLD='\033[1m'
-RESET='\033[0m'
-
-pass() { echo -e "  ${GREEN}✓${RESET} $1"; }
-fail() { echo -e "  ${RED}✗${RESET} $1"; exit 1; }
-
-# push_only_deletes: true when every ref line git hands pre-push on stdin,
-# `<local ref> <local sha> <remote ref> <remote sha>`, deletes a remote ref.
-# A delete carries an all-zero local sha (40 zeros, or 64 in a SHA-256
-# repository) and delivers no commit for any check to read.
 #
-# False, so the checks run, when stdin is a terminal (the hook run by hand),
-# when it carries no ref lines, and when it stays open for
-# HOOK_STDIN_WAIT_SECONDS (default 5) with no next line. Git writes its lines
-# and closes stdin at once, so a real push never waits.
-#
-# The same function github-repo-setup's hooks library ships, inline because
-# this hook sources no library.
-push_only_deletes() {
-  local wait_s="${HOOK_STDIN_WAIT_SECONDS:-5}" line local_ref local_sha rc deletes=0 others=0
-  HOOK_PUSH_REFS=''
-  [ -t 0 ] && return 1
-  while :; do
-    rc=0
-    IFS= read -r -t "$wait_s" line || rc=$?
-    # At end of input read returns 1 but still fills line with a last line
-    # that has no newline, which counts like any other.
-    [ "$rc" -eq 0 ] || { [ "$rc" -le 128 ] && [ -n "$line" ]; } || break
-    HOOK_PUSH_REFS+="$line"$'\n'
-    read -r local_ref local_sha _ <<<"$line"
-    [ -n "$local_ref" ] || continue
-    if [[ "$local_sha" =~ ^0+$ ]]; then
-      deletes=$((deletes + 1))
-    else
-      others=$((others + 1))
-    fi
+# Requires bash >= 4.4 (mapfile, and empty-array expansion under `set -u`). The
+# guard re-execs under Homebrew's bash when `#!/usr/bin/env bash` found an older
+# one, such as the macOS /bin/bash 3.2, and otherwise stops with the install hint.
+if ((BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4))); then
+  for b in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+    [ -x "$b" ] && exec "$b" "$0" "$@"
   done
-  # read returns above 128 on a timeout and 1 at end of input.
-  [ "$rc" -le 128 ] && [ "$deletes" -gt 0 ] && [ "$others" -eq 0 ]
-}
+  echo "ERROR: needs bash >= 4.4 (running $BASH_VERSION); install it with: brew install bash" >&2
+  exit 1
+fi
+
+# A linked worktree can find core.hooksPath set to the main checkout's
+# absolute path (worktree tooling writes it), and git then runs the main
+# checkout's copy of this hook with the worktree as its working directory.
+# Hand off to the copy that worktree has checked out, so a push or commit is
+# gated by the hook its own branch carries.
+hook_self_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)
+hook_worktree_root=$(pwd -P)
+hook_own_copy="$hook_worktree_root/scripts/hooks/$(basename "${BASH_SOURCE[0]}")"
+if [[ "$hook_worktree_root" != "$hook_self_root" && -x "$hook_own_copy" ]]; then
+  exec "$hook_own_copy" "$@"
+fi
+
+# From a linked worktree git exports GIT_DIR, which sends a tool's git calls in
+# any directory to this repository. Pre-push has no temporary index, and
+# discovery from the hook's cwd (the worktree root) finds the same repository.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_PREFIX GIT_NAMESPACE
+
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+# shellcheck source=scripts/hooks/_lib.sh
+. ./scripts/hooks/_lib.sh || exit 1
 
 if push_only_deletes; then
   echo "Nothing to check: the push only deletes."
   exit 0
 fi
 
-echo -e "${BOLD}Running local CI checks...${RESET}"
-
-# 1. markdownlint — mirrors the `markdownlint` job in ci.yml. The CI workflow
-# uses DavidAnson/markdownlint-cli2-action with `globs: **/*.md` and the
-# committed .markdownlint-cli2.yaml config. The local CLI honors the same
-# config file, so passing the same glob reproduces CI behavior. Skip silently
-# if markdownlint-cli2 isn't installed — install via Homebrew
-# (`brew install markdownlint-cli2`) or Bun (`bun add -g markdownlint-cli2`).
-if command -v markdownlint-cli2 &>/dev/null; then
-    markdownlint-cli2 '**/*.md' '#node_modules' 2>&1 || fail "markdownlint-cli2"
-    pass "markdownlint"
-else
-    echo "  - markdownlint (skipped: install via \`brew install markdownlint-cli2\` or \`bun add -g markdownlint-cli2\`)"
+# A real push passes the remote's name and URL. With no ref lines after them,
+# no ref would update, so there is nothing to check. A hand run passes neither
+# and checks everything.
+if [ "$#" -ge 2 ] && [ -z "${HOOK_PUSH_REFS:-}" ]; then
+  echo "pre-push: nothing to push"
+  exit 0
 fi
 
-# 2. Shellcheck — mirrors the `shellcheck` job in ci.yml, which runs
-# ludeeus/action-shellcheck against `./scripts/` with SHELLCHECK_OPTS set to
-# `--severity=style`. CI uses style severity to surface all suggestions and
-# still fails on error+warning by default. The bundle is markdown-only;
-# only producer-ops scripts under ./scripts/ are subject to shellcheck.
-# Include scripts/hooks/* so this hook lints itself. Skip silently when
-# the linter isn't installed.
-if command -v shellcheck &>/dev/null; then
-    mapfile -t shell_files < <({
-        git ls-files 'scripts/*' 2>/dev/null
-    } | sort -u)
-    # Filter to actual shell scripts (by extension or shebang). action-shellcheck
-    # auto-detects via shebang; mirror that locally so bin/ stays out and
-    # non-shell files in scripts/ don't trip the linter.
-    shell_targets=()
-    for f in "${shell_files[@]}"; do
-        [ -f "$f" ] || continue
-        if [[ "$f" == *.sh ]]; then
-            shell_targets+=("$f")
-        elif head -c 80 "$f" 2>/dev/null | grep -qE '^#!.*\b(bash|sh)\b'; then
-            shell_targets+=("$f")
-        fi
-    done
-    if [ ${#shell_targets[@]} -gt 0 ]; then
-        shellcheck --severity=style "${shell_targets[@]}" || fail "shellcheck --severity=style"
-    fi
-    pass "shellcheck"
-else
-    echo "  - shellcheck (skipped: install via \`brew install shellcheck\` or \`apt install shellcheck\`)"
-fi
+fail=0
 
-echo -e "${BOLD}${GREEN}All checks passed.${RESET}"
+banner "Running local CI checks..."
+
+# Every step is a file-scoped linter: none writes and none takes a build lock,
+# so they all run together and the slowest sets their wall-clock.
+
+# 1. Shell correctness over every tracked script, the hooks included.
+step_bg "shellcheck" "shellcheck --severity=style" check_shell_all
+
+# 2. Workflow lint over every tracked workflow file.
+step_bg "actionlint" "actionlint" check_actionlint_all
+step_bg "concurrency namespacing" "scripts/check-workflow-concurrency.sh" check_workflow_concurrency_all
+
+# 3. Markdown over every tracked doc, minus the generated CHANGELOG.md, which
+# the markdownlint config also ignores.
+check_markdown_all() {
+  local files
+  mapfile -t files < <(tracked '*.md' ':!:CHANGELOG.md')
+  check_markdown "${files[@]}"
+}
+step_bg "markdownlint" "markdownlint-cli2" check_markdown_all
+
+step_wait || fail=1
+
+[ "$fail" -eq 0 ] || {
+  echo "pre-push checks failed; each line marked ✗ names the command to rerun." >&2
+  exit 1
+}
+
+banner "All checks passed."
