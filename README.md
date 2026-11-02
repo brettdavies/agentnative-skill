@@ -29,10 +29,14 @@ agentnative-skill/
 │   ├── sync-prose-tooling.sh       vendor BRAND.md from agentnative-spec main HEAD (dev-only; guarded off main)
 │   ├── sync-dev-after-release.sh   post-release backport PR to dev: VERSION, CHANGELOG.md, release-branch edits (vendored)
 │   ├── generate-changelog.py       release-time CHANGELOG generator (git-cliff + PR-body extraction; vendored)
-│   ├── release/                    release gates, vendored from the github-repo-setup skill
+│   ├── release/                    release orchestrators and gates from the github-repo-setup skill
+│   │   ├── cut-release-branch.sh       builds release/v<version>: overlay dev onto main, strip guarded paths, verify
+│   │   ├── preflight.sh                pre-cut gates; the smoke gates are this bundle's own
+│   │   ├── postflight.sh               post-tag gates: GitHub Release latest, dev backport
 │   │   ├── drift.sh                    anything on main that dev never received (run before a cut)
 │   │   ├── guarded-paths.sh            the path set guard-main-docs rejects, read from the workflow
-│   │   └── _lib.sh                     shared helpers sourced by drift.sh and sync-dev-after-release.sh
+│   │   ├── release.env                 this repo's release values (none needed beyond the defaults)
+│   │   └── _lib.sh                     shared helpers every release script sources
 │   ├── check-workflow-concurrency.sh  concurrency-group namespacing check both hooks run (vendored)
 │   └── hooks/                      local CI mirror (markdownlint, shellcheck, actionlint), installed via core.hooksPath
 │       ├── _lib.sh                 checks both hooks source (vendored skeleton, trimmed to this repo's checks)
