@@ -36,9 +36,9 @@ reconciling histories. The default is the whole-tree overlay (`git checkout orig
 set): `main` ships `dev`'s tree minus a small, known exclusion set, so asserting that end-state directly is simpler and
 safer than hand-resolving a merge. The overlay commit carries no per-PR history, so the changelog is built from the PRs
 merged into `dev` since the previous release (`generate-changelog.py --from-dev-prs`) rather than from the branch's
-commits; the result is the same per-PR section a cherry-picked branch would yield. Cherry-picking the dev
-squash-commits is kept only as an exception for a cut with a stated reason it cannot overlay, at the cost of
-guarded-path conflict handling.
+commits; the result is the same per-PR section a cherry-picked branch would yield. Cherry-picking the dev squash-commits
+is kept only as an exception for a cut with a stated reason it cannot overlay, at the cost of guarded-path conflict
+handling.
 
 Either way, the release must start from a `main` that `dev` fully contains. Security PRs, hotfixes, and config edits
 land on `main` first, and both constructions take `dev`'s content for the files they touch, so anything `main` holds
@@ -86,11 +86,11 @@ subtree), so the two never disagree about what is guarded.
 
 ### Why the release enumerates what it adds
 
-The leak check screens the diff against the registered set, so it says nothing about a category nobody registered. A
-new engineering directory or a stray note under `docs/` passes the local check and `guard-main-docs` alike. Step D of
-the release recipe lists every `docs/` file and every markdown file the release adds to `main` outside the guarded set
-and puts them in front of a human; each one needs a reason to ship, or it gets registered in `extra_paths` and dropped
-from the branch. Root-level markdown is in scope because an agent-facing note at the repo root is exactly the kind of
+The leak check screens the diff against the registered set, so it says nothing about a category nobody registered. A new
+engineering directory or a stray note under `docs/` passes the local check and `guard-main-docs` alike. Step D of the
+release recipe lists every `docs/` file and every markdown file the release adds to `main` outside the guarded set and
+puts them in front of a human; each one needs a reason to ship, or it gets registered in `extra_paths` and dropped from
+the branch. Root-level markdown is in scope because an agent-facing note at the repo root is exactly the kind of
 addition a `docs/`-only listing misses.
 
 ## Triple-diff verification
@@ -130,15 +130,20 @@ action). Otherwise cherry-pick the commit and re-run the triple-diff.
 
 `scripts/generate-changelog.py` (vendored from the `github-repo-setup` skill, with the repo-local `cliff.toml`) is the
 only sanctioned way to update `CHANGELOG.md`. On an overlay-built release branch it runs as `--from-dev-prs`: the PRs
-merged into `dev` since the previous release are the entries, and each PR's body supplies its `## Changelog → ###
-Breaking changes / Added / Changed / Fixed / Documentation` subsections (with author and PR-link attribution). On a
-cherry-picked branch it runs `git-cliff` first to prepend a versioned entry from the branch's commits, then expands the
-same way.
+merged into `dev` since the previous release are the entries, and each PR's body supplies its
+`## Changelog → ### Breaking changes / Added / Changed / Deprecated / Removed / Fixed / Documentation` subsections (with
+author and PR-link attribution). On a cherry-picked branch it runs `git-cliff` first to prepend a versioned entry from
+the branch's commits, then expands the same way.
 
-If a PR's body has no `## Changelog` section, its title becomes a `Changed` bullet, except for `chore`, `ci`, `build`,
-`style`, and `test` PRs, which stay out unless they carry a `## Changelog` of their own. A PR that keeps the
-`## Changelog` heading but leaves it empty adds no bullet, whatever its type. To fix a wrong CHANGELOG entry, fix the
-input: edit the squash-merged PR body, then re-run the script. Do **not** edit `CHANGELOG.md` directly.
+If a PR's body offers no changelog section at all, its title becomes a bullet under the group `cliff.toml` gives the
+same commit (`type!:` under Breaking changes, `feat` under Added, `fix` under Fixed, `docs` under Documentation,
+anything else under Changed), except for `chore`, `ci`, `build`, `style`, and `test` PRs, which stay out unless they
+carry a `## Changelog` of their own, and the `release:` PR, which is bookkeeping. A body that carries the `## Changelog`
+heading and leaves it empty is the PR template's way of saying the PR ships nothing user-facing, and the fallback
+respects that whatever the title: internal work also lands as `fix(ci)`, `fix(hooks)`, or `fix(release)`, which the skip
+list does not cover. `scripts/generate-changelog.py --audit-sections` names every PR whose entry would fall back to its
+title. To fix a wrong CHANGELOG entry, fix the input: edit the squash-merged PR body, then re-run the script. Do **not**
+edit `CHANGELOG.md` directly.
 
 `scripts/generate-changelog.py --check` verifies that `CHANGELOG.md` has a versioned section (not just `[Unreleased]`):
 wire this into the release-branch CI if/when one is added.

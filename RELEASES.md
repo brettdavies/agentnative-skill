@@ -66,8 +66,10 @@ Every PR (feature, fix, docs, release) uses `.github/pull_request_template.md` v
 - **Zero verification artifacts in the body.** No diff stats, leak-check output ("`guard-main-docs` runs clean"),
   patch-id cherry-check counts, pre-push gate results, CI status, or prose-scrub findings. Anomalies get fixed before
   push, not audit-trailed.
-- **Changelog** subsections (`### Added` / `### Changed` / `### Fixed` / `### Removed` / `### Security`): 1-5 bullets
-  each, delete empty subsections, each bullet starts with a verb.
+- **Changelog** subsections (`### Breaking changes` / `### Added` / `### Changed` / `### Deprecated` / `### Removed` /
+  `### Fixed` / `### Documentation`): 1-5 bullets each, delete empty subsections, each bullet starts with a verb. A
+  `## Changelog` heading left standing with no bullets under it says the PR ships nothing user-facing, and
+  `generate-changelog.py` adds nothing for it, whatever the PR title says.
 - A PR with no user-facing impact (pure refactor, test-only, CI-only) leaves `## Changelog` empty or omits it.
 
 → Rationale: [`RELEASES-RATIONALE.md` § PR body conventions](./RELEASES-RATIONALE.md#pr-body-conventions).
