@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Canonical version: 2026.11.01 (generic)
+# Canonical version: 2026.11.03 (generic)
 #
 # Pre-commit hook: fast, staged-file-scoped checks that catch the cheap
 # mistakes before they reach a commit. The whole-repo CI mirror lives in the
@@ -52,18 +52,21 @@ set -uo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root" || exit 1
-# shellcheck source=scripts/hooks/_lib.sh
+# A CI action that checks one file at a time without -x reports SC1091 here.
+# shellcheck source=scripts/hooks/_lib.sh disable=SC1091
 . ./scripts/hooks/_lib.sh || exit 1
 
 fail=0
 
 # Git's repository variables stay set in this hook: during `commit -a` and
 # `commit <paths>`, GIT_INDEX_FILE names the temporary index the commit is built
-# from, and `staged` has to read it.
+# from, and `staged` has to read it. So does check_markdown, whose `git show
+# :<path>` and `git ls-files` read the staged blobs and the tracked lint
+# configs from that index; no other check below runs git.
 
-# Every check here is a file-scoped linter over a disjoint set of paths: none
-# writes, none takes a build lock, so they all run together and the slowest one
-# sets the wall-clock. step_wait replays them in the order queued below.
+# Every check here reads files and none writes, so they all run together and
+# the slowest one sets the wall-clock. step_wait replays them in the order
+# queued below.
 
 # Shell: correctness on the staged scripts, hooks included.
 mapfile -t sh < <(staged '*.sh' 'scripts/hooks/pre-commit' 'scripts/hooks/pre-push' 'scripts/hooks/_lib.sh')
@@ -74,17 +77,16 @@ mapfile -t wf < <(staged '.github/workflows/*.yml' '.github/workflows/*.yaml')
 step_bg "actionlint" "actionlint" check_actionlint "${wf[@]}"
 step_bg "concurrency namespacing" "scripts/check-workflow-concurrency.sh" check_workflow_concurrency "${wf[@]}"
 
-# Markdown: lint what is being committed. check_markdown_copy reads the staged
-# blobs, so `commit -a` and `commit <paths>` are linted from the temporary index
-# GIT_INDEX_FILE names, and the root config's `ignores` keeps the generated
-# CHANGELOG.md out as it does in CI.
+# Markdown: lint the staged docs. check_markdown lints their staged blobs in a
+# scratch tree, so a config's `fix: true` cannot rewrite the checkout, and the
+# root config's `ignores` keeps the generated CHANGELOG.md out as it does in CI.
 mapfile -t md < <(staged '*.md')
-step_bg "markdownlint" "markdownlint-cli2" check_markdown_copy : "${md[@]}"
+step_bg "markdownlint" "markdownlint-cli2" check_markdown "${md[@]}"
 
 step_wait || fail=1
 
 [ "$fail" -eq 0 ] || {
-  echo "pre-commit checks failed; each line marked ✗ names the command to rerun." >&2
+  echo "pre-commit checks failed: rerun the command each failing line names (checks: scripts/hooks/pre-commit)." >&2
   exit 1
 }
 

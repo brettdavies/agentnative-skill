@@ -1,4 +1,0 @@
-# CI's action-shellcheck and the pre-commit hook check one file at a time at
-# style severity, where the hooks' `source=scripts/hooks/_lib.sh` directive
-# reports SC1091 unless shellcheck may open a file it was not given.
-external-sources=true

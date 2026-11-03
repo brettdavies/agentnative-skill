@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Canonical version: 2026.11.01 (generic)
+# Canonical version: 2026.11.03 (generic)
 #
 # Shared helpers for the git hook pair. Sourced by scripts/hooks/pre-commit and
 # scripts/hooks/pre-push, never executed directly.
@@ -189,6 +189,33 @@ push_only_deletes() {
   [ "$rc" -le 128 ] && [ "$deletes" -gt 0 ] && [ "$others" -eq 0 ]
 }
 
+# push_only_known_commits REMOTE: true when every ref line push_only_deletes
+# kept in HOOK_PUSH_REFS deletes or names a commit a REMOTE remote-tracking
+# branch already reaches, as a tag or a new branch at a pushed commit does, and
+# at least one line names a commit. rev-list peels an annotated tag to its
+# commit. False, so the checks run, with no REMOTE (the hook run by hand) and
+# with no line that names a commit. A push to a URL instead of a remote name
+# matches no remote-tracking branch, so every commit it carries counts as new.
+push_only_known_commits() {
+  local remote="${1:-}" local_sha known=0
+  [ -n "$remote" ] || return 1
+  while read -r _ local_sha _; do
+    [ -n "${local_sha:-}" ] || continue
+    [[ "$local_sha" =~ ^0+$ ]] && continue
+    brings_new_commits "$remote" "$local_sha" && return 1
+    known=$((known + 1))
+  done <<<"${HOOK_PUSH_REFS:-}"
+  [ "$known" -gt 0 ]
+}
+
+# brings_new_commits REMOTE SHA: true when SHA reaches a commit no REMOTE
+# remote-tracking branch reaches, and when git cannot read SHA.
+brings_new_commits() {
+  local out
+  out=$(git rev-list -n 1 "$2" --not --remotes="$1" 2>/dev/null) || return 0
+  [ -n "$out" ]
+}
+
 # ---------------------------------------------------------------------------
 # File selection
 # ---------------------------------------------------------------------------
@@ -266,44 +293,32 @@ check_workflow_concurrency_all() {
   check_workflow_concurrency "${files[@]}"
 }
 
-# Markdown syntax, linted in a scratch tree. The canonical .markdownlint-cli2.yaml
-# sets `fix: true`, under which markdownlint-cli2 rewrites every file it reads,
-# with or without --fix, so linting in place mutates the checkout and passes a
-# file whose findings are all fixable. The scratch tree holds every tracked
-# markdownlint config at its own relative path with `fix` turned off, so the
-# root `ignores` list and the nested config under spec/ apply exactly as they do
-# in CI's markdownlint job, and nothing in the checkout is touched. Findings go
-# to stderr; stdout carries only the run banner, which is dropped so a pass
-# stays as quiet as every other check.
-#
-# check_markdown_copy <from> <file>...: `:` lints the staged blobs, `.` the
-# working-tree files.
-check_markdown_copy() {
-  local from="$1" tree f rc=0
-  shift
+# Markdown syntax, judged on the staged content in a scratch tree.
+# markdownlint-cli2 rewrites every file it reads when any config on the path
+# sets `fix: true` (the canonical config does), with or without --fix, and a
+# --config base cannot turn that off because a directory config overrides it.
+# So the tree holds each passed file's staged blob and every tracked
+# markdownlint config at its own relative path with `fix` flipped off: the
+# root ignores and any nested config apply exactly as they do in CI, and
+# nothing in the checkout is written. `git show :path` reads the index git
+# names in GIT_INDEX_FILE, which is the temporary one during `commit -a` and
+# `commit <paths>`.
+check_markdown() {
   [ "$#" -gt 0 ] || return "$HOOK_SKIPPED"
   have markdownlint-cli2 || skip "markdownlint" "install via \`brew install markdownlint-cli2\`" || return
+  local tree f rc=0
   tree="$(mktemp -d)" || return 1
   while IFS= read -r f; do
     mkdir -p "$tree/$(dirname "$f")"
-    _hook_read "$from" "$f" | sed -E 's/^([[:space:]]*"?fix"?[[:space:]]*:[[:space:]]*)true/\1false/' >"$tree/$f"
+    git show ":$f" | sed -E 's/^([[:space:]]*"?fix"?[[:space:]]*:[[:space:]]*)true/\1false/' >"$tree/$f"
   done < <(git ls-files -- ':(glob)**/.markdownlint*')
   for f in "$@"; do
     mkdir -p "$tree/$(dirname "$f")"
-    _hook_read "$from" "$f" >"$tree/$f" || rc=1
+    git show ":$f" >"$tree/$f" || rc=1
   done
   if [ "$rc" -eq 0 ]; then
-    (cd "$tree" && markdownlint-cli2 "$@" >/dev/null) || rc=$?
+    (cd "$tree" && markdownlint-cli2 "$@") || rc=$?
   fi
   rm -rf "$tree"
   return "$rc"
-}
-
-# _hook_read <from> <path>: the staged blob for `:`, the working-tree file for `.`.
-_hook_read() {
-  if [ "$1" = ":" ]; then
-    git show ":$2"
-  else
-    cat -- "$2"
-  fi
 }
