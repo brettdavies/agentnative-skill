@@ -1,4 +1,4 @@
-<!-- Canonical version: 2026.10.22 (generic) -->
+<!-- Canonical version: 2026.11.03 (generic) -->
 # Post-release verification: `agentnative-skill`
 
 Operational post-flight checklist. Runs **after** the `release/v<version> → main` PR merges and you push the tag
@@ -34,7 +34,7 @@ Sub-commands let you re-run one verification in isolation:
 | `make-latest`   | GitHub Release is non-draft, non-prerelease, and `releases/latest` resolves to it | the GitHub Release `gh release create` made |
 | `crates`        | `crates.io` shows the tag's crate at its version                                  | SKIPs: no `Cargo.toml`                      |
 | `tags`          | Every workspace member the release moved is tagged on the binary tag's commit     | SKIPs: no `Cargo.toml`                      |
-| `backport`      | A merged PR to `dev` with the version in its title                                | the `sync-dev-after-release.sh` PR          |
+| `backport`      | The backport's own subject (`chore(release): sync dev after <tag>`) on `dev`      | the `sync-dev-after-release.sh` PR          |
 | `surface-smoke` | Delegates to `scripts/release/surface-smoke.sh` against the env's deployed URL    | not vendored; the gate does not run         |
 | `all`           | every above                                                                       |                                             |
 
@@ -43,10 +43,6 @@ Flags:
 - `--repo OWNER/REPO`: override the auto-detected nameWithOwner
 - `--tag vX.Y.Z`: override auto-detection (default: `v` plus the contents of `VERSION`; falls back to the newest
   `v[0-9]*` tag)
-
-The `backport` gate passes on the newest merged PR to `dev` whose title carries the version, preferring a backport PR.
-Read the PR it names: a feature PR whose title happens to carry the same version string also satisfies it, so confirm
-the named PR is the `chore/sync-dev-after-v<version>` one.
 
 ## Checklist
 
@@ -73,9 +69,9 @@ Run immediately after `gh release create`.
 - [ ] **Rollback path confirmed.** If this release is bad, the fix is a forward patch release through the normal `dev`
   to `release/*` to `main` flow, never a deleted or moved tag. Confirm `protect-tags.json` still reports as installed
   (`gh api repos/brettdavies/agentnative-skill/rulesets --jq '.[] | select(.target == "tag") | .name'`).
-- [ ] **Backport `main` → `dev`** via a **merged PR to `dev` with the version in its title.** Bring the release-only
-  changes (`VERSION`, `CHANGELOG.md`, and anything the release branch edited on `main` that never round-tripped to
-  `dev`, such as a spec re-vendor) across with `scripts/sync-dev-after-release.sh`, which opens that PR
+- [ ] **Backport `main` → `dev`** via the PR `scripts/sync-dev-after-release.sh` opens, merged to `dev`. Bring the
+  release-only changes (`VERSION`, `CHANGELOG.md`, and anything the release branch edited on `main` that never
+  round-tripped to `dev`, such as a spec re-vendor) across with `scripts/sync-dev-after-release.sh`, which opens that PR
   ([`RELEASES.md` § After publish](./RELEASES.md#after-publish-sync-dev-with-the-release)). It keeps the next release's
   drift and `diff-B` checks quiet, so a real missed change stands out instead of hiding in expected divergence. Per the
   documented learning at
@@ -85,9 +81,11 @@ Run immediately after `gh release create`.
   scripts/sync-dev-after-release.sh v<X.Y.Z>
   ```
 
-  The gate (`scripts/release/postflight.sh backport`) is signal-agnostic about which files moved: it searches merged PRs
-  to `dev` by the tag (the search index tokenizes `v1.2.0` as one word, so a bare `1.2.0` misses it) and accepts either
-  spelling in the title. Its SKIP and FAIL name the sync command to run. Never merge `main` into `dev` or push to `dev`
+  The gate (`scripts/release/postflight.sh backport`) is signal-agnostic about which files moved: it looks for the
+  subject the script gives the backport, `chore(release): sync dev after <tag>` (its PR title and squash commit) or
+  `chore(release): backport <tag> artifacts to dev` (its commit), first on `dev`'s first-parent history, so a backport
+  committed without a PR counts, then among merged PRs to `dev`. A feature PR that only mentions the version does not
+  count. Its SKIP and FAIL name the sync command to run. Never merge `main` into `dev` or push to `dev`
   directly.
 
 - [ ] **Consumer submodule pins bumped.** `brettdavies/agent-skills` (and any other aggregator) has its `agentnative`

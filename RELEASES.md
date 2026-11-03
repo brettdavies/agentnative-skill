@@ -1,4 +1,5 @@
-<!-- Canonical version: 2026.10.22 (generic) -->
+<!-- Canonical version: 2026.11.03 (generic) -->
+<!-- canonical: version-scheme semver -->
 # Releasing `agentnative-skill`
 
 Operational runbook. Rationale lives in [`RELEASES-RATIONALE.md`](./RELEASES-RATIONALE.md). Pre-cut go/no-go checklist
@@ -72,10 +73,10 @@ optional: fill `## Breaking Changes` on a major, delete the rest when they do no
   intermediate state, or release-branch mechanics.
 - **Zero verification artifacts in the body.** No triple-diff stats, leak-check output, patch-id cherry-check counts,
   pre-push gate results, CI status, or prose-scrub findings. Anomalies get fixed before push, not audit-trailed.
-- **Changelog** subsections (`### Breaking changes` / `### Added` / `### Changed` / `### Deprecated` / `### Removed` /
-  `### Fixed` / `### Documentation`): 1-5 bullets each, delete empty subsections, each bullet starts with a verb. A
-  `## Changelog` heading left standing with no bullets under it says the PR ships nothing user-facing, and
-  `generate-changelog.py` adds nothing for it, whatever the PR title says.
+- **Changelog** subsections (`### Breaking changes` / `### Added` / `### Changed` / `### Deprecated` / `### Fixed` /
+  `### Documentation`, the six headings of [§ Versioning](#versioning)): 1-5 bullets each, delete empty subsections,
+  each bullet starts with a verb. A `## Changelog` heading left standing with no bullets under it says the PR ships
+  nothing user-facing, and `generate-changelog.py` adds nothing for it, whatever the PR title says.
 - **Type of Change**: one checkbox. Prefer `feat`/`fix` over `chore` for any user-observable change.
 - **Related Issues/Stories**: four labels (`Story:` / `Issue:` / `Architecture:` / `Related PRs:`). All four required
   even when empty (`- None.` / `n/a`).
@@ -85,6 +86,91 @@ optional: fill `## Breaking Changes` on a major, delete the rest when they do no
 - **No hard line wraps**: one logical line per paragraph or bullet.
 
 → Rationale: [`RELEASES-RATIONALE.md` § PR body conventions](./RELEASES-RATIONALE.md#pr-body-conventions).
+
+## Versioning
+
+The marked lines below are github-repo-setup's SemVer section of `references/versioning.md`, which the drift check
+compares, and line 2 declares the scheme.
+
+<!-- canonical:begin versioning-semver -->
+
+This repo follows [SemVer 2.0.0](https://semver.org/). Its version comes from its changelog: every PR files each
+user-facing change under one of the six headings below, and a release takes the highest bump any of its PRs calls for.
+The rules cover only the surfaces § What the contract is names.
+
+### What the contract is
+
+<!-- canonical:repo-begin contract -->
+
+The bundle's contract is what hosts, `anc skill install`, and agents running an installed copy rely on:
+
+- **Install layout:** `git clone --depth 1` of `main` puts `SKILL.md` at the clone root, with `getting-started.md`,
+  `references/`, `templates/`, `spec/`, `bin/check-update`, and `VERSION` beside it. `anc skill install <host>` clones
+  into the host's skills directory as `agent-native-cli` and reads a root `SKILL.md` as an install.
+- **Skill identity:** the `name: agent-native-cli` field of `SKILL.md`'s frontmatter, which hosts find the skill by and
+  which names the install directory.
+- **File paths:** `getting-started.md` and the file names in `references/` and `templates/`, which a project's own
+  instructions can point an agent at inside an installed copy.
+- **Update check:** `bin/check-update`'s path; its output, one `UPGRADE_AVAILABLE <old> <new>` line or nothing; its exit
+  code, 0 in every case; its `AGENTNATIVE_SKILL_DIR`, `AGENTNATIVE_SKILL_REMOTE_URL`, and `AGENTNATIVE_SKILL_STATE_DIR`
+  overrides; and the `update-snoozed` (`<version> <level> <epoch>`) and `disabled` files an agent writes under
+  `$HOME/.cache/agent-native-cli/`, as [`references/update-check.md`](./references/update-check.md) describes.
+- **Version file:** `VERSION`, one SemVer line at the root, which `bin/check-update` compares with `main`'s copy.
+- **Vendored spec:** `spec/`, holding the `agentnative-spec` release `spec/VERSION` names, and its principles and their
+  MUSTs. A re-vendor that renames or removes a principle, or tightens a MUST existing consumers meet, is a break; one
+  that adds requirements without tightening an existing tier is an addition; prose-only edits are neither, whatever
+  level the spec release itself took.
+
+The wording, order, and examples in `SKILL.md`'s body, `getting-started.md`, and `references/` are not contract. Neither
+are the `description` field's wording while it keeps the skill findable for the tasks it covers, the code inside
+`templates/`, which a project copies once and then owns, `bin/check-update`'s cache file and its TTLs, or any
+producer-side file (`scripts/`, `docs/`, `.github/`, the `RELEASES*.md` runbooks, `cliff.toml`).
+
+<!-- canonical:repo-end -->
+
+### The six headings
+
+| Heading            | Holds                                                                   | Bump  |
+| ------------------ | ----------------------------------------------------------------------- | ----- |
+| `Breaking changes` | a contract surface removed, renamed, or retyped, or its meaning changed | major |
+| `Added`            | a new contract surface                                                  | minor |
+| `Changed`          | a visible change outside the contract                                   | patch |
+| `Deprecated`       | a contract surface marked for removal                                   | minor |
+| `Fixed`            | behavior brought back to the documented contract                        | patch |
+| `Documentation`    | documentation only                                                      | patch |
+
+`generate-changelog.py` writes them in this order and any other heading after them. A contract removal is a
+`Breaking changes` bullet that starts with "Remove"; a removal outside the contract goes under `Changed`, or is left
+out. Removals ship when they are ready, with no deprecation schedule. A `type!:` commit is a prompt to check the PR's
+sections, never the bump itself.
+
+### The bump
+
+`scripts/generate-changelog.py --bump` prints the next version from the PRs merged since the last release, and
+`cut-release-branch.sh` prints it beside the version the cut is given:
+
+- The highest heading among their sections sets the bump.
+- A `rust-version` raised since the last tag is a minor-level change, so it lifts a patch to a minor. A Rust repo's
+  `rust-version` equals the toolchain `rust-toolchain.toml` pins, and CI's MSRV job builds on exactly that version.
+- Before 1.0, a major or a minor moves the middle number and a patch moves the last: `0.4.2` becomes `0.5.0` or `0.4.3`.
+  This is stricter than Cargo's convention on purpose: an addition never ships as a last-number bump, so a `^0.y`
+  dependent receives only fixes until it opts in.
+- From 1.0, when the sections call for a major, the release agent asks the maintainer: a major, or a minor under the
+  small-break exception. A minor ships `docs/migrating/v<version>.md`, whose first line names the exception, and
+  preflight fails a 1.0+ release that keeps its major and carries `### Breaking changes` without that guide.
+
+### Overrides
+
+<!-- canonical:repo-begin overrides -->
+
+One addition to the bump: a spec re-vendor made on the release branch in step 2 of
+[§ Releasing dev to main](#releasing-dev-to-main) comes after `--bump` has read the PRs, so the maintainer weighs it by
+the vendored-spec rule of [§ What the contract is](#what-the-contract-is) and the release takes the higher of the two
+bumps.
+
+<!-- canonical:repo-end -->
+
+<!-- canonical:end versioning-semver -->
 
 ## Releasing dev to main
 
@@ -316,9 +402,10 @@ After the commit, when the sync carried the release changelog and `git-cliff` is
 generator's own reason line (a PR body edited after the release, or a difference in line wrapping only). The warning
 does not block the backport.
 
-The script opens a PR against `dev`; merge it once CI is green. The postflight backport gate looks for that merged PR.
-Never merge `main` into `dev` or push to `dev` directly: the squash-merged histories share no recent ancestry, so the
-merge conflicts on every file both sides touched, and a direct push bypasses `dev`'s required checks.
+The script opens a PR against `dev`; merge it once CI is green. The postflight backport gate looks for its
+`chore(release): sync dev after <tag>` subject on `dev`. Never merge `main` into `dev` or push to `dev` directly: the
+squash-merged histories share no recent ancestry, so the merge conflicts on every file both sides touched, and a direct
+push bypasses `dev`'s required checks.
 
 After it merges, confirm the branches actually converged. This is what catches a contested path nobody resolved:
 
@@ -375,14 +462,10 @@ checkout to the previous tag; knowing that identifier before the release goes ou
 ## Version bump procedure
 
 The version bump and CHANGELOG generation both happen on the `release/v<version>` branch (steps 1 and 2 of the overlay
-recipe above). There is no separate version-bump PR to `dev`. Picking the version is the only manual decision:
-
-- **Patch**: doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump.
-- **Minor**: new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
-  minor-level spec bump that adds requirements without tightening existing tiers.
-- **Major**: breaking changes to the bundle's contract (renaming `SKILL.md` frontmatter fields, restructuring directory
-  layout in ways that break existing skill installations, moving content between subdirectories and the producer-ops
-  root, or vendoring a major-level spec bump).
+recipe above). There is no separate version-bump PR to `dev`. The changelog sections of the PRs merged since the last
+release pick the version, by the rules in [§ Versioning](#versioning): `scripts/generate-changelog.py --bump` prints it,
+and step 1's `cut-release-branch.sh` passes when the version it was given matches. When they differ, the cut reports a
+skip naming the computed version; settle which one ships before the commit in step 3.
 
 → Rationale: [`RELEASES-RATIONALE.md` § Spec-vendor pipeline](./RELEASES-RATIONALE.md#spec-vendor-pipeline) (skill
 version is independent of spec version).

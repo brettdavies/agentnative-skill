@@ -1,4 +1,4 @@
-<!-- Canonical version: 2026.11.02 (generic) -->
+<!-- Canonical version: 2026.11.03 (generic) -->
 # Releases rationale
 
 Companion to [`RELEASES.md`](./RELEASES.md). RELEASES.md is the runbook (commands, paths, decision tables). This file
@@ -184,10 +184,11 @@ action). Otherwise cherry-pick the commit and re-run the triple-diff.
 
 `scripts/generate-changelog.py` (vendored from the `github-repo-setup` skill, with the repo-local `cliff.toml`) is the
 only sanctioned way to update `CHANGELOG.md`. On an overlay-built release branch it runs as `--from-dev-prs`: the PRs
-merged into `dev` since the previous release are the entries, and each PR's body supplies its
-`## Changelog → ### Breaking changes / Added / Changed / Deprecated / Removed / Fixed / Documentation` subsections (with
-author and PR-link attribution). On a cherry-picked branch it runs `git-cliff` first to prepend a versioned entry from
-the branch's commits, then expands the same way.
+merged into `dev` since the previous release are the entries, and each PR's body supplies its `## Changelog` subsections
+under the six headings of [`RELEASES.md` § Versioning](./RELEASES.md#versioning) (`Breaking changes`, `Added`,
+`Changed`, `Deprecated`, `Fixed`, `Documentation`), with author and PR-link attribution. A heading outside the six still
+renders, after them. On a cherry-picked branch it runs `git-cliff` first to prepend a versioned entry from the branch's
+commits, then expands the same way.
 
 If a PR's body offers no changelog section at all, its title becomes a bullet under the group `cliff.toml` gives the
 same commit (`type!:` under Breaking changes, `feat` under Added, `fix` under Fixed, `docs` under Documentation,
@@ -202,6 +203,15 @@ wrong CHANGELOG entry, fix the input: edit the squash-merged PR body, then re-ru
 `preflight.sh mechanics` checks that `CHANGELOG.md` opens on the version `VERSION` names, with no `[Unreleased]`
 placeholder. The GitHub Release body is cut by hand from the section whose heading names the tag's version
 ([`RELEASES.md` § Tagging and publishing](./RELEASES.md#tagging-and-publishing)).
+
+### Why the changelog sections set the version
+
+A SemVer release's bump comes from the headings its PRs filed, not from commit markers or a judgment made at the cut:
+the author of a change knows best whether it adds, fixes, or breaks a contract surface, and the heading records that
+answer where review sees it. `generate-changelog.py --bump` reads the same sections the release notes are built from, so
+the version and the notes cannot disagree. A `!:` commit stays a cross-check: a PR can break the contract with no
+marker, and a marker can sit on a change outside the contract. The rules, the pre-1.0 shift, the MSRV rule, and the
+small-break exception are in [`RELEASES.md` § Versioning](./RELEASES.md#versioning).
 
 ### Why `cliff.toml` skips chore/style/test/ci/build
 
@@ -237,16 +247,11 @@ on the release branch keeps the on-disk snapshot in lockstep with the published 
 ### Skill version is independent of spec version
 
 The skill's version is independent of the spec it vendors. A spec bump that doesn't affect the skill's surface (e.g.,
-prose-only edits) can ship as a patch even when the spec went minor. SemVer guidance applies to the *skill's* observable
-behaviour, not the spec's:
-
-- **Patch** (doc updates, internal cleanups, non-substantive template edits, vendoring a patch-level spec bump).
-- **Minor** (new templates, new reference docs, new bundle files (backward-compatible additions), vendoring a
-  minor-level spec bump that adds requirements without tightening existing tiers).
-- **Major** (breaking changes to the bundle's contract: renaming `SKILL.md` frontmatter fields, restructuring directory
-  layout in ways that break existing skill installations, moving content between subdirectories and the producer-ops
-  root, or vendoring a major-level spec bump (renamed/removed principles or tightened MUSTs that would regress existing
-  consumers)).
+prose-only edits) can ship as a patch even when the spec went minor. SemVer applies to the *skill's* observable
+behaviour, not the spec's: [`RELEASES.md` § What the contract is](./RELEASES.md#what-the-contract-is) names the surfaces
+and weighs a re-vendor by what it does to them, so renamed or removed principles and tightened MUSTs that would regress
+existing consumers are a break, added requirements that tighten no existing tier are an addition, and prose-only edits
+are neither.
 
 ## `bin/check-update` semantics
 
@@ -292,8 +297,10 @@ The backport is a PR opened by `scripts/sync-dev-after-release.sh` (`chore/sync-
 `main` into `dev` and never a direct push. The squash-merged branches share no recent history, so a merge conflicts on
 every file both sides touched, and a direct push to `dev` bypasses its required status checks. The script writes the
 released version into every version carrier it finds (`VERSION` here), copies `CHANGELOG.md` from `main`, and opens the
-PR; the postflight backport gate treats that merged PR as the durable signal that the backport ran. Guarded paths never
-enter the copy, so the backport cannot remove `dev`-only content.
+PR; the postflight backport gate treats the backport's own subject on `dev` (`chore(release): sync dev after <tag>`, or
+`chore(release): backport <tag> artifacts to dev` on a commit made without a PR) as the durable signal that the backport
+ran, so a feature PR that only mentions the version does not satisfy it. Guarded paths never enter the copy, so the
+backport cannot remove `dev`-only content.
 
 The other paths are discovered rather than listed. A release branch is edited for reasons nobody predicts (a spec
 re-vendor, a doc fix, a reverted payload), each such edit is made against `main`'s base, and a fixed list misses it
