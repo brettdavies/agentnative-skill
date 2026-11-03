@@ -239,7 +239,9 @@ smoke_install_path() {
     gate_fail "default branch" "$SKILL_REPO reports '${default:-unreachable}'; bin/check-update reads main"
   fi
 
-  clone="$SMOKE_HOME/bundle"
+  # A fresh directory per run: a --smoke-home reuse keeps the last run's clone,
+  # and git clone refuses a destination that is not empty.
+  clone=$(mktemp -d "$SMOKE_HOME/bundle.XXXXXX")
   if ! git clone --quiet --depth 1 "https://github.com/$SKILL_REPO" "$clone" >/dev/null 2>&1; then
     gate_fail "bundle clone" "git clone --depth 1 https://github.com/$SKILL_REPO failed"
     return
