@@ -90,7 +90,7 @@ table.
 
 ## What an agent should NEVER do
 
-- Edit `scripts/release/*.sh` other than `preflight.sh`, `scripts/sync-dev-after-release.sh`,
+- Edit `scripts/release/*.sh` (except `preflight.sh`), `scripts/sync-dev-after-release.sh`,
   `scripts/check-workflow-concurrency.sh`, `scripts/generate-changelog.py`, or `cliff.toml` in place. They are verbatim
   copies from the `github-repo-setup` skill; fix upstream and refresh by copy. `preflight.sh` is the skill's skeleton:
   its shared scaffolding follows the template, and its `gate_smoke` body is this repo's own.
