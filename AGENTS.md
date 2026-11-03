@@ -48,12 +48,13 @@ symlink is missing, recreate it: `ln -s ~/dev/solutions-docs docs/solutions`.
 ## Lint & Format
 
 ```bash
-markdownlint-cli2 '**/*.md' '!node_modules/**'
-shellcheck --severity=style scripts/*.sh scripts/release/*.sh bin/*
-actionlint .github/workflows/*.yml
+git add <changed paths>     # the hooks lint the index, so unstaged edits are not checked
+scripts/hooks/pre-push      # markdownlint, shellcheck, actionlint, workflow concurrency: what CI runs
 ```
 
-The repo ships a local `.markdownlint-cli2.yaml` (canonical 120-char line length) so CI and local tooling agree.
+The repo ships a local `.markdownlint-cli2.yaml` (canonical 120-char line length) so CI and local tooling agree. It sets
+`fix: true`, so never run `markdownlint-cli2` in the checkout: it rewrites files and passes any violation it can fix.
+The hooks lint Markdown in a scratch copy with `fix` turned off.
 
 ## Voice and prose rules
 
