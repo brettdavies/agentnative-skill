@@ -104,26 +104,25 @@ The rules cover only the surfaces § What the contract is names.
 
 The bundle's contract is what hosts, `anc skill install`, and agents running an installed copy rely on:
 
-- **Install layout:** `git clone --depth 1` of `main` puts `SKILL.md` at the clone root, with `getting-started.md`,
-  `references/`, `templates/`, `spec/`, `bin/check-update`, and `VERSION` beside it. `anc skill install <host>` clones
+- **Install root:** `git clone --depth 1` of `main` puts `SKILL.md` at the clone root. `anc skill install <host>` clones
   into the host's skills directory as `agent-native-cli` and reads a root `SKILL.md` as an install.
 - **Skill identity:** the `name: agent-native-cli` field of `SKILL.md`'s frontmatter, which hosts find the skill by and
   which names the install directory.
-- **File paths:** `getting-started.md` and the file names in `references/` and `templates/`, which a project's own
-  instructions can point an agent at inside an installed copy.
 - **Update check:** `bin/check-update`'s path; its output, one `UPGRADE_AVAILABLE <old> <new>` line or nothing; its exit
   code, 0 in every case; its `AGENTNATIVE_SKILL_DIR`, `AGENTNATIVE_SKILL_REMOTE_URL`, and `AGENTNATIVE_SKILL_STATE_DIR`
   overrides; and the `update-snoozed` (`<version> <level> <epoch>`) and `disabled` files an agent writes under
   `$HOME/.cache/agent-native-cli/`, as [`references/update-check.md`](./references/update-check.md) describes.
-- **Version file:** `VERSION`, one SemVer line at the root, which `bin/check-update` compares with `main`'s copy.
+- **Version file:** `VERSION`, one SemVer line at the root. Every installed copy's `bin/check-update` fetches `main`'s
+  copy by that path and compares it with its own.
 - **Vendored spec:** `spec/`, holding the `agentnative-spec` release `spec/VERSION` names, and its principles and their
   MUSTs. A re-vendor that renames or removes a principle, or tightens a MUST existing consumers meet, is a break; one
   that adds requirements without tightening an existing tier is an addition; prose-only edits are neither, whatever
   level the spec release itself took.
 
-The wording, order, and examples in `SKILL.md`'s body, `getting-started.md`, and `references/` are not contract. Neither
-are the `description` field's wording while it keeps the skill findable for the tasks it covers, the code inside
-`templates/`, which a project copies once and then owns, `bin/check-update`'s cache file and its TTLs, or any
+The names, layout, wording, and examples of `getting-started.md`, `references/`, and `templates/` are not contract: only
+the bundle's own files link to them, and nothing outside the bundle reads one by path. Neither are the wording of
+`SKILL.md`'s body, the `description` field's wording while it keeps the skill findable for the tasks it covers, the code
+inside `templates/`, which a project copies once and then owns, `bin/check-update`'s cache file and its TTLs, or any
 producer-side file (`scripts/`, `docs/`, `.github/`, the `RELEASES*.md` runbooks, `cliff.toml`).
 
 <!-- canonical:repo-end -->

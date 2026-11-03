@@ -12,7 +12,7 @@ CI (markdownlint, shellcheck, `guard-docs / check-forbidden-docs`) catches mecha
 checklist covers what CI structurally can't:
 
 - Changes on `main` that `dev` never received, which the release would silently revert.
-- Breaking changes to the bundle's contract (`SKILL.md` frontmatter fields, directory layout, vendored `spec/` shape)
+- Breaking changes to the bundle's contract ([`RELEASES.md` § What the contract is](./RELEASES.md#what-the-contract-is))
   that downstream consumers must adapt to.
 - Behavior against live external systems: the `git clone --depth 1` install path, `bin/check-update` against `main`'s
   `VERSION`, and the spec repository `spec/` is vendored from.
