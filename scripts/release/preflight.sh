@@ -294,7 +294,7 @@ smoke_check_update() {
 
 # spec/VERSION against the newest v* tag of the spec repo, resolved the way
 # scripts/sync-spec.sh resolves it. A mismatch before the cut is the re-vendor
-# RELEASES.md step 4 makes on the release branch; on a release branch it means
+# RELEASES.md step 2 makes on the release branch; on a release branch it means
 # that step was skipped.
 smoke_spec_lockstep() {
   local latest vendored branch
@@ -311,9 +311,9 @@ smoke_spec_lockstep() {
   fi
   branch=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
   if [[ "$branch" == release/* ]]; then
-    gate_fail "spec vendor" "spec/VERSION=$vendored, newest tag $latest; run scripts/sync-spec.sh (RELEASES.md step 4)"
+    gate_fail "spec vendor" "spec/VERSION=$vendored, newest tag $latest; run scripts/sync-spec.sh (RELEASES.md step 2)"
   else
-    gate_skip "spec vendor" "spec/VERSION=$vendored, newest tag $latest; the release branch re-vendors it (RELEASES.md step 4)"
+    gate_skip "spec vendor" "spec/VERSION=$vendored, newest tag $latest; the release branch re-vendors it (RELEASES.md step 2)"
   fi
 }
 
