@@ -228,16 +228,32 @@ gate_smoke() {
 
 # The install path: `git clone --depth 1` of the bundle repo lands every file a
 # host loads, and main is the default branch, the one bin/check-update reads.
-# The clone is main as published, so the engineering docs guard-main-docs keeps
-# off main must be absent from it.
+# The committed HEAD is the tree the release merges into main, so it is held to
+# the same layout. The clone is main as published, so the engineering docs
+# guard-main-docs keeps off main must be absent from it.
+readonly INSTALL_PATHS=(SKILL.md getting-started.md VERSION spec/VERSION references templates)
+
 smoke_install_path() {
-  local default clone path missing=()
+  local default clone path ref missing=()
   default=$(gh repo view "$SKILL_REPO" --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null || true)
   if [[ "$default" == "main" ]]; then
     gate_pass "$SKILL_REPO default branch = main (the branch bin/check-update reads)"
   else
     gate_fail "default branch" "$SKILL_REPO reports '${default:-unreachable}'; bin/check-update reads main"
   fi
+
+  ref=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
+  for path in "${INSTALL_PATHS[@]}"; do
+    git -C "$REPO_ROOT" cat-file -e "HEAD:$path" 2>/dev/null || missing+=("$path")
+  done
+  [[ "$(git -C "$REPO_ROOT" ls-tree HEAD -- bin/check-update | cut -d' ' -f1)" == "100755" ]] \
+    || missing+=("bin/check-update (mode 100755)")
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    gate_pass "$ref carries the install layout a clone of main will land"
+  else
+    gate_fail "install layout" "missing from $ref's HEAD: ${missing[*]}; the release would ship without them"
+  fi
+  missing=()
 
   # A fresh directory per run: a --smoke-home reuse keeps the last run's clone,
   # and git clone refuses a destination that is not empty.
@@ -246,7 +262,7 @@ smoke_install_path() {
     gate_fail "bundle clone" "git clone --depth 1 https://github.com/$SKILL_REPO failed"
     return
   fi
-  for path in SKILL.md getting-started.md VERSION spec/VERSION references templates; do
+  for path in "${INSTALL_PATHS[@]}"; do
     [[ -e "$clone/$path" ]] || missing+=("$path")
   done
   [[ -x "$clone/bin/check-update" ]] || missing+=("bin/check-update (executable)")

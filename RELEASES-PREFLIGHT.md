@@ -41,15 +41,15 @@ fallback when running by hand.
 
 Sub-commands let you re-run one section in isolation:
 
-| Sub-command          | What it checks                                                                                                                                     | Source of truth                                           |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `drift`              | Commits on `main` since the last release whose changes `dev` lacks, `.github/` parity, lockfile packages `main` resolves newer                     | `scripts/release/drift.sh`                                |
-| `surface`            | Commits since the last release reached `dev`, files changed since the last tag, breaking markers                                                   | `git log`, `git diff`                                     |
-| `smoke`              | `main` is the default branch, a `git clone --depth 1` lands the bundle, `bin/check-update` flags a stale install, `spec/VERSION` is the newest tag | `gh`, `git clone`, `bin/check-update`, the spec repo tags |
-| `mechanics`          | `VERSION` and `CHANGELOG.md` agree, no `[Unreleased]`, leak check, unguarded docs added to `main`, diff-B vs `origin/dev`                          | `VERSION`, `CHANGELOG.md`, `guarded-paths.sh`             |
-| `changelog-sections` | No PR this release carries leaves its changelog entry to its title for want of a section                                                           | `generate-changelog.py`, `gh`                             |
-| `semver`             | Skips: the bundle has no `Cargo.toml`                                                                                                              | `cargo semver-checks`                                     |
-| `all`                | Every above sequentially, drift first                                                                                                              |                                                           |
+| Sub-command          | What it checks                                                                                                                                                          | Source of truth                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `drift`              | Commits on `main` since the last release whose changes `dev` lacks, `.github/` parity, lockfile packages `main` resolves newer                                          | `scripts/release/drift.sh`                                |
+| `surface`            | Commits since the last release reached `dev`, files changed since the last tag, breaking markers                                                                        | `git log`, `git diff`                                     |
+| `smoke`              | `main` is the default branch, `HEAD` and a `git clone --depth 1` of `main` carry the bundle, `bin/check-update` flags a stale install, `spec/VERSION` is the newest tag | `gh`, `git clone`, `bin/check-update`, the spec repo tags |
+| `mechanics`          | `VERSION` and `CHANGELOG.md` agree, no `[Unreleased]`, leak check, unguarded docs added to `main`, diff-B vs `origin/dev`                                               | `VERSION`, `CHANGELOG.md`, `guarded-paths.sh`             |
+| `changelog-sections` | No PR this release carries leaves its changelog entry to its title for want of a section                                                                                | `generate-changelog.py`, `gh`                             |
+| `semver`             | Skips: the bundle has no `Cargo.toml`                                                                                                                                   | `cargo semver-checks`                                     |
+| `all`                | Every above sequentially, drift first                                                                                                                                   |                                                           |
 
 Flags:
 
@@ -159,9 +159,10 @@ The bundle has no test suite, and CI lints only. Exercises that only fire end-to
 - [ ] **Install-path destination exists.** `main` is the default branch of `brettdavies/agentnative-skill`, the branch
   `bin/check-update` reads (see
   [`RELEASES-RATIONALE.md` § `bin/check-update` semantics](./RELEASES-RATIONALE.md#bincheck-update-semantics)).
-- [ ] **Bundle install probe.** `git clone --depth 1 https://github.com/brettdavies/agentnative-skill` lands `SKILL.md`,
-  `getting-started.md`, `VERSION`, `spec/`, `references/`, `templates/`, and an executable `bin/check-update`, and no
-  `docs/plans/` (guarded off `main`).
+- [ ] **Bundle install probe.** The release branch's committed `HEAD`, the tree the release merges into `main`, carries
+  `SKILL.md`, `getting-started.md`, `VERSION`, `spec/VERSION`, `references/`, `templates/`, and `bin/check-update` at
+  mode 100755. `git clone --depth 1 https://github.com/brettdavies/agentnative-skill` of `main` as published lands the
+  same files and no `docs/plans/` (guarded off `main`).
 - [ ] **Negative control: `bin/check-update` flags a stale install.** With a local `VERSION` of `0.0.0` it prints
   `UPGRADE_AVAILABLE 0.0.0 <main's VERSION>`, and with `main`'s own `VERSION` it prints nothing. A check that only ever
   ran on an up-to-date install would pass identically if the comparison had stopped working.
