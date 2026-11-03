@@ -25,13 +25,14 @@ with `SPEC_ROOT`) and reads files with `git show`, so the checkout's working tre
 
 ## Layout
 
-| Path                    | Source in `agentnative-spec`     | Purpose                                                                                       |
-| ----------------------- | -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `VERSION`               | `VERSION`                        | Spec version string; the skill's vendored `SPEC_VERSION`                                      |
-| `CHANGELOG.md`          | `CHANGELOG.md`                   | Spec change history; informational                                                            |
-| `principles/p*.md`      | `principles/p*.md`               | Frontmatter `requirements[]` is the machine-readable contract                                 |
-| `principles/scoring.md` | `principles/scoring.md`          | Leaderboard formula, badge eligibility floor, and color bands                                 |
-| `reading-the-spec.md`   | `README.md` § "Reading the spec" | `requirements[]` fields and the flag-name reading rule; relative links point at the spec repo |
+| Path                      | Source in `agentnative-spec`     | Purpose                                                                                            |
+| ------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `VERSION`                 | `VERSION`                        | Spec version string; the skill's vendored `SPEC_VERSION`                                           |
+| `CHANGELOG.md`            | `CHANGELOG.md`                   | Spec change history; informational                                                                 |
+| `principles/p*.md`        | `principles/p*.md`               | Frontmatter `requirements[]` is the machine-readable contract                                      |
+| `principles/scoring.md`   | `principles/scoring.md`          | Leaderboard formula, badge eligibility floor, and color bands                                      |
+| `reading-the-spec.md`     | `README.md` § "Reading the spec" | `requirements[]` fields and the flag-name reading rule; relative links point at the spec repo      |
+| `.markdownlint-cli2.yaml` | none; this repo's own            | Turns MD013 off for the vendored files, which keep upstream's line shapes; other rules still apply |
 
 Each principle file has a YAML frontmatter block with `id`, `title`, `last-revised`, `status`, and `requirements[]`.
 Each `requirements[]` entry carries a stable `id` (e.g. `p1-must-no-interactive`), a `level` (`must`/`should`/`may`), an

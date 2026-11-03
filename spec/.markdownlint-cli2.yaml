@@ -1,0 +1,8 @@
+# scripts/sync-spec.sh vendors this directory from agentnative-spec, which lints
+# its own files. Its CHANGELOG.md keeps one logical line per bullet and
+# reading-the-spec.md keeps upstream's line shapes, so wrapping anything here to
+# MD013 would make the vendored copy differ from upstream. Every other rule
+# still applies from the root .markdownlint-cli2.yaml, which stays a
+# byte-for-byte copy of the canonical config.
+config:
+  MD013: false

@@ -14,33 +14,33 @@ The repo ships to consumers via plain `git clone`. After install, the host (Clau
 auto-discovers `SKILL.md` at the install root and ignores everything else. Producer-side files (`scripts/`, `docs/`,
 `.github/`, `cliff.toml`, etc.) clone alongside the skill content but are inert at runtime.
 
-| Path                                                                                     | Read at runtime by host? | Purpose                                                                                                                              |
-| ---------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `SKILL.md`                                                                               | ✓                        | Skill metadata + entry-point pointer to `getting-started.md`. The host's first read.                                                 |
-| `getting-started.md`                                                                     | ✓                        | Three working loops (existing CLI / new Rust / other language); canonical `anc audit` invocations.                                   |
-| `bin/check-update`                                                                       | ✓                        | Consumer-side update-check script. Compares local `VERSION` to GitHub `main`; emits `UPGRADE_AVAILABLE` for the SKILL.md preamble.   |
-| `spec/`                                                                                  | ✓                        | Vendored copy of `agentnative-spec`. Canonical principle text + machine-readable `requirements[]`.                                   |
-| `references/`                                                                            | ✓                        | Implementation guidance: framework idioms (Rust + others), project structure, Rust/clap patterns.                                    |
-| `templates/`                                                                             | ✓                        | Drop-in starter files for greenfield Rust CLIs (`clap-main.rs`, `error-types.rs`, `output-format.rs`, `agents-md-template.md`).      |
-| `VERSION`                                                                                | ✓                        | Single-line current version. `bin/check-update` reads this for the upgrade comparison.                                               |
-| `scripts/sync-spec.sh`                                                                   | ✗                        | Vendor the latest `agentnative-spec` v\* tag into `spec/`. Mirror of the agentnative-cli script.                                     |
-| `scripts/generate-changelog.py`                                                          | ✗                        | Release-time CHANGELOG generator (git-cliff + PR-body extraction). Vendored from `github-repo-setup`.                                |
-| `scripts/sync-dev-after-release.sh`                                                      | ✗                        | Post-release backport PR (`chore/sync-dev-after-v*`): lands `VERSION`, `CHANGELOG.md`, and release-branch edits on `dev`. Vendored.  |
-| `scripts/release/`                                                                       | ✗                        | Release gates, vendored: `drift.sh` (main ahead of dev), `guarded-paths.sh` (the set `guard-main-docs` rejects), `_lib.sh`.          |
-| `AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `README.md`, `SECURITY.md`                | ✗                        | Producer-repo docs.                                                                                                                  |
-| `.github/rulesets/`                                                                      | ✗                        | Version-controlled GitHub repository rulesets.                                                                                       |
-| `.github/workflows/`                                                                     | ✗                        | CI: markdownlint, shellcheck. Plus the `guard-main-docs`, `guard-release-branch`, and `guard-main-provenance` callers on `main` PRs. |
-| `.github/dependabot.yml`                                                                 | ✗                        | Weekly github-actions updates against `dev`; security updates grouped on `main`.                                                     |
-| `.github/ISSUE_TEMPLATE/`                                                                | ✗                        | Bug report + bundle-proposal templates.                                                                                              |
-| `docs/plans/`                                                                            | ✗                        | Engineering plans (`dev`-only — guarded out of `main`).                                                                              |
-| `.markdownlint-cli2.yaml`, `.gitattributes`, `.gitignore`, `cliff.toml`                  | ✗                        | Local lint configs, git-cliff config, and repo metadata.                                                                             |
+| Path                                                                      | Read at runtime by host? | Purpose                                                                                                                                 |
+| ------------------------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `SKILL.md`                                                                | ✓                        | Skill metadata + entry-point pointer to `getting-started.md`. The host's first read.                                                    |
+| `getting-started.md`                                                      | ✓                        | Three working loops (existing CLI / new Rust / other language); canonical `anc audit` invocations.                                      |
+| `bin/check-update`                                                        | ✓                        | Consumer-side update-check script. Compares local `VERSION` to GitHub `main`; emits `UPGRADE_AVAILABLE` for the SKILL.md preamble.      |
+| `spec/`                                                                   | ✓                        | Vendored copy of `agentnative-spec`. Canonical principle text + machine-readable `requirements[]`.                                      |
+| `references/`                                                             | ✓                        | Implementation guidance: framework idioms (Rust + others), project structure, Rust/clap patterns.                                       |
+| `templates/`                                                              | ✓                        | Drop-in starter files for greenfield Rust CLIs (`clap-main.rs`, `error-types.rs`, `output-format.rs`, `agents-md-template.md`).         |
+| `VERSION`                                                                 | ✓                        | Single-line current version. `bin/check-update` reads this for the upgrade comparison.                                                  |
+| `scripts/sync-spec.sh`                                                    | ✗                        | Vendor the latest `agentnative-spec` v\* tag into `spec/`. Mirror of the agentnative-cli script.                                        |
+| `scripts/generate-changelog.py`                                           | ✗                        | Release-time CHANGELOG generator (git-cliff + PR-body extraction). Vendored from `github-repo-setup`.                                   |
+| `scripts/sync-dev-after-release.sh`                                       | ✗                        | Post-release backport PR (`chore/sync-dev-after-v*`): lands `VERSION`, `CHANGELOG.md`, and release-branch edits on `dev`. Vendored.     |
+| `scripts/release/`                                                        | ✗                        | Release orchestrators (`cut-release-branch.sh`, `preflight.sh`, `postflight.sh`) and gates (`drift.sh`, `guarded-paths.sh`, `_lib.sh`). |
+| `AGENTS.md`, `RELEASES.md`, `CONTRIBUTING.md`, `README.md`, `SECURITY.md` | ✗                        | Producer-repo docs.                                                                                                                     |
+| `.github/rulesets/`                                                       | ✗                        | Version-controlled GitHub repository rulesets.                                                                                          |
+| `.github/workflows/`                                                      | ✗                        | CI: markdownlint, shellcheck. Plus the `guard-main-docs`, `guard-release-branch`, and `guard-main-provenance` callers on `main` PRs.    |
+| `.github/dependabot.yml`                                                  | ✗                        | Weekly github-actions updates against `dev`; security updates grouped on `main`.                                                        |
+| `.github/ISSUE_TEMPLATE/`                                                 | ✗                        | Bug report + bundle-proposal templates.                                                                                                 |
+| `docs/plans/`                                                             | ✗                        | Engineering plans (`dev`-only — guarded out of `main`).                                                                                 |
+| `.markdownlint-cli2.yaml`, `.gitattributes`, `.gitignore`, `cliff.toml`   | ✗                        | Local lint configs, git-cliff config, and repo metadata.                                                                                |
 
 ## Documented Solutions
 
 `docs/solutions/` is a symlink to `~/dev/solutions-docs/`, a shared private repo of cross-repo solutions and best
-practices, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Search with `qmd query
-"<topic>" --collection solutions`. Relevant when researching artifact-sync, calver, frontmatter, or skill-bundle
-patterns before building from scratch.
+practices, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Search with
+`qmd query "<topic>" --collection solutions`. Relevant when researching artifact-sync, calver, frontmatter, or
+skill-bundle patterns before building from scratch.
 
 The consuming repo's `git status` shows nothing for `docs/solutions/` because the symlink target is gitignored. If the
 symlink is missing, recreate it: `ln -s ~/dev/solutions-docs docs/solutions`.
@@ -48,12 +48,13 @@ symlink is missing, recreate it: `ln -s ~/dev/solutions-docs docs/solutions`.
 ## Lint & Format
 
 ```bash
-markdownlint-cli2 '**/*.md' '!node_modules/**'
-shellcheck --severity=style scripts/*.sh scripts/release/*.sh bin/*
-actionlint .github/workflows/*.yml
+git add <changed paths>     # the hooks lint the index, so unstaged edits are not checked
+scripts/hooks/pre-push      # markdownlint, shellcheck, actionlint, workflow concurrency: what CI runs
 ```
 
-The repo ships a local `.markdownlint-cli2.yaml` (canonical 120-char line length) so CI and local tooling agree.
+The repo ships a local `.markdownlint-cli2.yaml` (canonical 120-char line length) so CI and local tooling agree. It sets
+`fix: true`, so never run `markdownlint-cli2` in the checkout: it rewrites files and passes any violation it can fix.
+The hooks lint Markdown in a scratch copy with `fix` turned off.
 
 ## Voice and prose rules
 
@@ -77,8 +78,8 @@ non-default local checkout.
 
 ## Branch + release model
 
-`feat/* → dev (squash) → release/v<version> from origin/main → main (squash)`. The release branch is cut from `main`
-and takes `dev`'s whole tree as one overlay commit, minus the guarded set. `dev` and `main` are both forever branches;
+`feat/* → dev (squash) → release/v<version> from origin/main → main (squash)`. The release branch is cut from `main` and
+takes `dev`'s whole tree as one overlay commit, minus the guarded set. `dev` and `main` are both forever branches;
 `release/*` branches are short-lived and auto-deleted on merge.
 
 Engineering docs (`docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, `docs/reviews/`) live on `dev` only.
@@ -90,10 +91,13 @@ table.
 
 ## What an agent should NEVER do
 
-- Edit `scripts/release/*.sh`, `scripts/sync-dev-after-release.sh`, `scripts/generate-changelog.py`, or `cliff.toml`
-  in place. They are verbatim copies from the `github-repo-setup` skill; fix upstream and refresh by copy.
-- Edit anything under `spec/` by hand. It is vendored from `agentnative-spec`. Any required change is a PR against the
-  spec repo, then a `scripts/sync-spec.sh` bump here.
+- Edit `scripts/release/*.sh` (except `preflight.sh`), `scripts/sync-dev-after-release.sh`,
+  `scripts/check-workflow-concurrency.sh`, `scripts/generate-changelog.py`, or `cliff.toml` in place. They are verbatim
+  copies from the `github-repo-setup` skill; fix upstream and refresh by copy. `preflight.sh` is the skill's skeleton:
+  its shared scaffolding follows the template, and its `gate_smoke` body is this repo's own.
+- Edit anything under `spec/` by hand except `spec/README.md` and `spec/.markdownlint-cli2.yaml`, which are this repo's
+  own. The rest is vendored from `agentnative-spec`. Any required change is a PR against the spec repo, then a
+  `scripts/sync-spec.sh` bump here.
 - Reimplement `anc`. The skill does not contain shell-script duplicates of `anc`'s checks. If you find yourself writing
   `rg`-based grep checks, you're rebuilding what `anc` already does; use `anc audit --output json` instead.
 - Commit anything under `docs/plans/`, `docs/solutions/`, `docs/brainstorms/`, or `docs/reviews/` directly to a
